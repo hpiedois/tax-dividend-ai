@@ -1,0 +1,25 @@
+post:
+  tags:
+    - Dividends
+  summary: Generate tax forms
+  operationId: generateTaxForms
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            dividendIds:
+              type: array
+              items:
+                type: string
+  responses:
+    '200':
+      description: Forms generated
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              formUrl:
+                type: string

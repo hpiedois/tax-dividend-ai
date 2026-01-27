@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: bff-gateway
+  codec:
+    max-in-memory-size: 10MB # Needed for large PDF uploads
+
+security:
+  cookie:
+    access-token-name: ACCESS_TOKEN
+    refresh-token-name: REFRESH_TOKEN
+    access-token-duration: 900 # 15 minutes
+    refresh-token-duration: 604800 # 7 days
+
+backend:
+  url: http://backend:8081

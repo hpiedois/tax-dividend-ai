@@ -1,0 +1,8 @@
+type: object
+properties:
+  totalReclaimed:
+    type: number
+  pendingAmount:
+    type: number
+  casesCount:
+    type: integer

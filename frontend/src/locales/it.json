@@ -1,0 +1,148 @@
+{
+    "app": {
+        "title": "Tax Dividend AI",
+        "dashboard": "Dashboard",
+        "history": "Cronologia",
+        "settings": "Impostazioni"
+    },
+    "hero": {
+        "title_start": "Recupera le tue",
+        "title_highlight": "tasse sui dividendi",
+        "title_end": "con facilità.",
+        "subtitle": "Importa il tuo estratto conto. L'IA si occupa del resto.",
+        "start_cta": "Inizia",
+        "learn_more": "Saperne di più"
+    },
+    "help": {
+        "title": "Centro Assistenza",
+        "how_it_works": "Come funziona?",
+        "step_1": "Carica i tuoi estratti dividendi (PDF) tramite l'area di rilascio.",
+        "analysis": "Analisi automatica",
+        "step_2": "L'IA estrae i dati chiave: importo lordo, ritenuta alla fonte, codice ISIN, data di pagamento.",
+        "reclaim": "Recupero",
+        "step_3": "L'app calcola l'importo recuperabile e genera i moduli fiscali precompilati.",
+        "menu_title": "Aiuto"
+    },
+    "upload": {
+        "drop_title_active": "Lascia il file qui",
+        "drop_title_idle": "Trascina e rilascia il tuo estratto dividendi",
+        "drop_subtitle": "Supporta file PDF (Swissquote, IBKR, CA...)"
+    },
+    "scanning": {
+        "title": "Analisi intelligente in corso...",
+        "subtitle": "Estrazione dati finanziari e fiscali"
+    },
+    "result": {
+        "payment_date": "Data pagamento",
+        "gross_amount": "Importo Lordo",
+        "withholding_tax": "Ritenuta (12,8%)",
+        "reclaimable_est": "Recuperabile Stimato",
+        "new_scan": "Nuova scansione",
+        "scan_completed": "Scansione completata!",
+        "generate_forms": "Genera Moduli 5000/5001"
+    },
+    "auth": {
+        "login_title": "Accedi",
+        "email_placeholder": "tua@email.com",
+        "password_placeholder": "Password",
+        "login_button": "Accedi",
+        "logging_in": "Accesso in corso...",
+        "logout": "Esci",
+        "login_success": "Accesso effettuato con successo"
+    },
+    "dashboard": {
+        "total_reclaimed": "Totale Recuperato",
+        "pending": "In attesa",
+        "cases_processed": "Pratiche elaborate",
+        "recent_activity": "Attività Recente",
+        "scan_imported": "Scansione importata",
+        "refund_received": "Rimborso ricevuto"
+    },
+    "history": {
+        "export_csv": "Esporta CSV",
+        "status": {
+            "pending": "In attesa",
+            "submitted": "Inviato",
+            "refunded": "Rimborsato"
+        },
+        "filters": {
+            "search_placeholder": "Cerca titolo...",
+            "tax_year": "Anno Fiscale",
+            "all_years": "Tutti gli anni",
+            "status_label": "Stato",
+            "all_statuses": "Tutti gli stati"
+        },
+        "columns": {
+            "date": "Data",
+            "security": "Titolo",
+            "gross_amount": "Importo Lordo",
+            "reclaimed": "Recuperato",
+            "status": "Stato",
+            "actions": "Azioni"
+        }
+    },
+    "settings": {
+        "title": "Profilo Fiscale",
+        "description": "Questi dettagli sono utilizzati per precompilare i tuoi moduli 5000/5001.",
+        "fiscal_resident": "Residente Fiscale Svizzero",
+        "section_address": "Indirizzo di residenza",
+        "section_id": "Identificazione",
+        "street": "Via",
+        "number": "Numero",
+        "zip": "CAP",
+        "city": "Città",
+        "avs_nif": "Numero AVS / TIN",
+        "tax_office": "Ufficio imposte competente",
+        "save_button": "Salva Modifiche"
+    },
+    "validation": {
+        "error": {
+            "invalid_type": "Sono accettati solo file PDF",
+            "file_too_large": "File troppo grande (max 10 MB)",
+            "filename_too_long": "Nome file troppo lungo (max 255 caratteri)",
+            "too_many_files": "Troppi file (max 10)",
+            "generic": "Si è verificato un errore durante l'elaborazione"
+        }
+    },
+    "toast": {
+        "files_validated": "{{count}} file validati",
+        "files_rejected": "{{count}} file rifiutati",
+        "error_occurred": "Si è verificato un errore"
+    },
+    "forms": {
+        "title": "Genera Moduli 5000/5001",
+        "subtitle": "Crea automaticamente i tuoi moduli fiscali",
+        "no_data": "Nessun dato disponibile",
+        "scan_first": "Per favore scansiona prima i tuoi estratti dividendi",
+        "fill_required_fields": "Per favore compila tutti i campi obbligatori (*)",
+        "personal_info": "Informazioni Personali",
+        "full_name": "Nome Completo",
+        "tax_id": "Codice Fiscale",
+        "address": "Indirizzo",
+        "city": "Città",
+        "postal_code": "CAP",
+        "tax_year": "Anno Fiscale",
+        "data_summary": "Riepilogo Dati",
+        "dividends_count": "Dividendi",
+        "total_gross": "Importo Lordo Totale",
+        "french_withholding": "Ritenuta Francese",
+        "treaty_amount": "Importo Convenzionale",
+        "net_reclaimable": "Importo Netto Recuperabile",
+        "dividends_detail": "Dettaglio Dividendi",
+        "preview": "Anteprima",
+        "generate": "Genera Moduli",
+        "preview_title": "Anteprima Modulo",
+        "preview_subtitle": "Controlla le informazioni prima di scaricare",
+        "preview_not_supported": "Il tuo browser non supporta l'anteprima PDF",
+        "download_instead": "Scarica invece il file",
+        "download": "Scarica PDF",
+        "generation_success": "Moduli generati con successo",
+        "generation_error": "Errore durante la generazione dei moduli"
+    },
+    "common": {
+        "back": "Indietro",
+        "continue": "Continua",
+        "cancel": "Annulla",
+        "close": "Chiudi"
+    }
+}

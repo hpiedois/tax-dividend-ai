@@ -1,0 +1,62 @@
+openapi: 3.0.3
+info:
+  title: Tax Dividend AI BFF API
+  version: 1.0.0
+  description: Backend for Frontend API for Tax Dividend AI
+servers:
+  - url: http://localhost:8080/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+paths:
+  /dividends/parse:
+    $ref: './paths/dividends-parse.yaml'
+  /dividends/history:
+    $ref: './paths/dividends-history.yaml'
+  /dividends/stats:
+    $ref: './paths/dividends-stats.yaml'
+  /dividends/generate-forms:
+    $ref: './paths/dividends-forms.yaml'
+  
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                fullName:
+                  type: string
+      responses:
+        '200':
+          description: Registration initiated
+  
+  /auth/verify:
+    post:
+      tags:
+        - Auth
+      summary: Verify email
+      operationId: verifyEmail
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verified

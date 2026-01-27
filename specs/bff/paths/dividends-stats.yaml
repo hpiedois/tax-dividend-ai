@@ -1,0 +1,12 @@
+get:
+  tags:
+    - Dividends
+  summary: Get dividend statistics
+  operationId: getDividendStats
+  responses:
+    '200':
+      description: Stats retrieved
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/DividendStats.yaml'

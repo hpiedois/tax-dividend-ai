@@ -1,0 +1,148 @@
+{
+    "app": {
+        "title": "Tax Dividend AI",
+        "dashboard": "Dashboard",
+        "history": "History",
+        "settings": "Settings"
+    },
+    "hero": {
+        "title_start": "Reclaim your",
+        "title_highlight": "dividend taxes",
+        "title_end": "with ease.",
+        "subtitle": "Import your statement. AI handles the rest.",
+        "start_cta": "Get Started",
+        "learn_more": "Learn More"
+    },
+    "help": {
+        "title": "Help Center",
+        "how_it_works": "How it works?",
+        "step_1": "Upload your dividend statements (PDF) via the drop zone.",
+        "analysis": "Automatic Analysis",
+        "step_2": "AI extracts key data: gross amount, withholding tax, ISIN code, payment date.",
+        "reclaim": "Reclaim",
+        "step_3": "The app calculates the reclaimable amount and generates pre-filled tax forms.",
+        "menu_title": "Help"
+    },
+    "upload": {
+        "drop_title_active": "Drop your file here",
+        "drop_title_idle": "Drag & drop your dividend statement",
+        "drop_subtitle": "Supports PDF files (Swissquote, IBKR, CA...)"
+    },
+    "scanning": {
+        "title": "Smart analysis in progress...",
+        "subtitle": "Extracting financial and tax data"
+    },
+    "result": {
+        "payment_date": "Payment Date",
+        "gross_amount": "Gross Amount",
+        "withholding_tax": "Withholding (12.8%)",
+        "reclaimable_est": "Est. Reclaimable",
+        "new_scan": "New Scan",
+        "scan_completed": "Scan completed!",
+        "generate_forms": "Generate Forms 5000/5001"
+    },
+    "auth": {
+        "login_title": "Login",
+        "email_placeholder": "your@email.com",
+        "password_placeholder": "Password",
+        "login_button": "Sign In",
+        "logging_in": "Signing In...",
+        "logout": "Logout",
+        "login_success": "Successfully logged in"
+    },
+    "dashboard": {
+        "total_reclaimed": "Total Reclaimed",
+        "pending": "Pending",
+        "cases_processed": "Cases Processed",
+        "recent_activity": "Recent Activity",
+        "scan_imported": "Scan Imported",
+        "refund_received": "Refund Received"
+    },
+    "history": {
+        "export_csv": "Export CSV",
+        "status": {
+            "pending": "Pending",
+            "submitted": "Submitted",
+            "refunded": "Refunded"
+        },
+        "filters": {
+            "search_placeholder": "Search security...",
+            "tax_year": "Tax Year",
+            "all_years": "All Years",
+            "status_label": "Status",
+            "all_statuses": "All Statuses"
+        },
+        "columns": {
+            "date": "Date",
+            "security": "Security",
+            "gross_amount": "Gross Amount",
+            "reclaimed": "Reclaimed",
+            "status": "Status",
+            "actions": "Actions"
+        }
+    },
+    "settings": {
+        "title": "Tax Profile",
+        "description": "These details are used to pre-fill your 5000/5001 forms.",
+        "fiscal_resident": "Swiss Tax Resident",
+        "section_address": "Residential Address",
+        "section_id": "Identification",
+        "street": "Street",
+        "number": "Number",
+        "zip": "Zip Code",
+        "city": "City",
+        "avs_nif": "AVS Number / TIN",
+        "tax_office": "Competent Tax Office",
+        "save_button": "Save Changes"
+    },
+    "validation": {
+        "error": {
+            "invalid_type": "Only PDF files are accepted",
+            "file_too_large": "File too large (max 10 MB)",
+            "filename_too_long": "Filename too long (max 255 characters)",
+            "too_many_files": "Too many files (max 10)",
+            "generic": "An error occurred during processing"
+        }
+    },
+    "toast": {
+        "files_validated": "{{count}} file(s) validated",
+        "files_rejected": "{{count}} file(s) rejected",
+        "error_occurred": "An error occurred"
+    },
+    "forms": {
+        "title": "Generate Forms 5000/5001",
+        "subtitle": "Create your tax forms automatically",
+        "no_data": "No data available",
+        "scan_first": "Please scan your dividend statements first",
+        "fill_required_fields": "Please fill in all required fields (*)",
+        "personal_info": "Personal Information",
+        "full_name": "Full Name",
+        "tax_id": "Tax ID",
+        "address": "Address",
+        "city": "City",
+        "postal_code": "Postal Code",
+        "tax_year": "Tax Year",
+        "data_summary": "Data Summary",
+        "dividends_count": "Dividends",
+        "total_gross": "Total Gross Amount",
+        "french_withholding": "French Withholding",
+        "treaty_amount": "Treaty Amount",
+        "net_reclaimable": "Net Reclaimable Amount",
+        "dividends_detail": "Dividend Details",
+        "preview": "Preview",
+        "generate": "Generate Forms",
+        "preview_title": "Form Preview",
+        "preview_subtitle": "Review information before downloading",
+        "preview_not_supported": "Your browser doesn't support PDF preview",
+        "download_instead": "Download file instead",
+        "download": "Download forms",
+        "generation_success": "📦 2 forms generated (5000 + 5001) in a ZIP file",
+        "generation_error": "Error generating forms"
+    },
+    "common": {
+        "back": "Back",
+        "continue": "Continue",
+        "cancel": "Cancel",
+        "close": "Close"
+    }
+}

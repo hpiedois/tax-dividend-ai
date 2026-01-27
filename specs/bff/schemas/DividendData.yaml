@@ -1,0 +1,24 @@
+type: object
+properties:
+  securityName:
+    type: string
+  isin:
+    type: string
+  grossAmount:
+    type: number
+  currency:
+    type: string
+  paymentDate:
+    type: string
+    format: date
+  withholdingTax:
+    type: number
+  reclaimableAmount:
+    type: number
+  frenchRate:
+    type: number
+    description: Tracks which rate was applied (PFU or progressive)
+required:
+  - securityName
+  - grossAmount
+  - currency

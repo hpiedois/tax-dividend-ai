@@ -1,0 +1,148 @@
+{
+    "app": {
+        "title": "Tax Dividend AI",
+        "dashboard": "Tableau de Bord",
+        "history": "Historique",
+        "settings": "Paramètres"
+    },
+    "hero": {
+        "title_start": "Récupérez vos",
+        "title_highlight": "taxes sur dividendes",
+        "title_end": "en toute simplicité.",
+        "subtitle": "Importez votre relevé. L'IA s'occupe du reste.",
+        "start_cta": "Commencer",
+        "learn_more": "En savoir plus"
+    },
+    "help": {
+        "title": "Centre d'aide",
+        "how_it_works": "Comment ça marche ?",
+        "step_1": "Téléversez vos relevés de dividendes (PDF) via la zone de dépôt.",
+        "analysis": "Analyse automatique",
+        "step_2": "L'IA extrait les données clés : montant brut, impôt retenu, code ISIN, date de paiement.",
+        "reclaim": "Récupération",
+        "step_3": "L'application calcule le montant récupérable et génère les formulaires fiscaux pré-remplis.",
+        "menu_title": "Aide"
+    },
+    "upload": {
+        "drop_title_active": "Déposez votre fichier ici",
+        "drop_title_idle": "Glissez votre relevé de dividendes",
+        "drop_subtitle": "Supporte les fichiers PDF (Swissquote, IBKR, CA...)"
+    },
+    "scanning": {
+        "title": "Analyse intelligente en cours...",
+        "subtitle": "Extraction des données financières et fiscales"
+    },
+    "result": {
+        "payment_date": "Date de paiement",
+        "gross_amount": "Montant Brut",
+        "withholding_tax": "Retenue (12.8%)",
+        "reclaimable_est": "Récupérable Est.",
+        "new_scan": "Nouveau scan",
+        "scan_completed": "Scan terminé !",
+        "generate_forms": "Générer Formulaires 5000/5001"
+    },
+    "auth": {
+        "login_title": "Connexion",
+        "email_placeholder": "votre@email.com",
+        "password_placeholder": "Mot de passe",
+        "login_button": "Se connecter",
+        "logging_in": "Connexion...",
+        "logout": "Déconnexion",
+        "login_success": "Connexion réussie"
+    },
+    "dashboard": {
+        "total_reclaimed": "Total Récupéré",
+        "pending": "En attente",
+        "cases_processed": "Dossiers traités",
+        "recent_activity": "Activité Récente",
+        "scan_imported": "Scan importé",
+        "refund_received": "Remboursement reçu"
+    },
+    "history": {
+        "export_csv": "Export CSV",
+        "status": {
+            "pending": "En attente",
+            "submitted": "Transmis",
+            "refunded": "Remboursé"
+        },
+        "filters": {
+            "search_placeholder": "Rechercher titre...",
+            "tax_year": "Année Fiscale",
+            "all_years": "Toutes années",
+            "status_label": "Statut",
+            "all_statuses": "Tous statuts"
+        },
+        "columns": {
+            "date": "Date",
+            "security": "Titre",
+            "gross_amount": "Montant Brut",
+            "reclaimed": "Récupéré",
+            "status": "Statut",
+            "actions": "Actions"
+        }
+    },
+    "settings": {
+        "title": "Profil Fiscal",
+        "description": "Ces informations sont utilisées pour pré-remplir vos formulaires 5000/5001.",
+        "fiscal_resident": "Résident Fiscal Suisse",
+        "section_address": "Adresse de résidence",
+        "section_id": "Identification",
+        "street": "Rue",
+        "number": "Numéro",
+        "zip": "Code Postal",
+        "city": "Ville",
+        "avs_nif": "Numéro AVS / NIF",
+        "tax_office": "Bureau des impôts compétent",
+        "save_button": "Enregistrer les modifications"
+    },
+    "validation": {
+        "error": {
+            "invalid_type": "Seuls les fichiers PDF sont acceptés",
+            "file_too_large": "Fichier trop volumineux (max 10 MB)",
+            "filename_too_long": "Nom de fichier trop long (max 255 caractères)",
+            "too_many_files": "Trop de fichiers (max 10)",
+            "generic": "Une erreur est survenue lors du traitement"
+        }
+    },
+    "toast": {
+        "files_validated": "{{count}} fichier(s) validé(s)",
+        "files_rejected": "{{count}} fichier(s) rejeté(s)",
+        "error_occurred": "Une erreur est survenue"
+    },
+    "forms": {
+        "title": "Génération Formulaires 5000/5001",
+        "subtitle": "Créez vos formulaires fiscaux automatiquement",
+        "no_data": "Aucune donnée disponible",
+        "scan_first": "Effectuez d'abord un scan de vos relevés de dividendes",
+        "fill_required_fields": "Veuillez remplir tous les champs obligatoires (*)",
+        "personal_info": "Informations personnelles",
+        "full_name": "Nom complet",
+        "tax_id": "Numéro fiscal",
+        "address": "Adresse",
+        "city": "Ville",
+        "postal_code": "Code postal",
+        "tax_year": "Année fiscale",
+        "data_summary": "Résumé des données",
+        "dividends_count": "Dividendes",
+        "total_gross": "Montant brut total",
+        "french_withholding": "Retenue française",
+        "treaty_amount": "Montant conventionnel",
+        "net_reclaimable": "Montant récupérable net",
+        "dividends_detail": "Détail des dividendes",
+        "preview": "Aperçu",
+        "generate": "Générer les formulaires",
+        "preview_title": "Aperçu du formulaire",
+        "preview_subtitle": "Vérifiez les informations avant téléchargement",
+        "preview_not_supported": "Votre navigateur ne supporte pas l'aperçu PDF",
+        "download_instead": "Télécharger le fichier",
+        "download": "Télécharger les formulaires",
+        "generation_success": "📦 2 formulaires générés (5000 + 5001) dans un fichier ZIP",
+        "generation_error": "Erreur lors de la génération des formulaires"
+    },
+    "common": {
+        "back": "Retour",
+        "continue": "Continuer",
+        "cancel": "Annuler",
+        "close": "Fermer"
+    }
+}

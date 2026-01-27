@@ -1,0 +1,12 @@
+type: object
+properties:
+  data:
+    type: array
+    items:
+      $ref: './DividendCase.yaml'
+  total:
+    type: integer
+  page:
+    type: integer
+  pageSize:
+    type: integer

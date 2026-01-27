@@ -1,0 +1,16 @@
+type: object
+properties:
+  id:
+    type: string
+  date:
+    type: string
+    format: date
+  security:
+    type: string
+  grossAmount:
+    type: number
+  reclaimedAmount:
+    type: number
+  status:
+    type: string
+    enum: [pending, submitted, refunded]

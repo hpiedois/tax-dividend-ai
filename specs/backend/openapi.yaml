@@ -1,0 +1,192 @@
+openapi: 3.0.3
+info:
+  title: Tax Dividend AI Backend Internal API
+  version: 1.0.0
+  description: Internal API for Backend Services (PDF, Storage, Auth)
+servers:
+  - url: http://localhost:8081/internal
+paths:
+  /auth/validate-token:
+    post:
+      tags:
+        - Auth
+      summary: Validate a JWT token
+      operationId: validateToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  userId:
+                    type: string
+
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      operationId: registerUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                fullName:
+                  type: string
+      responses:
+        '200':
+          description: Registration pending verification
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+
+  /auth/verify:
+    post:
+      tags:
+        - Auth
+      summary: Verify user email
+      operationId: verifyEmail
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified:
+                    type: boolean
+                  message:
+                    type: string
+
+  /pdf/generate:
+    post:
+      tags:
+        - Pdf
+      summary: Generate Tax Forms PDF
+      operationId: generatePdf
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormGenerationRequest'
+      responses:
+        '200':
+          description: PDF Generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfGenerationResponse'
+
+  /pdf/parse:
+    post:
+      tags:
+        - Pdf
+      summary: Parse Dividend PDF
+      operationId: parseMakePdf
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Parsing result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rawText:
+                    type: string
+
+  /storage/upload:
+    post:
+      tags:
+        - Storage
+      summary: Upload file to storage
+      operationId: uploadFile
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                bucket: 
+                  type: string
+      responses:
+        '200':
+          description: Upload successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  url:
+                    type: string
+
+components:
+  schemas:
+    FormGenerationRequest:
+      type: object
+      properties:
+        taxpayerName:
+          type: string
+        taxId:
+          type: string
+        taxYear:
+          type: integer
+        country:
+          type: string
+          example: "FR"
+        dividends:
+          type: array
+          items:
+            type: object # Simplified for now
+    
+    PdfGenerationResponse:
+      type: object
+      properties:
+        formId:
+          type: string
+        downloadUrl:
+          type: string
+        fileName:
+          type: string

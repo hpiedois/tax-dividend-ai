@@ -1,0 +1,148 @@
+{
+    "app": {
+        "title": "Tax Dividend AI",
+        "dashboard": "Dashboard",
+        "history": "Verlauf",
+        "settings": "Einstellungen"
+    },
+    "hero": {
+        "title_start": "Rückforderung Ihrer",
+        "title_highlight": "Dividendensteuern",
+        "title_end": "mit Leichtigkeit.",
+        "subtitle": "Importieren Sie Ihren Auszug. KI erledigt den Rest.",
+        "start_cta": "Loslegen",
+        "learn_more": "Mehr erfahren"
+    },
+    "help": {
+        "title": "Hilfezentrum",
+        "how_it_works": "Wie funktioniert es?",
+        "step_1": "Laden Sie Ihre Dividendenauszüge (PDF) über den Upload-Bereich hoch.",
+        "analysis": "Automatische Analyse",
+        "step_2": "KI extrahiert Schlüsseldaten: Bruttobetrag, Quellensteuer, ISIN, Auszahlungsdatum.",
+        "reclaim": "Rückforderung",
+        "step_3": "Die App berechnet den rückforderbaren Betrag und erstellt vorausgefüllte Steuerformulare.",
+        "menu_title": "Hilfe"
+    },
+    "upload": {
+        "drop_title_active": "Datei hier ablegen",
+        "drop_title_idle": "Dividendenbescheinigung hierhin ziehen",
+        "drop_subtitle": "Unterstützt PDF-Dateien (Swissquote, IBKR, CA...)"
+    },
+    "scanning": {
+        "title": "Intelligente Analyse läuft...",
+        "subtitle": "Extraktion von Finanz- und Steuerdaten"
+    },
+    "result": {
+        "payment_date": "Zahldatum",
+        "gross_amount": "Bruttobetrag",
+        "withholding_tax": "Quellensteuer (12,8%)",
+        "reclaimable_est": "Geschätzte Rückforderung",
+        "new_scan": "Neuer Scan",
+        "scan_completed": "Scan abgeschlossen!",
+        "generate_forms": "Formulare 5000/5001 erstellen"
+    },
+    "auth": {
+        "login_title": "Anmelden",
+        "email_placeholder": "ihre@email.com",
+        "password_placeholder": "Passwort",
+        "login_button": "Anmelden",
+        "logging_in": "Anmeldung läuft...",
+        "logout": "Abmelden",
+        "login_success": "Erfolgreich angemeldet"
+    },
+    "dashboard": {
+        "total_reclaimed": "Insgesamt zurückgefordert",
+        "pending": "Ausstehend",
+        "cases_processed": "Fälle bearbeitet",
+        "recent_activity": "Letzte Aktivität",
+        "scan_imported": "Scan importiert",
+        "refund_received": "Rückerstattung erhalten"
+    },
+    "history": {
+        "export_csv": "CSV exportieren",
+        "status": {
+            "pending": "Ausstehend",
+            "submitted": "Eingereicht",
+            "refunded": "Erstattet"
+        },
+        "filters": {
+            "search_placeholder": "Wertpapier suchen...",
+            "tax_year": "Steuerjahr",
+            "all_years": "Alle Jahre",
+            "status_label": "Status",
+            "all_statuses": "Alle Status"
+        },
+        "columns": {
+            "date": "Datum",
+            "security": "Wertpapier",
+            "gross_amount": "Bruttobetrag",
+            "reclaimed": "Zurückgefordert",
+            "status": "Status",
+            "actions": "Aktionen"
+        }
+    },
+    "settings": {
+        "title": "Steuerprofil",
+        "description": "Diese Details werden verwendet, um Ihre Formulare 5000/5001 vorauszufüllen.",
+        "fiscal_resident": "Schweizer Steuerpflichtiger",
+        "section_address": "Wohnadresse",
+        "section_id": "Identifikation",
+        "street": "Straße",
+        "number": "Nummer",
+        "zip": "PLZ",
+        "city": "Stadt",
+        "avs_nif": "AHV-Nummer / TIN",
+        "tax_office": "Zuständiges Steueramt",
+        "save_button": "Änderungen speichern"
+    },
+    "validation": {
+        "error": {
+            "invalid_type": "Nur PDF-Dateien werden akzeptiert",
+            "file_too_large": "Datei zu groß (max. 10 MB)",
+            "filename_too_long": "Dateiname zu lang (max. 255 Zeichen)",
+            "too_many_files": "Zu viele Dateien (max. 10)",
+            "generic": "Ein Fehler ist aufgetreten"
+        }
+    },
+    "toast": {
+        "files_validated": "{{count}} Datei(en) validiert",
+        "files_rejected": "{{count}} Datei(en) abgelehnt",
+        "error_occurred": "Ein Fehler ist aufgetreten"
+    },
+    "forms": {
+        "title": "Formulare 5000/5001 erstellen",
+        "subtitle": "Erstellen Sie Ihre Steuerformulare automatisch",
+        "no_data": "Keine Daten verfügbar",
+        "scan_first": "Bitte scannen Sie zuerst Ihre Dividendenbescheinigungen",
+        "fill_required_fields": "Bitte füllen Sie alle Pflichtfelder aus (*)",
+        "personal_info": "Persönliche Informationen",
+        "full_name": "Vollständiger Name",
+        "tax_id": "Steuernummer",
+        "address": "Adresse",
+        "city": "Stadt",
+        "postal_code": "PLZ",
+        "tax_year": "Steuerjahr",
+        "data_summary": "Datenzusammenfassung",
+        "dividends_count": "Dividenden",
+        "total_gross": "Gesamtbruttobetrag",
+        "french_withholding": "Französische Quellensteuer",
+        "treaty_amount": "Abkommensbetrag",
+        "net_reclaimable": "Netto-Rückforderungsbetrag",
+        "dividends_detail": "Dividenden-Details",
+        "preview": "Vorschau",
+        "generate": "Formulare erstellen",
+        "preview_title": "Formular-Vorschau",
+        "preview_subtitle": "Überprüfen Sie die Informationen vor dem Download",
+        "preview_not_supported": "Ihr Browser unterstützt keine PDF-Vorschau",
+        "download_instead": "Datei stattdessen herunterladen",
+        "download": "PDF herunterladen",
+        "generation_success": "Formulare erfolgreich erstellt",
+        "generation_error": "Fehler bei der Formularerstellung"
+    },
+    "common": {
+        "back": "Zurück",
+        "continue": "Weiter",
+        "cancel": "Abbrechen",
+        "close": "Schließen"
+    }
+}

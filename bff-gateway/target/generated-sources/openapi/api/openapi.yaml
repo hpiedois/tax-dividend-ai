@@ -1,0 +1,242 @@
+openapi: 3.0.3
+info:
+  description: "Internal API for Backend Services (PDF, Storage, Auth)"
+  title: Tax Dividend AI Backend Internal API
+  version: 1.0.0
+servers:
+- url: http://localhost:8081/internal
+paths:
+  /auth/validate-token:
+    post:
+      operationId: validateToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/validateToken_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/validateToken_200_response'
+          description: Token is valid
+      summary: Validate a JWT token
+      tags:
+      - Auth
+      x-content-type: application/json
+      x-accepts: application/json
+  /auth/register:
+    post:
+      operationId: registerUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/registerUser_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/registerUser_200_response'
+          description: Registration pending verification
+      summary: Register a new user
+      tags:
+      - Auth
+      x-content-type: application/json
+      x-accepts: application/json
+  /auth/verify:
+    post:
+      operationId: verifyEmail
+      parameters:
+      - explode: true
+        in: query
+        name: token
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/verifyEmail_200_response'
+          description: Verification successful
+      summary: Verify user email
+      tags:
+      - Auth
+      x-accepts: application/json
+  /pdf/generate:
+    post:
+      operationId: generatePdf
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormGenerationRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PdfGenerationResponse'
+          description: PDF Generated
+      summary: Generate Tax Forms PDF
+      tags:
+      - Pdf
+      x-content-type: application/json
+      x-accepts: application/json
+  /pdf/parse:
+    post:
+      operationId: parseMakePdf
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/parseMakePdf_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/parseMakePdf_200_response'
+          description: Parsing result
+      summary: Parse Dividend PDF
+      tags:
+      - Pdf
+      x-content-type: multipart/form-data
+      x-accepts: application/json
+  /storage/upload:
+    post:
+      operationId: uploadFile
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/uploadFile_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/uploadFile_200_response'
+          description: Upload successful
+      summary: Upload file to storage
+      tags:
+      - Storage
+      x-content-type: multipart/form-data
+      x-accepts: application/json
+components:
+  schemas:
+    FormGenerationRequest:
+      example:
+        country: FR
+        taxYear: 0
+        taxId: taxId
+        dividends:
+        - "{}"
+        - "{}"
+        taxpayerName: taxpayerName
+      properties:
+        taxpayerName:
+          type: string
+        taxId:
+          type: string
+        taxYear:
+          type: integer
+        country:
+          example: FR
+          type: string
+        dividends:
+          items:
+            type: object
+          type: array
+      type: object
+    PdfGenerationResponse:
+      example:
+        formId: formId
+        fileName: fileName
+        downloadUrl: downloadUrl
+      properties:
+        formId:
+          type: string
+        downloadUrl:
+          type: string
+        fileName:
+          type: string
+      type: object
+    validateToken_request:
+      properties:
+        token:
+          type: string
+      type: object
+    validateToken_200_response:
+      example:
+        valid: true
+        userId: userId
+      properties:
+        valid:
+          type: boolean
+        userId:
+          type: string
+      type: object
+    registerUser_request:
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        fullName:
+          type: string
+      type: object
+    registerUser_200_response:
+      example:
+        id: id
+      properties:
+        id:
+          type: string
+      type: object
+    verifyEmail_200_response:
+      example:
+        verified: true
+        message: message
+      properties:
+        verified:
+          type: boolean
+        message:
+          type: string
+      type: object
+    parseMakePdf_request:
+      properties:
+        file:
+          format: binary
+          type: string
+      type: object
+    parseMakePdf_200_response:
+      example:
+        rawText: rawText
+      properties:
+        rawText:
+          type: string
+      type: object
+    uploadFile_request:
+      properties:
+        file:
+          format: binary
+          type: string
+        bucket:
+          type: string
+      type: object
+    uploadFile_200_response:
+      example:
+        key: key
+        url: url
+      properties:
+        key:
+          type: string
+        url:
+          type: string
+      type: object
+
