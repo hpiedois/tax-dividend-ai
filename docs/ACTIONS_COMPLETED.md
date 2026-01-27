@@ -38,7 +38,7 @@ Revue technique exhaustive avec :
 #### **Revue Fonctionnelle**
 - 4 user flows analysés (Auth, Upload/Scan, Historique, Paramètres)
 - Fonctionnalités manquantes B2C/B2B identifiées
-- Erreurs dans la logique de calcul fiscal
+- Calculs fiscaux actuels en mock (à implémenter dans le Tax Engine backend)
 
 #### **Propositions d'Amélioration**
 1. **Sprint 1 (Corrections Immédiates)**
@@ -180,19 +180,23 @@ npm run build
 
 ## 📋 Prochaines Étapes Recommandées
 
-### Priorité Immédiate (Cette Semaine)
+### Priorité Immédiate (Cette Semaine) - Phase 0 Completion
 1. ⬜ Ajouter validation fichiers (type MIME, taille max)
 2. ⬜ Setup Vitest + React Testing Library
-3. ⬜ Écrire 5-10 tests basiques (auth, upload)
+3. ⬜ Écrire 5-10 tests basiques (auth, upload, UI components)
 4. ⬜ Ajouter gestion d'erreurs UI (toast/alert)
-5. ⬜ Corriger la logique de calcul fiscal
 
-### Court Terme (2-4 Semaines)
-1. ⬜ Décider : Backend Python (FastAPI) ou Node.js
-2. ⬜ Setup projet backend + PostgreSQL
-3. ⬜ Implémenter authentification JWT
-4. ⬜ Parser PDF réel (pdfplumber/OCR)
-5. ⬜ Migration mock → API
+**Note**: Les calculs fiscaux seront implémentés dans le Tax Engine backend (Phase 1)
+
+### Court Terme (2-4 Semaines) - Phase 1 Backend
+1. ✅ Décision actée : **Architecture BFF + Backend Services** (2 projets Spring Boot)
+2. ⬜ Setup BFF Gateway (Spring Boot WebFlux, port 8080)
+3. ⬜ Setup Backend Services (Spring Boot + JPA, port 8081)
+4. ⬜ Setup PostgreSQL + MinIO (S3 local)
+5. ⬜ Implémenter authentification JWT (Spring Security dans BFF)
+6. ⬜ Parser PDF réel (Apache PDFBox dans Backend)
+7. ⬜ Génération Forms 5000/5001 (Apache PDFBox dans Backend)
+8. ⬜ Migration frontend mock → appels API REST vers BFF
 
 ### Moyen Terme (1-3 Mois)
 1. ⬜ Génération Forms 5000/5001 (PDF)
@@ -208,16 +212,47 @@ npm run build
 
 | Domaine | Choix | Justification |
 |---------|-------|---------------|
-| **Backend** | FastAPI (Python) | ML/PDF, typage, async, écosystème |
-| **Database** | PostgreSQL | ACID, relationnel, extensions |
-| **State Mgmt** | Zustand | Simple, performant, TypeScript |
+| **Backend** | Spring Boot 3.5+ (Java) | Production-ready, conformité fiscale, écosystème mature |
+| **Database** | PostgreSQL 16+ | ACID, relationnel, extensions |
+| **PDF Generation** | Apache PDFBox 3.0+ | Bibliothèque Java mature, Forms complexes |
+| **State Mgmt** | Zustand (futur) | Simple, performant, TypeScript |
 | **Forms** | React Hook Form + Zod | Performance, DX, validation |
 | **Routing** | React Router v6 | Standard, mature, TypeScript |
 | **API Client** | React Query | Cache, optimistic updates |
-| **Testing** | Vitest + Testing Library | Rapide, intégration Vite |
+| **Testing Frontend** | Vitest + Testing Library | Rapide, intégration Vite |
+| **Testing Backend** | JUnit 5 + Mockito | Standard Java, TestContainers |
 | **Deploy Frontend** | Firebase Hosting | CDN global, gratuit |
-| **Deploy Backend** | Cloud Run | Auto-scale, pay-per-use |
+| **Deploy Backend** | Cloud Run (containerisé) | Auto-scale, pay-per-use |
 | **CI/CD** | GitHub Actions | Gratuit, intégré |
+
+---
+
+## 🏛️ Décisions Architecturales Importantes
+
+### Séparation Frontend/Backend
+
+**✅ DÉCISION**: Les calculs fiscaux et la logique métier sont 100% backend
+
+| Responsabilité | Frontend | Backend |
+|----------------|----------|---------|
+| **Calculs fiscaux** | ❌ NON | ✅ OUI (Tax Engine) |
+| **Validation métier** | ❌ NON | ✅ OUI |
+| **Parsing PDF** | ❌ NON | ✅ OUI (DividendService) |
+| **Génération Forms** | ❌ NON | ✅ OUI (PDFService) |
+| **Validation UI** | ✅ OUI (format, requis) | ✅ OUI (règles métier) |
+| **Affichage données** | ✅ OUI | ❌ NON |
+| **Gestion état UI** | ✅ OUI | ❌ NON |
+
+**Justification**:
+- **Sécurité**: Règles fiscales ne peuvent pas être contournées côté client
+- **Conformité**: Audit trail et versioning des règles fiscales
+- **Maintenance**: Changements réglementaires déployés sans recompilation frontend
+- **Testing**: Validation métier testable indépendamment de l'UI
+- **Performance**: Calculs complexes sur serveur, pas dans le navigateur
+
+**Références**:
+- Voir `docs/ARCHITECTURE.md` ligne 15: "Aucune logique métier" dans le frontend
+- Voir `docs/ARCHITECTURE.md` ligne 75: "Calculs fiscaux" dans DividendService
 
 ---
 
