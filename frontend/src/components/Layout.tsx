@@ -120,6 +120,8 @@ export const Layout: React.FC = () => {
                     </Link>
                     <Link
                         to="/settings"
+                        state={{}}
+                        replace={location.pathname === '/settings'}
                         className={`flex flex-col items-center justify-center space-y-1 ${location.pathname === '/settings'
                             ? 'text-brand-600'
                             : 'text-muted-foreground'

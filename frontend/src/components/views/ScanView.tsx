@@ -162,12 +162,14 @@ export function ScanView() {
               ))}
             </div>
 
-            <div className="p-6 bg-muted/30 border-t border-border flex flex-col-reverse md:flex-row justify-end gap-3 rounded-xl">
-              <Button variant="ghost" onClick={startNewScan} className="w-full md:w-auto justify-center">
+            <div className="p-4 md:p-6 bg-muted/30 border-t border-border flex flex-row justify-center md:justify-end gap-2 md:gap-3 rounded-xl">
+              <Button variant="ghost" onClick={startNewScan} className="flex-1 md:flex-none md:w-auto justify-center text-sm md:text-base">
                 <RefreshCcw className="w-4 h-4 mr-2" /> {t('result.new_scan')}
               </Button>
-              <Button onClick={() => navigate('/forms')} className="w-full md:w-auto justify-center">
-                {t('result.generate_forms')} <ArrowRight className="w-4 h-4 ml-2" />
+              <Button onClick={() => navigate('/forms')} className="flex-1 md:flex-none md:w-auto justify-center text-sm md:text-base whitespace-nowrap">
+                <span className="hidden md:inline">{t('result.generate_forms')}</span>
+                <span className="md:hidden">Forms</span>
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </motion.div>

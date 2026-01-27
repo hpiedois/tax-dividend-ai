@@ -59,7 +59,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
 
                             <button
                                 onClick={() => {
-                                    navigate('/settings');
+                                    navigate('/settings', { state: { openTaxProfile: true } });
                                     setIsOpen(false);
                                 }}
                                 className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-3 text-slate-700 hover:bg-slate-50 font-medium"

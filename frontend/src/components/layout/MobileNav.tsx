@@ -119,7 +119,7 @@ export function MobileNav() {
                                     <div className="bg-muted/30 rounded-xl overflow-hidden">
                                         <button
                                             onClick={() => {
-                                                navigate('/settings');
+                                                navigate('/settings', { replace: true, state: {} });
                                                 setIsMenuOpen(false);
                                             }}
                                             className="w-full flex items-center px-4 py-3 hover:bg-muted/50 transition-colors"

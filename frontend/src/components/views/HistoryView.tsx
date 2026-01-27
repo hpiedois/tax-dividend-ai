@@ -50,10 +50,12 @@ export function HistoryView() {
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h2 className="text-3xl font-heading font-bold text-foreground">{t('app.history')}</h2>
+            <div className="flex flex-row justify-between items-center gap-4">
+                <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground">{t('app.history')}</h2>
                 <Button variant="secondary" size="sm">
-                    <Download className="w-4 h-4 mr-2" /> {t('history.export_csv')}
+                    <Download className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">{t('history.export_csv')}</span>
+                    <span className="sm:hidden">CSV</span>
                 </Button>
             </div>
 

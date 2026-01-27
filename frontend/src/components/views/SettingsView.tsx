@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { SettingsMenu } from '../settings/SettingsMenu';
 import { TaxProfileForm } from '../settings/TaxProfileForm';
@@ -8,14 +9,25 @@ import { HelpModal } from '../layout/HelpModal';
 
 export function SettingsView() {
     const { t } = useTranslation();
+    const location = useLocation();
     const [subPage, setSubPage] = useState<'main' | 'tax-profile'>('main');
     const [showHelp, setShowHelp] = useState(false);
+
+    // Open tax profile directly if coming from UserMenu
+    useEffect(() => {
+        if (location.state?.openTaxProfile) {
+            setSubPage('tax-profile');
+            window.history.replaceState({}, document.title);
+        } else {
+            setSubPage('main');
+        }
+    }, [location.pathname, location.key]);
 
     if (subPage === 'tax-profile') {
         return (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-6 max-w-2xl mx-auto pb-20 md:pb-0">
                 <div className="flex items-center gap-2 mb-6">
-                    <button onClick={() => setSubPage('main')} className="p-2 hover:bg-muted rounded-full transition-colors">
+                    <button onClick={() => setSubPage('main')} className="md:hidden p-2 hover:bg-muted rounded-full transition-colors">
                         <ChevronLeft className="w-5 h-5 text-foreground" />
                     </button>
                     <h2 className="text-2xl font-heading font-bold text-foreground">Tax Profile</h2>

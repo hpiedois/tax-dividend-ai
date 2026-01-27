@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { ArrowUpRight, Clock, CheckCircle, FileText } from 'lucide-react';
+import { ArrowUpRight, Clock, CheckCircle, FileText, ArrowRight } from 'lucide-react';
 import { MockSelector } from '../debug/MockSelector';
 import { SCENARIOS } from '../../lib/mock-scenarios';
 
@@ -38,16 +38,17 @@ export function DashboardView() {
                     <div className="flex items-center gap-3 w-full sm:w-auto">
                         <Button
                             variant="ghost"
-                            size="lg"
+                            size="md"
                             onClick={() => navigate('/forms')}
-                            className="flex-1 sm:flex-none justify-center font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                            className="flex-1 sm:flex-none justify-center font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 whitespace-nowrap"
                         >
-                            <FileText className="w-4 h-4 mr-2" />
-                            {t('result.generate_forms')}
+                            <span className="hidden md:inline">{t('result.generate_forms')}</span>
+                            <span className="md:hidden">Forms</span>
+                            <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                         <Button
                             onClick={() => navigate('/scan')}
-                            size="lg"
+                            size="md"
                             className="shadow-brand-500/20 flex-1 sm:flex-none justify-center"
                         >
                             + {t('result.new_scan')}
