@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import JSZip from 'jszip';
+import { PDFDocument } from 'pdf-lib';
 import { showSuccess, showError } from '../lib/toast-helpers';
 import { fillOfficialForm5001, analyzePDFStructure } from '../lib/pdf-form-filler';
 import { fillOfficialForm5000 } from '../lib/pdf-form-5000-filler';
@@ -53,7 +54,32 @@ const generateFormWithOfficialPDF = async (request: FormGenerationRequest): Prom
 
     const pdf5000Blob = await fillOfficialForm5000(form5000Data);
 
-    // Create ZIP file containing both forms
+    // ---------------------------------------------------------
+    // MERGE PDFs for Preview (Form 5000 + Form 5001)
+    // ---------------------------------------------------------
+    console.log('📑 Merging PDFs for preview...');
+    const mergedPdf = await PDFDocument.create();
+
+    // Load source PDFs
+    const pdf5000Doc = await PDFDocument.load(await pdf5000Blob.arrayBuffer());
+    const pdf5001Doc = await PDFDocument.load(await pdf5001Blob.arrayBuffer());
+
+    // Copy pages from Form 5000
+    const copiedPages5000 = await mergedPdf.copyPages(pdf5000Doc, pdf5000Doc.getPageIndices());
+    copiedPages5000.forEach((page) => mergedPdf.addPage(page));
+
+    // Copy pages from Form 5001
+    const copiedPages5001 = await mergedPdf.copyPages(pdf5001Doc, pdf5001Doc.getPageIndices());
+    copiedPages5001.forEach((page) => mergedPdf.addPage(page));
+
+    const mergedPdfBytes = await mergedPdf.save();
+    // Fix: Cast Uint8Array to any to satisfy BlobPart type definition in strict mode
+    const mergedPdfBlob = new Blob([mergedPdfBytes as any], { type: 'application/pdf' });
+    const mergedPdfUrl = URL.createObjectURL(mergedPdfBlob);
+
+    // ---------------------------------------------------------
+    // Create ZIP archive for Download
+    // ---------------------------------------------------------
     console.log('📦 Creating ZIP archive...');
     const zip = new JSZip();
 
@@ -67,7 +93,8 @@ const generateFormWithOfficialPDF = async (request: FormGenerationRequest): Prom
 
     return {
       formId,
-      pdfUrl: zipUrl,
+      pdfUrl: mergedPdfUrl, // Merged PDF for Preview
+      zipUrl: zipUrl,       // ZIP for Download
       fileName: `formulaires-${formData.taxYear}.zip`,
       generatedAt: new Date().toISOString(),
     };

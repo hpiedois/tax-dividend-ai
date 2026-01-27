@@ -43,8 +43,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const login = async (credentials: LoginCredentials) => {
-        const res = await api.post('/auth/login', credentials);
-        setUser(res.data);
+        // Mock login for development
+        console.log('Mock login with:', credentials);
+        setUser({
+            id: 'mock-user-id',
+            email: 'john.doe@example.com',
+            fullName: 'John Doe'
+        });
+
+        // Original API call preserved but commented out for reference
+        // const res = await api.post('/auth/login', credentials);
+        // setUser(res.data);
     };
 
     const register = async (data: RegisterData) => {

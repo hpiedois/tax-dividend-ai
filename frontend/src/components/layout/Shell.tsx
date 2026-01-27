@@ -60,7 +60,7 @@ export function Shell() {
                     {isAuthenticated && (
                         <div className="flex items-center gap-3 pl-2 border-l border-border ml-2">
                             <UserMenu
-                                isLoggedIn={isAuthenticated}
+                                user={{ email: 'user@example.com', id: '1', fullName: 'User' }} // Mock user for Shell
                                 onLogout={logout}
                             />
                         </div>

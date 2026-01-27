@@ -39,7 +39,7 @@ export async function fillOfficialForm5001(formData: Form5001Data): Promise<Blob
       // Fill the fields (you'll need to adjust field names based on actual PDF)
       try {
         fillFormFields(form, formData);
-      } catch (_error) {
+      } catch (error) {
         console.error('Error filling form fields:', error);
         // Fallback to text overlay
         await fillWithTextOverlay(pdfDoc, formData);
@@ -55,7 +55,7 @@ export async function fillOfficialForm5001(formData: Form5001Data): Promise<Blob
     // Create Blob from Uint8Array (TypeScript strict mode workaround)
     return new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' });
 
-  } catch (_error) {
+  } catch (error) {
     console.error('Error filling PDF:', error);
     throw new Error('Failed to generate PDF form. Please try again.');
   }
@@ -258,7 +258,7 @@ function fillDividendLine(
 
     console.log(`✓ Filled line ${lineNumber}${suffix ? ' (page 2)' : ''}: ${dividend.securityName}`);
 
-  } catch (_error) {
+  } catch (error) {
     console.error(`❌ Error filling line ${lineNumber}${suffix}:`, error);
   }
 }

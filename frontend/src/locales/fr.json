@@ -48,7 +48,12 @@
         "login_button": "Se connecter",
         "logging_in": "Connexion...",
         "logout": "Déconnexion",
-        "login_success": "Connexion réussie"
+        "login_success": "Connexion réussie",
+        "error_invalid_credentials": "Identifiants invalides",
+        "error_generic": "Échec de la connexion",
+        "create_account": "Créer un compte",
+        "already_have_account": "Vous avez déjà un compte ?",
+        "creating_account": "Création du compte..."
     },
     "dashboard": {
         "total_reclaimed": "Total Récupéré",

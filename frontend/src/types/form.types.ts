@@ -34,7 +34,10 @@ export interface DividendEntry {
 
 export interface FormGenerationResponse {
   formId: string;
-  pdfUrl: string;
+  pdfUrl?: string; // Legacy/Fallback
+  pdf5000Url?: string; // URL for Form 5000
+  pdf5001Url?: string; // URL for Form 5001
+  zipUrl?: string; // URL for the ZIP archive (download)
   fileName: string;
   generatedAt: string;
 }

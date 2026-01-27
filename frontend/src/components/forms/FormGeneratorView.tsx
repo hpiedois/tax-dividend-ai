@@ -16,7 +16,7 @@ export function FormGeneratorView() {
   const [user] = useAtom(userAtom);
   const [scanResults] = useAtom(scanResultsAtom);
   const [showPreview, setShowPreview] = useState(false);
-  const [generatedForm, setGeneratedForm] = useState<{ pdfUrl: string; formId: string } | null>(null);
+  const [generatedForm, setGeneratedForm] = useState<{ pdf5000Url?: string; pdf5001Url?: string; pdfUrl?: string; zipUrl?: string; formId: string } | null>(null);
 
   // Form data state
   const [taxYear, setTaxYear] = useState(new Date().getFullYear() - 1);
@@ -61,7 +61,7 @@ export function FormGeneratorView() {
       { formData, includeForm5000: true },
       {
         onSuccess: (data) => {
-          setGeneratedForm({ pdfUrl: data.pdfUrl, formId: data.formId });
+          setGeneratedForm(data);
           setShowPreview(true);
         },
       }
@@ -90,12 +90,16 @@ export function FormGeneratorView() {
           <Button variant="ghost" onClick={() => setShowPreview(false)}>
             ← {t('common.back')}
           </Button>
-          <Button onClick={() => window.open(`/api/forms/${generatedForm.formId}/download`, '_blank')}>
+          <Button onClick={() => window.open(generatedForm.zipUrl || generatedForm.pdfUrl, '_blank')}>
             <Download className="w-4 h-4 mr-2" />
             {t('forms.download')}
           </Button>
         </div>
-        <FormPreview pdfUrl={generatedForm.pdfUrl} />
+        <FormPreview
+          pdfUrl={generatedForm.pdfUrl}
+          pdf5000Url={generatedForm.pdf5000Url}
+          pdf5001Url={generatedForm.pdf5001Url}
+        />
       </div>
     );
   }
