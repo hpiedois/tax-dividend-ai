@@ -57,7 +57,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const register = async (data: RegisterData) => {
-        await api.post('/auth/register', data);
+        // Mock registration for development
+        console.log('Mock register with:', data);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+        // Simulate successful registration
+        // In a real app we might auto-login or just return
     };
 
     const verifyEmail = async (token: string) => {

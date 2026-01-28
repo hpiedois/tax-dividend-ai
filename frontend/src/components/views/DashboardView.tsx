@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { ArrowUpRight, Clock, CheckCircle, FileText, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, Clock, CheckCircle, ArrowRight } from 'lucide-react';
 import { MockSelector } from '../debug/MockSelector';
 import { SCENARIOS } from '../../lib/mock-scenarios';
 

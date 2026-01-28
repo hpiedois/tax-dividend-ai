@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LogoFinFinal } from '../components/ui/AppLogos';
-import { User, Lock, ArrowRight } from 'lucide-react';
+import { User, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
     const { t } = useTranslation();
@@ -11,6 +11,7 @@ export const Login: React.FC = () => {
     const navigate = useNavigate();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -72,17 +73,28 @@ export const Login: React.FC = () => {
 
                     <div className="space-y-1.5">
                         <div className="relative group">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-600 group-focus-within:text-brand-500 transition-colors">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-700 transition-colors">
                                 <Lock size={20} strokeWidth={2} />
                             </div>
                             <input
                                 name="password"
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 required
-                                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-100 border border-slate-200 dark:border-slate-200 rounded-xl focus:bg-white dark:focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium disabled:opacity-50"
+                                className="w-full pl-12 pr-12 py-3.5 bg-slate-50 dark:bg-slate-100 border border-slate-200 dark:border-slate-200 rounded-xl focus:bg-white dark:focus:bg-white focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500 outline-none transition-all text-slate-900 placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium disabled:opacity-50"
                                 placeholder={t('auth.password_placeholder')}
                                 disabled={loading}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-700 transition-colors outline-none"
+                            >
+                                {showPassword ? (
+                                    <EyeOff size={18} strokeWidth={2} />
+                                ) : (
+                                    <Eye size={18} strokeWidth={2} />
+                                )}
+                            </button>
                         </div>
                     </div>
 
@@ -105,6 +117,9 @@ export const Login: React.FC = () => {
                         </button>
                     </div>
                 </form>
+                <p className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400 font-medium">
+                    {t('auth.no_account', "Don't have an account?")} <Link to="/register" className="text-brand-600 dark:text-brand-500 font-bold hover:text-brand-700 dark:hover:text-brand-400 hover:underline transition-all ml-1">{t('auth.register_link', "Create Account")}</Link>
+                </p>
             </div>
         </div>
     );
