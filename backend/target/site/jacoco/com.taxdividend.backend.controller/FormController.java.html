@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.controller</a> &gt; <span class="el_source">FormController.java</span></div><h1>FormController.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.controller;
+
+import com.taxdividend.backend.api.FormsApi;
+import com.taxdividend.backend.api.dto.FormGenerationRequest;
+import com.taxdividend.backend.api.dto.GenerateFormResultDTO; // API DTO
+import com.taxdividend.backend.mapper.FormMapper;
+import com.taxdividend.backend.service.AuditService;
+import com.taxdividend.backend.service.FormService;
+import com.taxdividend.backend.service.PdfGenerationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.ByteArrayInputStream;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * REST Controller for tax form generation and management.
+ *
+ * Endpoints:
+ * - POST /internal/forms/generate - Generate tax forms (5000, 5001, BUNDLE)
+ * - GET /internal/forms - List user's generated forms
+ * - GET /internal/forms/{id} - Get form metadata
+ * - GET /internal/forms/{id}/download - Download form PDF/ZIP
+ * - GET /internal/forms/{id}/download-url - Get pre-signed download URL
+ * - POST /internal/forms/{id}/regenerate - Regenerate an expired form
+ * - DELETE /internal/forms/{id} - Delete form
+ */
+<span class="fc" id="L40">@Slf4j</span>
+@RestController
+@RequestMapping(&quot;/internal&quot;)
+@RequiredArgsConstructor
+@Tag(name = &quot;Forms&quot;, description = &quot;Tax form generation and download API&quot;)
+public class FormController implements FormsApi {
+
+    private final PdfGenerationService pdfGenerationService;
+    // GeneratedFormRepository removed
+    // StorageService removed (handled in service)
+    private final AuditService auditService; // Used for generation log
+    private final FormMapper formMapper;
+    private final FormService formService;
+
+    /**
+     * Generate tax forms (5000, 5001, or BUNDLE).
+     */
+    @Override
+    public ResponseEntity&lt;com.taxdividend.backend.api.dto.GenerateFormResultDTO&gt; generateForms(
+            UUID xUserId,
+            FormGenerationRequest request) {
+
+<span class="fc" id="L62">        request.setUserId(xUserId);</span>
+
+<span class="fc" id="L64">        log.info(&quot;Generating forms for user {}: type={}, year={}, dividends={}&quot;,</span>
+<span class="fc" id="L65">                xUserId, request.getFormType(), request.getTaxYear(),</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">                request.getDividendIds() != null ? request.getDividendIds().size() : 0);</span>
+
+        try {
+<span class="fc" id="L69">            com.taxdividend.backend.dto.GenerateFormResultDTO result = pdfGenerationService.generateForms(request);</span>
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            if (result.getSuccess()) {</span>
+                // Audit log
+<span class="fc" id="L73">                auditService.logFormGeneration(xUserId, result.getFormId(),</span>
+<span class="fc" id="L74">                        result.getFormType(), result.getDividendCount());</span>
+
+<span class="fc" id="L76">                log.info(&quot;Form generated successfully: {} ({})&quot;, result.getFormId(), result.getFormType());</span>
+            }
+
+<span class="fc" id="L79">            return ResponseEntity.ok(formMapper.toApiResultDto(result));</span>
+
+<span class="fc" id="L81">        } catch (Exception e) {</span>
+<span class="fc" id="L82">            log.error(&quot;Failed to generate forms&quot;, e);</span>
+
+<span class="fc" id="L84">            com.taxdividend.backend.api.dto.GenerateFormResultDTO errorResult = new com.taxdividend.backend.api.dto.GenerateFormResultDTO();</span>
+<span class="fc" id="L85">            errorResult.setSuccess(false);</span>
+<span class="fc" id="L86">            errorResult.setErrors(List.of(&quot;Generation failed: &quot; + e.getMessage()));</span>
+
+<span class="fc" id="L88">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="fc" id="L89">                    .body(errorResult);</span>
+        }
+    }
+
+    /**
+     * List all forms for a user.
+     */
+    @Override
+    public ResponseEntity&lt;List&lt;com.taxdividend.backend.api.dto.GeneratedForm&gt;&gt; listForms(
+            UUID xUserId,
+            Integer taxYear,
+            String formType) {
+
+<span class="fc" id="L102">        List&lt;com.taxdividend.backend.api.dto.GeneratedForm&gt; forms = formService.listForms(xUserId, taxYear, formType);</span>
+<span class="fc" id="L103">        log.info(&quot;Retrieved {} forms for user {}&quot;, forms.size(), xUserId);</span>
+
+<span class="fc" id="L105">        return ResponseEntity.ok(forms);</span>
+    }
+
+    /**
+     * Get form metadata by ID.
+     */
+    @Override
+    public ResponseEntity&lt;com.taxdividend.backend.api.dto.GeneratedForm&gt; getForm(
+            UUID id,
+            UUID xUserId) {
+
+<span class="fc" id="L116">        return formService.getForm(id, xUserId)</span>
+<span class="fc" id="L117">                .map(ResponseEntity::ok)</span>
+<span class="fc" id="L118">                .orElse(ResponseEntity.notFound().build());</span>
+    }
+
+    /**
+     * Download form PDF or ZIP.
+     */
+    @Override
+    public ResponseEntity&lt;Resource&gt; downloadForm(
+            UUID id,
+            UUID xUserId) {
+
+<span class="fc" id="L129">        return formService.downloadForm(id, xUserId);</span>
+    }
+
+    /**
+     * Get pre-signed download URL (for frontend to download directly from S3).
+     */
+    @GetMapping(&quot;/{id}/download-url&quot;)
+    @Operation(summary = &quot;Get download URL&quot;, description = &quot;Get a temporary pre-signed URL for downloading the form&quot;)
+    public ResponseEntity&lt;String&gt; getDownloadUrl(
+            @Parameter(description = &quot;Form ID&quot;) @PathVariable UUID id,
+            @Parameter(description = &quot;User ID&quot;) @RequestHeader(&quot;X-User-Id&quot;) String userIdHeader,
+            @Parameter(description = &quot;URL expiration in hours&quot;) @RequestParam(defaultValue = &quot;24&quot;) int expirationHours) {
+
+<span class="nc" id="L142">        UUID userId = UUID.fromString(userIdHeader);</span>
+
+<span class="nc" id="L144">        return formService.getDownloadUrl(id, userId, expirationHours)</span>
+<span class="nc" id="L145">                .map(ResponseEntity::ok)</span>
+<span class="nc" id="L146">                .orElse(ResponseEntity.notFound().build());</span>
+    }
+
+    /**
+     * Regenerate an expired or lost form.
+     */
+    @PostMapping(&quot;/{id}/regenerate&quot;)
+    @Operation(summary = &quot;Regenerate form&quot;, description = &quot;Regenerate a form that has expired or been lost&quot;)
+    public ResponseEntity&lt;GenerateFormResultDTO&gt; regenerateForm(
+            @Parameter(description = &quot;Form ID&quot;) @PathVariable UUID id,
+            @Parameter(description = &quot;User ID&quot;) @RequestHeader(&quot;X-User-Id&quot;) String userIdHeader) {
+
+<span class="nc" id="L158">        UUID userId = UUID.fromString(userIdHeader);</span>
+
+        // Verification of existence logic handled in service ideally, but
+        // pdfGenerationService might need ID.
+        // Assuming pdfGenerationService handles it.
+        // But wait, existing code checked existence first via repo.
+        // I should stick to existing behavior if I can, or delegate.
+        // Actually, PdfGenerationService.regenerateForm probably handles loading.
+        // But current controller code loaded entity to check user ownership!
+        /*
+         * GeneratedForm existingForm = generatedFormRepository.findById(id)
+         * .filter(f -&gt; f.getUser().getId().equals(userId))
+         * .orElse(null);
+         */
+
+<span class="nc" id="L173">        Optional&lt;com.taxdividend.backend.api.dto.GeneratedForm&gt; formOpt = formService.getForm(id, userId);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        if (formOpt.isEmpty()) {</span>
+<span class="nc" id="L175">            return ResponseEntity.notFound().build();</span>
+        }
+
+        try {
+<span class="nc" id="L179">            com.taxdividend.backend.dto.GenerateFormResultDTO result = pdfGenerationService.regenerateForm(id);</span>
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">            if (result.getSuccess()) {</span>
+                // Audit log
+<span class="nc" id="L183">                auditService.logAction(userId, &quot;FORM_REGENERATED&quot;, &quot;FORM&quot;, id, null, null, null);</span>
+
+<span class="nc" id="L185">                log.info(&quot;Form {} regenerated successfully for user {}&quot;, id, userId);</span>
+            }
+
+            // Need to map Result DTO (backend) to API DTO.
+            // result is backend DTO (com.taxdividend.backend.dto.GenerateFormResultDTO)
+            // generic return type is GenerateFormResultDTO (API)
+            // Controller signature says ResponseEntity&lt;GenerateFormResultDTO&gt; but imports
+            // are inconsistent.
+            // Using formMapper.toApiResultDto(result)
+<span class="nc" id="L194">            return ResponseEntity.ok(formMapper.toApiResultDto(result));</span>
+
+<span class="nc" id="L196">        } catch (Exception e) {</span>
+<span class="nc" id="L197">            log.error(&quot;Failed to regenerate form {}&quot;, id, e);</span>
+
+<span class="nc" id="L199">            com.taxdividend.backend.api.dto.GenerateFormResultDTO errorRes = new com.taxdividend.backend.api.dto.GenerateFormResultDTO();</span>
+<span class="nc" id="L200">            errorRes.setSuccess(false);</span>
+<span class="nc" id="L201">            errorRes.setErrors(List.of(&quot;Regeneration failed: &quot; + e.getMessage()));</span>
+
+<span class="nc" id="L203">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L204">                    .body(errorRes);</span>
+        }
+    }
+
+    /**
+     * Delete a form.
+     */
+    @Override
+    public ResponseEntity&lt;Void&gt; deleteForm(
+            UUID id,
+            UUID xUserId) {
+
+        try {
+<span class="fc" id="L217">            formService.deleteForm(id, xUserId);</span>
+<span class="fc" id="L218">            return ResponseEntity.noContent().build();</span>
+<span class="nc" id="L219">        } catch (Exception e) {</span>
+<span class="nc" id="L220">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();</span>
+        }
+    }
+
+    /**
+     * Get forms by status.
+     * Fixed: Returns DTOs
+     */
+    @GetMapping(&quot;/by-status&quot;)
+    @Operation(summary = &quot;Get forms by status&quot;, description = &quot;Filter forms by status (GENERATED, SIGNED, SUBMITTED, etc.)&quot;)
+    public ResponseEntity&lt;List&lt;com.taxdividend.backend.api.dto.GeneratedForm&gt;&gt; getFormsByStatus(
+            @Parameter(description = &quot;User ID&quot;) @RequestHeader(&quot;X-User-Id&quot;) String userIdHeader,
+            @Parameter(description = &quot;Status filter&quot;) @RequestParam String status) {
+
+<span class="nc" id="L234">        UUID userId = UUID.fromString(userIdHeader);</span>
+
+<span class="nc" id="L236">        List&lt;com.taxdividend.backend.api.dto.GeneratedForm&gt; forms = formService.getFormsByStatus(userId, status);</span>
+
+<span class="nc" id="L238">        log.info(&quot;Found {} forms with status {} for user {}&quot;, forms.size(), status, userId);</span>
+
+<span class="nc" id="L240">        return ResponseEntity.ok(forms);</span>
+    }
+
+    /**
+     * Generate forms for all unsubmitted dividends.
+     */
+    @PostMapping(&quot;/generate-all-unsubmitted&quot;)
+    @Operation(summary = &quot;Generate for all unsubmitted dividends&quot;, description = &quot;Automatically generate forms for all dividends not yet linked to a form&quot;)
+    public ResponseEntity&lt;com.taxdividend.backend.api.dto.GenerateFormResultDTO&gt; generateForAllUnsubmitted(
+            @Parameter(description = &quot;User ID&quot;) @RequestHeader(&quot;X-User-Id&quot;) String userIdHeader,
+            @Parameter(description = &quot;Tax year&quot;) @RequestParam Integer taxYear,
+            @Parameter(description = &quot;Bundle type (5000, 5001, BUNDLE)&quot;) @RequestParam(defaultValue = &quot;BUNDLE&quot;) String bundleType) {
+
+<span class="nc" id="L253">        UUID userId = UUID.fromString(userIdHeader);</span>
+
+        try {
+<span class="nc" id="L256">            com.taxdividend.backend.dto.GenerateFormResultDTO result = pdfGenerationService.generateForUserDividends(</span>
+                    userId, taxYear, bundleType);
+
+<span class="nc bnc" id="L259" title="All 2 branches missed.">            if (result.getSuccess()) {</span>
+                // Audit log
+<span class="nc" id="L261">                auditService.logFormGeneration(userId, result.getFormId(),</span>
+<span class="nc" id="L262">                        result.getFormType(), result.getDividendCount());</span>
+
+<span class="nc" id="L264">                log.info(&quot;Generated {} for all unsubmitted dividends: {} dividends&quot;,</span>
+<span class="nc" id="L265">                        bundleType, result.getDividendCount());</span>
+            }
+
+<span class="nc" id="L268">            return ResponseEntity.ok(formMapper.toApiResultDto(result));</span>
+
+<span class="nc" id="L270">        } catch (Exception e) {</span>
+<span class="nc" id="L271">            log.error(&quot;Failed to generate forms for unsubmitted dividends&quot;, e);</span>
+
+<span class="nc" id="L273">            com.taxdividend.backend.api.dto.GenerateFormResultDTO error = new com.taxdividend.backend.api.dto.GenerateFormResultDTO();</span>
+<span class="nc" id="L274">            error.setSuccess(false);</span>
+<span class="nc" id="L275">            error.setErrors(List.of(&quot;Generation failed: &quot; + e.getMessage()));</span>
+
+<span class="nc" id="L277">            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)</span>
+<span class="nc" id="L278">                    .body(error);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

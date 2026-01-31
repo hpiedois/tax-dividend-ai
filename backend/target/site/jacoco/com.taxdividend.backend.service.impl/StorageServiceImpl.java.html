@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StorageServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.service.impl</a> &gt; <span class="el_source">StorageServiceImpl.java</span></div><h1>StorageServiceImpl.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.service.impl;
+
+import com.taxdividend.backend.dto.FileUploadResultDTO;
+import com.taxdividend.backend.exception.StorageException;
+import com.taxdividend.backend.repository.GeneratedFormRepository;
+import com.taxdividend.backend.service.StorageService;
+import io.minio.*;
+import io.minio.errors.*;
+import io.minio.http.Method;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
+import io.minio.messages.Item;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Implementation of storage service using MinIO (S3-compatible).
+ */
+<span class="fc" id="L33">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+public class StorageServiceImpl implements StorageService {
+
+    private final MinioClient minioClient;
+    private final GeneratedFormRepository generatedFormRepository;
+
+    @Value(&quot;${storage.s3.bucket}&quot;)
+    private String bucketName;
+
+    @Value(&quot;${app.forms.expiry-days:30}&quot;)
+    private int formExpiryDays;
+
+<span class="fc" id="L47">    private static final Duration DEFAULT_PRESIGNED_URL_EXPIRATION = Duration.ofHours(1);</span>
+
+    @Override
+    public FileUploadResultDTO uploadFile(MultipartFile file, String folder) {
+        try {
+<span class="fc" id="L52">            String s3Key = generateS3Key(folder, file.getOriginalFilename());</span>
+<span class="fc" id="L53">            return uploadFileWithKey(file, s3Key);</span>
+<span class="nc" id="L54">        } catch (Exception e) {</span>
+<span class="nc" id="L55">            log.error(&quot;Failed to upload file: {}&quot;, file.getOriginalFilename(), e);</span>
+<span class="nc" id="L56">            return FileUploadResultDTO.builder()</span>
+<span class="nc" id="L57">                    .fileName(file.getOriginalFilename())</span>
+<span class="nc" id="L58">                    .success(false)</span>
+<span class="nc" id="L59">                    .errorMessage(&quot;Upload failed: &quot; + e.getMessage())</span>
+<span class="nc" id="L60">                    .build();</span>
+        }
+    }
+
+    @Override
+    public FileUploadResultDTO uploadFile(InputStream inputStream, String fileName,
+                                          String contentType, String folder) {
+        try {
+<span class="fc" id="L68">            String s3Key = generateS3Key(folder, fileName);</span>
+
+            // Need to know stream size - MinIO requires it
+<span class="fc" id="L71">            byte[] bytes = inputStream.readAllBytes();</span>
+
+<span class="fc" id="L73">            PutObjectArgs args = PutObjectArgs.builder()</span>
+<span class="fc" id="L74">                    .bucket(bucketName)</span>
+<span class="fc" id="L75">                    .object(s3Key)</span>
+<span class="fc" id="L76">                    .stream(new java.io.ByteArrayInputStream(bytes), bytes.length, -1)</span>
+<span class="fc" id="L77">                    .contentType(contentType)</span>
+<span class="fc" id="L78">                    .build();</span>
+
+<span class="fc" id="L80">            ObjectWriteResponse response = minioClient.putObject(args);</span>
+
+<span class="fc" id="L82">            log.info(&quot;File uploaded successfully: {} ({} bytes)&quot;, s3Key, bytes.length);</span>
+
+<span class="fc" id="L84">            return FileUploadResultDTO.builder()</span>
+<span class="fc" id="L85">                    .s3Key(s3Key)</span>
+<span class="fc" id="L86">                    .bucketName(bucketName)</span>
+<span class="fc" id="L87">                    .fileName(fileName)</span>
+<span class="fc" id="L88">                    .fileSize((long) bytes.length)</span>
+<span class="fc" id="L89">                    .contentType(contentType)</span>
+<span class="fc" id="L90">                    .etag(response.etag())</span>
+<span class="fc" id="L91">                    .uploadedAt(LocalDateTime.now())</span>
+<span class="fc" id="L92">                    .success(true)</span>
+<span class="fc" id="L93">                    .build();</span>
+
+<span class="nc" id="L95">        } catch (Exception e) {</span>
+<span class="nc" id="L96">            log.error(&quot;Failed to upload file: {}&quot;, fileName, e);</span>
+<span class="nc" id="L97">            return FileUploadResultDTO.builder()</span>
+<span class="nc" id="L98">                    .fileName(fileName)</span>
+<span class="nc" id="L99">                    .success(false)</span>
+<span class="nc" id="L100">                    .errorMessage(&quot;Upload failed: &quot; + e.getMessage())</span>
+<span class="nc" id="L101">                    .build();</span>
+        }
+    }
+
+    @Override
+    public FileUploadResultDTO uploadFileWithKey(MultipartFile file, String s3Key) {
+        try {
+<span class="fc" id="L108">            ensureBucketExists();</span>
+
+<span class="fc" id="L110">            PutObjectArgs args = PutObjectArgs.builder()</span>
+<span class="fc" id="L111">                    .bucket(bucketName)</span>
+<span class="fc" id="L112">                    .object(s3Key)</span>
+<span class="fc" id="L113">                    .stream(file.getInputStream(), file.getSize(), -1)</span>
+<span class="fc" id="L114">                    .contentType(file.getContentType())</span>
+<span class="fc" id="L115">                    .build();</span>
+
+<span class="fc" id="L117">            ObjectWriteResponse response = minioClient.putObject(args);</span>
+
+<span class="fc" id="L119">            log.info(&quot;File uploaded successfully: {} ({} bytes)&quot;, s3Key, file.getSize());</span>
+
+<span class="fc" id="L121">            return FileUploadResultDTO.builder()</span>
+<span class="fc" id="L122">                    .s3Key(s3Key)</span>
+<span class="fc" id="L123">                    .bucketName(bucketName)</span>
+<span class="fc" id="L124">                    .fileName(file.getOriginalFilename())</span>
+<span class="fc" id="L125">                    .fileSize(file.getSize())</span>
+<span class="fc" id="L126">                    .contentType(file.getContentType())</span>
+<span class="fc" id="L127">                    .etag(response.etag())</span>
+<span class="fc" id="L128">                    .uploadedAt(LocalDateTime.now())</span>
+<span class="fc" id="L129">                    .success(true)</span>
+<span class="fc" id="L130">                    .build();</span>
+
+<span class="fc" id="L132">        } catch (Exception e) {</span>
+<span class="fc" id="L133">            log.error(&quot;Failed to upload file with key {}: {}&quot;, s3Key, e.getMessage(), e);</span>
+<span class="fc" id="L134">            return FileUploadResultDTO.builder()</span>
+<span class="fc" id="L135">                    .fileName(file.getOriginalFilename())</span>
+<span class="fc" id="L136">                    .s3Key(s3Key)</span>
+<span class="fc" id="L137">                    .success(false)</span>
+<span class="fc" id="L138">                    .errorMessage(&quot;Upload failed: &quot; + e.getMessage())</span>
+<span class="fc" id="L139">                    .build();</span>
+        }
+    }
+
+    @Override
+    public InputStream downloadFile(String s3Key) {
+        try {
+<span class="fc" id="L146">            log.debug(&quot;Downloading file: {}&quot;, s3Key);</span>
+
+<span class="fc" id="L148">            GetObjectArgs args = GetObjectArgs.builder()</span>
+<span class="fc" id="L149">                    .bucket(bucketName)</span>
+<span class="fc" id="L150">                    .object(s3Key)</span>
+<span class="fc" id="L151">                    .build();</span>
+
+<span class="fc" id="L153">            return minioClient.getObject(args);</span>
+
+<span class="nc" id="L155">        } catch (Exception e) {</span>
+<span class="nc" id="L156">            log.error(&quot;Failed to download file: {}&quot;, s3Key, e);</span>
+<span class="nc" id="L157">            throw new StorageException(&quot;Failed to download file: &quot; + s3Key, e);</span>
+        }
+    }
+
+    @Override
+    public byte[] downloadFileAsBytes(String s3Key) {
+<span class="fc" id="L163">        try (InputStream inputStream = downloadFile(s3Key)) {</span>
+<span class="fc" id="L164">            return inputStream.readAllBytes();</span>
+<span class="nc" id="L165">        } catch (IOException e) {</span>
+<span class="nc" id="L166">            log.error(&quot;Failed to read file bytes: {}&quot;, s3Key, e);</span>
+<span class="nc" id="L167">            throw new StorageException(&quot;Failed to read file: &quot; + s3Key, e);</span>
+        }
+    }
+
+    @Override
+    public String generatePresignedUrl(String s3Key, Duration expiration) {
+        try {
+<span class="fc" id="L174">            log.debug(&quot;Generating presigned URL for: {} (expires in {})&quot;, s3Key, expiration);</span>
+
+<span class="fc" id="L176">            GetPresignedObjectUrlArgs args = GetPresignedObjectUrlArgs.builder()</span>
+<span class="fc" id="L177">                    .method(Method.GET)</span>
+<span class="fc" id="L178">                    .bucket(bucketName)</span>
+<span class="fc" id="L179">                    .object(s3Key)</span>
+<span class="fc" id="L180">                    .expiry((int) expiration.getSeconds(), TimeUnit.SECONDS)</span>
+<span class="fc" id="L181">                    .build();</span>
+
+<span class="fc" id="L183">            String url = minioClient.getPresignedObjectUrl(args);</span>
+<span class="fc" id="L184">            log.debug(&quot;Generated presigned URL: {}&quot;, url);</span>
+
+<span class="fc" id="L186">            return url;</span>
+
+<span class="nc" id="L188">        } catch (Exception e) {</span>
+<span class="nc" id="L189">            log.error(&quot;Failed to generate presigned URL for: {}&quot;, s3Key, e);</span>
+<span class="nc" id="L190">            throw new StorageException(&quot;Failed to generate presigned URL: &quot; + s3Key, e);</span>
+        }
+    }
+
+    @Override
+    public String generatePresignedUrl(String s3Key) {
+<span class="nc" id="L196">        return generatePresignedUrl(s3Key, DEFAULT_PRESIGNED_URL_EXPIRATION);</span>
+    }
+
+    @Override
+    public boolean deleteFile(String s3Key) {
+        try {
+<span class="fc" id="L202">            log.info(&quot;Deleting file: {}&quot;, s3Key);</span>
+
+<span class="fc" id="L204">            RemoveObjectArgs args = RemoveObjectArgs.builder()</span>
+<span class="fc" id="L205">                    .bucket(bucketName)</span>
+<span class="fc" id="L206">                    .object(s3Key)</span>
+<span class="fc" id="L207">                    .build();</span>
+
+<span class="fc" id="L209">            minioClient.removeObject(args);</span>
+<span class="fc" id="L210">            log.info(&quot;File deleted successfully: {}&quot;, s3Key);</span>
+
+<span class="fc" id="L212">            return true;</span>
+
+<span class="nc" id="L214">        } catch (Exception e) {</span>
+<span class="nc" id="L215">            log.error(&quot;Failed to delete file: {}&quot;, s3Key, e);</span>
+<span class="nc" id="L216">            return false;</span>
+        }
+    }
+
+    @Override
+    public int deleteFiles(List&lt;String&gt; s3Keys) {
+<span class="pc bpc" id="L222" title="2 of 4 branches missed.">        if (s3Keys == null || s3Keys.isEmpty()) {</span>
+<span class="nc" id="L223">            return 0;</span>
+        }
+
+        try {
+<span class="fc" id="L227">            List&lt;DeleteObject&gt; objects = s3Keys.stream()</span>
+<span class="fc" id="L228">                    .map(DeleteObject::new)</span>
+<span class="fc" id="L229">                    .toList();</span>
+
+<span class="fc" id="L231">            RemoveObjectsArgs args = RemoveObjectsArgs.builder()</span>
+<span class="fc" id="L232">                    .bucket(bucketName)</span>
+<span class="fc" id="L233">                    .objects(objects)</span>
+<span class="fc" id="L234">                    .build();</span>
+
+<span class="fc" id="L236">            Iterable&lt;Result&lt;DeleteError&gt;&gt; results = minioClient.removeObjects(args);</span>
+
+<span class="fc" id="L238">            int deletedCount = 0;</span>
+<span class="fc" id="L239">            int errorCount = 0;</span>
+
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">            for (Result&lt;DeleteError&gt; result : results) {</span>
+                try {
+<span class="nc" id="L243">                    DeleteError error = result.get();</span>
+<span class="nc" id="L244">                    log.error(&quot;Failed to delete object: {} - {}&quot;, error.objectName(), error.message());</span>
+<span class="nc" id="L245">                    errorCount++;</span>
+<span class="nc" id="L246">                } catch (Exception e) {</span>
+                    // No error means success
+<span class="nc" id="L248">                    deletedCount++;</span>
+<span class="nc" id="L249">                }</span>
+<span class="nc" id="L250">            }</span>
+
+<span class="fc" id="L252">            log.info(&quot;Batch delete completed: {} deleted, {} errors&quot;, deletedCount, errorCount);</span>
+<span class="fc" id="L253">            return deletedCount;</span>
+
+<span class="nc" id="L255">        } catch (Exception e) {</span>
+<span class="nc" id="L256">            log.error(&quot;Failed to delete files batch&quot;, e);</span>
+<span class="nc" id="L257">            return 0;</span>
+        }
+    }
+
+    @Override
+    public boolean fileExists(String s3Key) {
+        try {
+<span class="fc" id="L264">            StatObjectArgs args = StatObjectArgs.builder()</span>
+<span class="fc" id="L265">                    .bucket(bucketName)</span>
+<span class="fc" id="L266">                    .object(s3Key)</span>
+<span class="fc" id="L267">                    .build();</span>
+
+<span class="fc" id="L269">            minioClient.statObject(args);</span>
+<span class="fc" id="L270">            return true;</span>
+
+<span class="nc" id="L272">        } catch (Exception e) {</span>
+<span class="nc" id="L273">            log.debug(&quot;File does not exist: {}&quot;, s3Key);</span>
+<span class="nc" id="L274">            return false;</span>
+        }
+    }
+
+    @Override
+    public long getFileSize(String s3Key) {
+        try {
+<span class="nc" id="L281">            StatObjectArgs args = StatObjectArgs.builder()</span>
+<span class="nc" id="L282">                    .bucket(bucketName)</span>
+<span class="nc" id="L283">                    .object(s3Key)</span>
+<span class="nc" id="L284">                    .build();</span>
+
+<span class="nc" id="L286">            StatObjectResponse stat = minioClient.statObject(args);</span>
+<span class="nc" id="L287">            return stat.size();</span>
+
+<span class="nc" id="L289">        } catch (Exception e) {</span>
+<span class="nc" id="L290">            log.error(&quot;Failed to get file size: {}&quot;, s3Key, e);</span>
+<span class="nc" id="L291">            return -1;</span>
+        }
+    }
+
+    @Override
+    public List&lt;String&gt; listFiles(String folderPrefix) {
+<span class="nc" id="L297">        List&lt;String&gt; fileKeys = new ArrayList&lt;&gt;();</span>
+
+        try {
+<span class="nc" id="L300">            ListObjectsArgs args = ListObjectsArgs.builder()</span>
+<span class="nc" id="L301">                    .bucket(bucketName)</span>
+<span class="nc" id="L302">                    .prefix(folderPrefix)</span>
+<span class="nc" id="L303">                    .recursive(true)</span>
+<span class="nc" id="L304">                    .build();</span>
+
+<span class="nc" id="L306">            Iterable&lt;Result&lt;Item&gt;&gt; results = minioClient.listObjects(args);</span>
+
+<span class="nc bnc" id="L308" title="All 2 branches missed.">            for (Result&lt;Item&gt; result : results) {</span>
+                try {
+<span class="nc" id="L310">                    Item item = result.get();</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">                    if (!item.isDir()) {</span>
+<span class="nc" id="L312">                        fileKeys.add(item.objectName());</span>
+                    }
+<span class="nc" id="L314">                } catch (Exception e) {</span>
+<span class="nc" id="L315">                    log.error(&quot;Error processing list result&quot;, e);</span>
+<span class="nc" id="L316">                }</span>
+<span class="nc" id="L317">            }</span>
+
+<span class="nc" id="L319">            log.debug(&quot;Found {} files in folder: {}&quot;, fileKeys.size(), folderPrefix);</span>
+
+<span class="nc" id="L321">        } catch (Exception e) {</span>
+<span class="nc" id="L322">            log.error(&quot;Failed to list files in folder: {}&quot;, folderPrefix, e);</span>
+<span class="nc" id="L323">        }</span>
+
+<span class="nc" id="L325">        return fileKeys;</span>
+    }
+
+    @Override
+    public int cleanupExpiredFiles() {
+<span class="nc" id="L330">        log.info(&quot;Starting cleanup of expired files (older than {} days)&quot;, formExpiryDays);</span>
+
+<span class="nc" id="L332">        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(formExpiryDays);</span>
+
+        // Find expired forms from database
+<span class="nc" id="L335">        var expiredForms = generatedFormRepository.findExpiredForms(cutoffDate);</span>
+
+<span class="nc bnc" id="L337" title="All 2 branches missed.">        if (expiredForms.isEmpty()) {</span>
+<span class="nc" id="L338">            log.info(&quot;No expired forms found&quot;);</span>
+<span class="nc" id="L339">            return 0;</span>
+        }
+
+<span class="nc" id="L342">        List&lt;String&gt; s3KeysToDelete = expiredForms.stream()</span>
+<span class="nc" id="L343">                .map(form -&gt; form.getS3Key())</span>
+<span class="nc" id="L344">                .toList();</span>
+
+<span class="nc" id="L346">        int deletedCount = deleteFiles(s3KeysToDelete);</span>
+
+        // Also delete form records
+<span class="nc" id="L349">        generatedFormRepository.deleteAll(expiredForms);</span>
+
+<span class="nc" id="L351">        log.info(&quot;Cleanup completed: {} files and {} database records deleted&quot;,</span>
+<span class="nc" id="L352">                 deletedCount, expiredForms.size());</span>
+
+<span class="nc" id="L354">        return deletedCount;</span>
+    }
+
+    @Override
+    public String generateS3Key(String folder, String fileName) {
+        // Generate unique key: folder/YYYY/MM/uuid_filename
+<span class="fc" id="L360">        LocalDateTime now = LocalDateTime.now();</span>
+<span class="fc" id="L361">        String uuid = UUID.randomUUID().toString();</span>
+
+<span class="fc" id="L363">        String sanitizedFileName = fileName.replaceAll(&quot;[^a-zA-Z0-9._-]&quot;, &quot;_&quot;);</span>
+
+<span class="fc" id="L365">        return String.format(&quot;%s/%d/%02d/%s_%s&quot;,</span>
+                             folder,
+<span class="fc" id="L367">                             now.getYear(),</span>
+<span class="fc" id="L368">                             now.getMonthValue(),</span>
+                             uuid,
+                             sanitizedFileName);
+    }
+
+    // ========================================
+    // Private Helper Methods
+    // ========================================
+
+    /**
+     * Ensure the bucket exists, create if not.
+     */
+    private void ensureBucketExists() {
+        try {
+<span class="fc" id="L382">            boolean exists = minioClient.bucketExists(</span>
+<span class="fc" id="L383">                    BucketExistsArgs.builder().bucket(bucketName).build()</span>
+            );
+
+<span class="fc bfc" id="L386" title="All 2 branches covered.">            if (!exists) {</span>
+<span class="fc" id="L387">                log.info(&quot;Bucket {} does not exist, creating it&quot;, bucketName);</span>
+<span class="fc" id="L388">                minioClient.makeBucket(</span>
+<span class="fc" id="L389">                        MakeBucketArgs.builder().bucket(bucketName).build()</span>
+                );
+<span class="fc" id="L391">                log.info(&quot;Bucket {} created successfully&quot;, bucketName);</span>
+            }
+
+<span class="nc" id="L394">        } catch (Exception e) {</span>
+<span class="nc" id="L395">            log.error(&quot;Failed to ensure bucket exists: {}&quot;, bucketName, e);</span>
+<span class="nc" id="L396">            throw new StorageException(&quot;Failed to ensure bucket exists&quot;, e);</span>
+<span class="fc" id="L397">        }</span>
+<span class="fc" id="L398">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

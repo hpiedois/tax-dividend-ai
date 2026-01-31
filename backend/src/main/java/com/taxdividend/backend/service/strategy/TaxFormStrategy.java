@@ -1,6 +1,6 @@
 package com.taxdividend.backend.service.strategy;
 
-import com.taxdividend.backend.model.FormGenerationRequest;
+import com.taxdividend.backend.api.dto.FormGenerationRequest;
 
 public interface TaxFormStrategy {
 

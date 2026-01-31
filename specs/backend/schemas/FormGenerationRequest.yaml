@@ -1,0 +1,31 @@
+type: object
+required:
+  - userId
+  - taxYear
+  - formType
+properties:
+  userId:
+    type: string
+    format: uuid
+  taxYear:
+    type: integer
+  formType:
+    type: string
+    enum: ['5000', '5001', 'BUNDLE']
+  dividendIds:
+    type: array
+    items:
+      type: string
+      format: uuid
+  includeAttestation:
+    type: boolean
+    default: false
+  includeDividends:
+    type: boolean
+    default: false
+  canton:
+    type: string
+  address:
+    type: string
+  taxId:
+    type: string

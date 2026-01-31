@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormGenerationRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.api.dto</a> &gt; <span class="el_source">FormGenerationRequest.java</span></div><h1>FormGenerationRequest.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.api.dto;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.lang.Nullable;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+import jakarta.annotation.Generated;
+
+/**
+ * FormGenerationRequest
+ */
+
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;, date = &quot;2026-01-31T11:27:14.708089+01:00[Europe/Zurich]&quot;, comments = &quot;Generator version: 7.17.0&quot;)
+public class FormGenerationRequest {
+
+  private UUID userId;
+
+  private Integer taxYear;
+
+  /**
+   * Gets or Sets formType
+   */
+<span class="fc" id="L36">  public enum FormTypeEnum {</span>
+<span class="fc" id="L37">    _5000(&quot;5000&quot;),</span>
+    
+<span class="fc" id="L39">    _5001(&quot;5001&quot;),</span>
+    
+<span class="fc" id="L41">    BUNDLE(&quot;BUNDLE&quot;);</span>
+
+    private final String value;
+
+<span class="fc" id="L45">    FormTypeEnum(String value) {</span>
+<span class="fc" id="L46">      this.value = value;</span>
+<span class="fc" id="L47">    }</span>
+
+    @JsonValue
+    public String getValue() {
+<span class="fc" id="L51">      return value;</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="fc" id="L56">      return String.valueOf(value);</span>
+    }
+
+    @JsonCreator
+    public static FormTypeEnum fromValue(String value) {
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">      for (FormTypeEnum b : FormTypeEnum.values()) {</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (b.value.equals(value)) {</span>
+<span class="fc" id="L63">          return b;</span>
+        }
+      }
+<span class="nc" id="L66">      throw new IllegalArgumentException(&quot;Unexpected value '&quot; + value + &quot;'&quot;);</span>
+    }
+  }
+
+  private FormTypeEnum formType;
+
+<span class="fc" id="L72">  @Valid</span>
+  private List&lt;UUID&gt; dividendIds = new ArrayList&lt;&gt;();
+
+<span class="fc" id="L75">  private Boolean includeAttestation = false;</span>
+
+<span class="fc" id="L77">  private Boolean includeDividends = false;</span>
+
+  private @Nullable String canton;
+
+  private @Nullable String address;
+
+  private @Nullable String taxId;
+
+  public FormGenerationRequest() {
+<span class="fc" id="L86">    super();</span>
+<span class="fc" id="L87">  }</span>
+
+  /**
+   * Constructor with only required parameters
+   */
+<span class="fc" id="L92">  public FormGenerationRequest(UUID userId, Integer taxYear, FormTypeEnum formType) {</span>
+<span class="fc" id="L93">    this.userId = userId;</span>
+<span class="fc" id="L94">    this.taxYear = taxYear;</span>
+<span class="fc" id="L95">    this.formType = formType;</span>
+<span class="fc" id="L96">  }</span>
+
+  public FormGenerationRequest userId(UUID userId) {
+<span class="fc" id="L99">    this.userId = userId;</span>
+<span class="fc" id="L100">    return this;</span>
+  }
+
+  /**
+   * Get userId
+   * @return userId
+   */
+  @NotNull @Valid 
+  @JsonProperty(&quot;userId&quot;)
+  public UUID getUserId() {
+<span class="fc" id="L110">    return userId;</span>
+  }
+
+  public void setUserId(UUID userId) {
+<span class="fc" id="L114">    this.userId = userId;</span>
+<span class="fc" id="L115">  }</span>
+
+  public FormGenerationRequest taxYear(Integer taxYear) {
+<span class="fc" id="L118">    this.taxYear = taxYear;</span>
+<span class="fc" id="L119">    return this;</span>
+  }
+
+  /**
+   * Get taxYear
+   * @return taxYear
+   */
+  @NotNull 
+  @JsonProperty(&quot;taxYear&quot;)
+  public Integer getTaxYear() {
+<span class="fc" id="L129">    return taxYear;</span>
+  }
+
+  public void setTaxYear(Integer taxYear) {
+<span class="nc" id="L133">    this.taxYear = taxYear;</span>
+<span class="nc" id="L134">  }</span>
+
+  public FormGenerationRequest formType(FormTypeEnum formType) {
+<span class="fc" id="L137">    this.formType = formType;</span>
+<span class="fc" id="L138">    return this;</span>
+  }
+
+  /**
+   * Get formType
+   * @return formType
+   */
+  @NotNull 
+  @JsonProperty(&quot;formType&quot;)
+  public FormTypeEnum getFormType() {
+<span class="fc" id="L148">    return formType;</span>
+  }
+
+  public void setFormType(FormTypeEnum formType) {
+<span class="nc" id="L152">    this.formType = formType;</span>
+<span class="nc" id="L153">  }</span>
+
+  public FormGenerationRequest dividendIds(List&lt;UUID&gt; dividendIds) {
+<span class="fc" id="L156">    this.dividendIds = dividendIds;</span>
+<span class="fc" id="L157">    return this;</span>
+  }
+
+  public FormGenerationRequest addDividendIdsItem(UUID dividendIdsItem) {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">    if (this.dividendIds == null) {</span>
+<span class="nc" id="L162">      this.dividendIds = new ArrayList&lt;&gt;();</span>
+    }
+<span class="nc" id="L164">    this.dividendIds.add(dividendIdsItem);</span>
+<span class="nc" id="L165">    return this;</span>
+  }
+
+  /**
+   * Get dividendIds
+   * @return dividendIds
+   */
+  @Valid 
+  @JsonProperty(&quot;dividendIds&quot;)
+  public List&lt;UUID&gt; getDividendIds() {
+<span class="fc" id="L175">    return dividendIds;</span>
+  }
+
+  public void setDividendIds(List&lt;UUID&gt; dividendIds) {
+<span class="fc" id="L179">    this.dividendIds = dividendIds;</span>
+<span class="fc" id="L180">  }</span>
+
+  public FormGenerationRequest includeAttestation(Boolean includeAttestation) {
+<span class="nc" id="L183">    this.includeAttestation = includeAttestation;</span>
+<span class="nc" id="L184">    return this;</span>
+  }
+
+  /**
+   * Get includeAttestation
+   * @return includeAttestation
+   */
+  
+  @JsonProperty(&quot;includeAttestation&quot;)
+  public Boolean getIncludeAttestation() {
+<span class="fc" id="L194">    return includeAttestation;</span>
+  }
+
+  public void setIncludeAttestation(Boolean includeAttestation) {
+<span class="fc" id="L198">    this.includeAttestation = includeAttestation;</span>
+<span class="fc" id="L199">  }</span>
+
+  public FormGenerationRequest includeDividends(Boolean includeDividends) {
+<span class="nc" id="L202">    this.includeDividends = includeDividends;</span>
+<span class="nc" id="L203">    return this;</span>
+  }
+
+  /**
+   * Get includeDividends
+   * @return includeDividends
+   */
+  
+  @JsonProperty(&quot;includeDividends&quot;)
+  public Boolean getIncludeDividends() {
+<span class="fc" id="L213">    return includeDividends;</span>
+  }
+
+  public void setIncludeDividends(Boolean includeDividends) {
+<span class="fc" id="L217">    this.includeDividends = includeDividends;</span>
+<span class="fc" id="L218">  }</span>
+
+  public FormGenerationRequest canton(@Nullable String canton) {
+<span class="nc" id="L221">    this.canton = canton;</span>
+<span class="nc" id="L222">    return this;</span>
+  }
+
+  /**
+   * Get canton
+   * @return canton
+   */
+  
+  @JsonProperty(&quot;canton&quot;)
+  public @Nullable String getCanton() {
+<span class="fc" id="L232">    return canton;</span>
+  }
+
+  public void setCanton(@Nullable String canton) {
+<span class="fc" id="L236">    this.canton = canton;</span>
+<span class="fc" id="L237">  }</span>
+
+  public FormGenerationRequest address(@Nullable String address) {
+<span class="nc" id="L240">    this.address = address;</span>
+<span class="nc" id="L241">    return this;</span>
+  }
+
+  /**
+   * Get address
+   * @return address
+   */
+  
+  @JsonProperty(&quot;address&quot;)
+  public @Nullable String getAddress() {
+<span class="fc" id="L251">    return address;</span>
+  }
+
+  public void setAddress(@Nullable String address) {
+<span class="fc" id="L255">    this.address = address;</span>
+<span class="fc" id="L256">  }</span>
+
+  public FormGenerationRequest taxId(@Nullable String taxId) {
+<span class="nc" id="L259">    this.taxId = taxId;</span>
+<span class="nc" id="L260">    return this;</span>
+  }
+
+  /**
+   * Get taxId
+   * @return taxId
+   */
+  
+  @JsonProperty(&quot;taxId&quot;)
+  public @Nullable String getTaxId() {
+<span class="fc" id="L270">    return taxId;</span>
+  }
+
+  public void setTaxId(@Nullable String taxId) {
+<span class="fc" id="L274">    this.taxId = taxId;</span>
+<span class="fc" id="L275">  }</span>
+
+  @Override
+  public boolean equals(Object o) {
+<span class="nc bnc" id="L279" title="All 2 branches missed.">    if (this == o) {</span>
+<span class="nc" id="L280">      return true;</span>
+    }
+<span class="nc bnc" id="L282" title="All 4 branches missed.">    if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L283">      return false;</span>
+    }
+<span class="nc" id="L285">    FormGenerationRequest formGenerationRequest = (FormGenerationRequest) o;</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">    return Objects.equals(this.userId, formGenerationRequest.userId) &amp;&amp;</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">        Objects.equals(this.taxYear, formGenerationRequest.taxYear) &amp;&amp;</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">        Objects.equals(this.formType, formGenerationRequest.formType) &amp;&amp;</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        Objects.equals(this.dividendIds, formGenerationRequest.dividendIds) &amp;&amp;</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        Objects.equals(this.includeAttestation, formGenerationRequest.includeAttestation) &amp;&amp;</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        Objects.equals(this.includeDividends, formGenerationRequest.includeDividends) &amp;&amp;</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">        Objects.equals(this.canton, formGenerationRequest.canton) &amp;&amp;</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">        Objects.equals(this.address, formGenerationRequest.address) &amp;&amp;</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">        Objects.equals(this.taxId, formGenerationRequest.taxId);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="nc" id="L299">    return Objects.hash(userId, taxYear, formType, dividendIds, includeAttestation, includeDividends, canton, address, taxId);</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L304">    StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L305">    sb.append(&quot;class FormGenerationRequest {\n&quot;);</span>
+<span class="nc" id="L306">    sb.append(&quot;    userId: &quot;).append(toIndentedString(userId)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L307">    sb.append(&quot;    taxYear: &quot;).append(toIndentedString(taxYear)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L308">    sb.append(&quot;    formType: &quot;).append(toIndentedString(formType)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L309">    sb.append(&quot;    dividendIds: &quot;).append(toIndentedString(dividendIds)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L310">    sb.append(&quot;    includeAttestation: &quot;).append(toIndentedString(includeAttestation)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L311">    sb.append(&quot;    includeDividends: &quot;).append(toIndentedString(includeDividends)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L312">    sb.append(&quot;    canton: &quot;).append(toIndentedString(canton)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L313">    sb.append(&quot;    address: &quot;).append(toIndentedString(address)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L314">    sb.append(&quot;    taxId: &quot;).append(toIndentedString(taxId)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L315">    sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L316">    return sb.toString();</span>
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(Object o) {
+<span class="nc bnc" id="L324" title="All 2 branches missed.">    if (o == null) {</span>
+<span class="nc" id="L325">      return &quot;null&quot;;</span>
+    }
+<span class="nc" id="L327">    return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+  }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

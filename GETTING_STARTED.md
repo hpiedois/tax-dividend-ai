@@ -39,6 +39,13 @@ docker-compose ps
 
 All services should show `Up` or `healthy`.
 
+**What happens on first startup**:
+- PostgreSQL container starts
+- Infrastructure migrations run automatically:
+  - `01_extensions.sql` - Install PostgreSQL extensions
+  - `02_schemas_and_roles.sql` - Create schema `taxdividend` and user `taxdividend_user`
+- ⚠️ **Tables are NOT created yet** - Flyway will create them when backend starts
+
 ### 2. Start Backend Services
 
 ```bash
@@ -48,13 +55,35 @@ cd backend
 
 **Wait for** `Started TaxDividendBackendApplication in X seconds`.
 
+**What happens on first startup**:
+- Backend connects to PostgreSQL using `taxdividend_user`
+- **Flyway runs automatically**:
+  - V1: Create `users` table
+  - V2: Create `generated_forms` and `dividends` tables
+  - V3: Create `form_submissions` and `audit_logs` tables
+  - V4: Create `tax_rules` table
+  - V5: Insert default tax rules (France → Switzerland)
+- Application starts normally
+
+Check Flyway execution in logs:
+```
+Flyway Community Edition X.X.X
+Database: jdbc:postgresql://localhost:5432/taxdividend
+Successfully validated 5 migrations
+Current version of schema "taxdividend": << Empty Schema >>
+Migrating schema "taxdividend" to version "1 - create users table"
+Migrating schema "taxdividend" to version "2 - create forms tables"
+...
+Successfully applied 5 migrations
+```
+
 Test backend health:
 
 ```bash
 curl http://localhost:8081/internal/health
 ```
 
-Should return `{"status":"UP"}`.
+Should return `{"status":"UP","database":"connected"}`.
 
 ### 3. Start BFF Gateway
 
@@ -308,15 +337,38 @@ netstat -ano | findstr :8080  # Windows
 
 ### Database schema not created
 
-**Problem**: Tables don't exist
+**Problem**: Tables don't exist in `taxdividend` schema
 
 **Solution**:
+
+1. Check if infrastructure migrations ran:
 ```bash
-# Recreate database
 cd infrastructure
+docker exec -it tax-dividend-postgres psql -U postgres -d taxdividend -c "\dn"
+# Should show schema "taxdividend"
+
+docker exec -it tax-dividend-postgres psql -U postgres -d taxdividend -c "SELECT rolname FROM pg_roles WHERE rolname LIKE 'taxdividend%';"
+# Should show "taxdividend_user"
+```
+
+2. If schema is missing, recreate infrastructure:
+```bash
 docker-compose down -v
 docker-compose up -d postgres
 # Wait 10 seconds for initialization
+```
+
+3. Check if Flyway migrations ran in backend:
+```bash
+docker exec -it tax-dividend-postgres psql -U taxdividend_user -d taxdividend
+\dt taxdividend.*
+# Should show: users, dividends, generated_forms, form_submissions, audit_logs, tax_rules
+```
+
+4. If tables are missing but schema exists, restart backend (Flyway will run):
+```bash
+cd backend
+./mvnw spring-boot:run
 ```
 
 ### MinIO bucket not found

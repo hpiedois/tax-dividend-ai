@@ -7,11 +7,25 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**taxpayerName** | **String** |  |  [optional] |
+|**userId** | **UUID** |  |  |
+|**taxYear** | **Integer** |  |  |
+|**formType** | [**FormTypeEnum**](#FormTypeEnum) |  |  |
+|**dividendIds** | **List&lt;UUID&gt;** |  |  [optional] |
+|**includeAttestation** | **Boolean** |  |  [optional] |
+|**includeDividends** | **Boolean** |  |  [optional] |
+|**canton** | **String** |  |  [optional] |
+|**address** | **String** |  |  [optional] |
 |**taxId** | **String** |  |  [optional] |
-|**taxYear** | **Integer** |  |  [optional] |
-|**country** | **String** |  |  [optional] |
-|**dividends** | **List&lt;Object&gt;** |  |  [optional] |
+
+
+
+## Enum: FormTypeEnum
+
+| Name | Value |
+|---- | -----|
+| _5000 | &quot;5000&quot; |
+| _5001 | &quot;5001&quot; |
+| BUNDLE | &quot;BUNDLE&quot; |
 
 
 

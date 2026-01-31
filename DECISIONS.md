@@ -199,6 +199,53 @@ tax-dividend-ai/
 
 ---
 
+### 8. Stratégie de Migrations Base de Données
+
+**DÉCISION**: Séparation Infrastructure (Docker) / Application (Flyway)
+
+| Responsabilité | Outil | Emplacement |
+|----------------|-------|-------------|
+| **Extensions PostgreSQL** | Docker init scripts | `infrastructure/migrations/01_extensions.sql` |
+| **Schémas** | Docker init scripts | `infrastructure/migrations/02_schemas_and_roles.sql` |
+| **Rôles/Users** | Docker init scripts | `infrastructure/migrations/02_schemas_and_roles.sql` |
+| **Tables applicatives** | Flyway (backend) | `backend/src/main/resources/db/migration/V*__*.sql` |
+| **Indexes** | Flyway (backend) | Inclus dans migrations Flyway |
+| **Données initiales** | Flyway (backend) | `V5__insert_default_tax_rules.sql` |
+
+**Justification**:
+- **Séparation des responsabilités**: Infrastructure vs Application
+- **Portabilité**: Backend peut se connecter à n'importe quelle DB avec le bon schéma
+- **Versioning**: Flyway track les migrations applicatives indépendamment de l'infra
+- **Rollback**: Flyway gère les rollbacks des migrations applicatives
+- **Environnements multiples**: Même infra (Docker), différentes versions d'app (Flyway)
+
+**Workflow**:
+1. **First time**: Docker crée infra → Backend démarre → Flyway crée tables
+2. **Update**: Nouvelle migration Flyway → Backend démarre → Flyway applique migration
+3. **Reset infra**: `docker-compose down -v` → `docker-compose up` → Backend crée tables à nouveau
+
+**Migrations Flyway actuelles**:
+- V1: users table
+- V2: generated_forms, dividends tables
+- V3: form_submissions, audit_logs tables
+- V4: tax_rules table
+- V5: Insert default tax rules (France → Switzerland)
+
+**Configuration Flyway**:
+```yaml
+spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: taxdividend
+    baseline-on-migrate: true
+    validate-on-migrate: true
+```
+
+**Date de décision**: 28 Janvier 2026
+
+---
+
 ## 🔄 Décisions à Prendre (Futur)
 
 ### Phase 1 (4-6 semaines)

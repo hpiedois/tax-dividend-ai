@@ -1,6 +1,6 @@
 /*
  * Tax Dividend AI Backend Internal API
- * Internal API for Backend Services (PDF, Storage, Auth)
+ * Internal API for Backend Services
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -18,21 +18,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  * Model tests for RegisterUserRequest
  */
-public class RegisterUserRequestTest {
+class RegisterUserRequestTest {
     private final RegisterUserRequest model = new RegisterUserRequest();
 
     /**
      * Model tests for RegisterUserRequest
      */
     @Test
-    public void testRegisterUserRequest() {
+    void testRegisterUserRequest() {
         // TODO: test RegisterUserRequest
     }
 
@@ -40,7 +40,7 @@ public class RegisterUserRequestTest {
      * Test the property 'email'
      */
     @Test
-    public void emailTest() {
+    void emailTest() {
         // TODO: test email
     }
 
@@ -48,7 +48,7 @@ public class RegisterUserRequestTest {
      * Test the property 'password'
      */
     @Test
-    public void passwordTest() {
+    void passwordTest() {
         // TODO: test password
     }
 
@@ -56,8 +56,16 @@ public class RegisterUserRequestTest {
      * Test the property 'fullName'
      */
     @Test
-    public void fullNameTest() {
+    void fullNameTest() {
         // TODO: test fullName
+    }
+
+    /**
+     * Test the property 'country'
+     */
+    @Test
+    void countryTest() {
+        // TODO: test country
     }
 
 }

@@ -1,0 +1,9 @@
+/Users/hpiedois/perso/workspaces/tax-dividend-ai/backend/src/test/java/com/taxdividend/backend/config/TestSecurityConfig.java
+/Users/hpiedois/perso/workspaces/tax-dividend-ai/backend/src/test/java/com/taxdividend/backend/controller/DividendControllerTest.java
+/Users/hpiedois/perso/workspaces/tax-dividend-ai/backend/src/test/java/com/taxdividend/backend/controller/FormControllerTest.java
+/Users/hpiedois/perso/workspaces/tax-dividend-ai/backend/src/test/java/com/taxdividend/backend/controller/HealthControllerTest.java
+/Users/hpiedois/perso/workspaces/tax-dividend-ai/backend/src/test/java/com/taxdividend/backend/controller/TaxRuleControllerTest.java
+/Users/hpiedois/perso/workspaces/tax-dividend-ai/backend/src/test/java/com/taxdividend/backend/service/AuditServiceTest.java
+/Users/hpiedois/perso/workspaces/tax-dividend-ai/backend/src/test/java/com/taxdividend/backend/service/PdfGenerationServiceTest.java
+/Users/hpiedois/perso/workspaces/tax-dividend-ai/backend/src/test/java/com/taxdividend/backend/service/StorageServiceTest.java
+/Users/hpiedois/perso/workspaces/tax-dividend-ai/backend/src/test/java/com/taxdividend/backend/service/TaxCalculationServiceTest.java

@@ -1,0 +1,70 @@
+package com.taxdividend.backend.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * DTO representing a request to generate tax forms (5000, 5001, or both).
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class GenerateFormRequest {
+
+    /**
+     * User ID requesting the form
+     */
+    private UUID userId;
+
+    /**
+     * Tax year for the form
+     */
+    private Integer taxYear;
+
+    /**
+     * Type of form to generate: "5000", "5001", or "BUNDLE"
+     */
+    private String formType;
+
+    /**
+     * List of dividend IDs to include in Form 5001
+     * Required if formType is "5001" or "BUNDLE"
+     */
+    private List<UUID> dividendIds;
+
+    /**
+     * Whether to include attestation (Form 5000)
+     * Default: true if formType is "BUNDLE"
+     */
+    @Builder.Default
+    private Boolean includeAttestation = false;
+
+    /**
+     * Whether to include dividend details (Form 5001)
+     * Default: true if formType is "BUNDLE"
+     */
+    @Builder.Default
+    private Boolean includeDividends = false;
+
+    /**
+     * Canton for Form 5000 attestation
+     * Should match user's canton from profile
+     */
+    private String canton;
+
+    /**
+     * Full address for Form 5000
+     */
+    private String address;
+
+    /**
+     * Tax ID (NIF) for Form 5000
+     */
+    private String taxId;
+}

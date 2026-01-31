@@ -1,92 +1,90 @@
 package com.taxdividend.backend.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * User entity representing application users with authentication and tax information.
+ * Corresponds to the 'users' table in the database.
+ */
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_users_email", columnList = "email"),
+    @Index(name = "idx_users_is_active", columnList = "isActive"),
+    @Index(name = "idx_users_status", columnList = "status")
+})
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
+    @Column(name = "full_name", length = 255)
     private String fullName;
 
-    @Column(length = 50)
-    private String status; // PENDING, ACTIVE
+    /**
+     * Swiss NIF (Numéro d'Identification Fiscale)
+     */
+    @Column(name = "tax_id", length = 50)
+    private String taxId;
 
+    @Column(columnDefinition = "TEXT")
+    private String address;
+
+    /**
+     * Swiss canton code for tax residence (VD, GE, ZH, etc.)
+     */
+    @Column(length = 2)
+    private String canton;
+
+    @Column(length = 2)
+    @Builder.Default
+    private String country = "CH";
+
+    /**
+     * User status: ACTIVE, PENDING, SUSPENDED, DELETED
+     */
+    @Column(length = 50)
+    @Builder.Default
+    private String status = "ACTIVE";
+
+    @Column(name = "is_active")
+    @Builder.Default
+    private Boolean isActive = true;
+
+    @Column(name = "is_verified")
+    @Builder.Default
+    private Boolean isVerified = false;
+
+    @Column(name = "verification_token", length = 255)
     private String verificationToken;
 
+    @Column(name = "token_expiry")
     private LocalDateTime tokenExpiry;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
 
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt = LocalDateTime.now();
-
-    // Getters and Setters
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getVerificationToken() {
-        return verificationToken;
-    }
-
-    public void setVerificationToken(String verificationToken) {
-        this.verificationToken = verificationToken;
-    }
-
-    public LocalDateTime getTokenExpiry() {
-        return tokenExpiry;
-    }
-
-    public void setTokenExpiry(LocalDateTime tokenExpiry) {
-        this.tokenExpiry = tokenExpiry;
-    }
+    private LocalDateTime updatedAt;
 }

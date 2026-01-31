@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuditServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.service.impl</a> &gt; <span class="el_source">AuditServiceImpl.java</span></div><h1>AuditServiceImpl.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.service.impl;
+
+import com.taxdividend.backend.model.AuditLog;
+import com.taxdividend.backend.model.User;
+import com.taxdividend.backend.repository.AuditLogRepository;
+import com.taxdividend.backend.repository.UserRepository;
+import com.taxdividend.backend.service.AuditService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+/**
+ * Implementation of audit service for logging user actions and security events.
+ */
+<span class="fc" id="L26">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+public class AuditServiceImpl implements AuditService {
+
+    private final AuditLogRepository auditLogRepository;
+    private final UserRepository userRepository;
+
+    @Override
+    @Transactional
+    public AuditLog logAction(UUID userId, String action, String entityType, UUID entityId,
+                              Map&lt;String, Object&gt; details, String ipAddress, String userAgent) {
+
+<span class="fc bfc" id="L39" title="All 2 branches covered.">        User user = userId != null ? userRepository.findById(userId).orElse(null) : null;</span>
+
+<span class="fc" id="L41">        AuditLog auditLog = AuditLog.builder()</span>
+<span class="fc" id="L42">                .user(user)</span>
+<span class="fc" id="L43">                .action(action)</span>
+<span class="fc" id="L44">                .entityType(entityType)</span>
+<span class="fc" id="L45">                .entityId(entityId)</span>
+<span class="fc" id="L46">                .details(details)</span>
+<span class="fc" id="L47">                .ipAddress(ipAddress)</span>
+<span class="fc" id="L48">                .userAgent(userAgent)</span>
+<span class="fc" id="L49">                .build();</span>
+
+<span class="fc" id="L51">        AuditLog saved = auditLogRepository.save(auditLog);</span>
+
+<span class="fc" id="L53">        log.info(&quot;Audit log created: action={}, user={}, entity={}:{}&quot;,</span>
+                 action, userId, entityType, entityId);
+
+<span class="fc" id="L56">        return saved;</span>
+    }
+
+    @Override
+    @Transactional
+    public AuditLog logAction(UUID userId, String action, Map&lt;String, Object&gt; details,
+                              String ipAddress, String userAgent) {
+<span class="fc" id="L63">        return logAction(userId, action, null, null, details, ipAddress, userAgent);</span>
+    }
+
+    @Override
+    @Transactional
+    public AuditLog logAction(UUID userId, String action) {
+<span class="nc" id="L69">        return logAction(userId, action, null, null, null, null, null);</span>
+    }
+
+    @Override
+    @Transactional
+    public AuditLog logLogin(UUID userId, String email, boolean success, String ipAddress, String userAgent) {
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        String action = success ? &quot;LOGIN&quot; : &quot;LOGIN_FAILED&quot;;</span>
+
+<span class="fc" id="L77">        Map&lt;String, Object&gt; details = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L78">        details.put(&quot;email&quot;, email);</span>
+<span class="fc" id="L79">        details.put(&quot;success&quot;, success);</span>
+
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (!success) {</span>
+<span class="fc" id="L82">            log.warn(&quot;Failed login attempt for email: {} from IP: {}&quot;, email, ipAddress);</span>
+        } else {
+<span class="fc" id="L84">            log.info(&quot;Successful login for user: {} from IP: {}&quot;, userId, ipAddress);</span>
+        }
+
+<span class="fc" id="L87">        return logAction(userId, action, details, ipAddress, userAgent);</span>
+    }
+
+    @Override
+    @Transactional
+    public AuditLog logLogout(UUID userId, String ipAddress) {
+<span class="fc" id="L93">        log.info(&quot;User logout: {} from IP: {}&quot;, userId, ipAddress);</span>
+
+<span class="fc" id="L95">        return logAction(userId, &quot;LOGOUT&quot;, null, ipAddress, null);</span>
+    }
+
+    @Override
+    @Transactional
+    public AuditLog logPdfParsing(UUID userId, String fileName, int dividendCount, boolean success) {
+<span class="fc" id="L101">        Map&lt;String, Object&gt; details = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L102">        details.put(&quot;fileName&quot;, fileName);</span>
+<span class="fc" id="L103">        details.put(&quot;dividendCount&quot;, dividendCount);</span>
+<span class="fc" id="L104">        details.put(&quot;success&quot;, success);</span>
+
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        String action = success ? &quot;PDF_PARSED&quot; : &quot;PDF_PARSE_FAILED&quot;;</span>
+
+<span class="fc" id="L108">        log.info(&quot;PDF parsing logged: user={}, file={}, dividends={}, success={}&quot;,</span>
+<span class="fc" id="L109">                 userId, fileName, dividendCount, success);</span>
+
+<span class="fc" id="L111">        return logAction(userId, action, &quot;DIVIDEND&quot;, null, details, null, null);</span>
+    }
+
+    @Override
+    @Transactional
+    public AuditLog logFormGeneration(UUID userId, UUID formId, String formType, int dividendCount) {
+<span class="fc" id="L117">        Map&lt;String, Object&gt; details = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L118">        details.put(&quot;formType&quot;, formType);</span>
+<span class="fc" id="L119">        details.put(&quot;dividendCount&quot;, dividendCount);</span>
+
+<span class="fc" id="L121">        log.info(&quot;Form generation logged: user={}, form={}, type={}, dividends={}&quot;,</span>
+<span class="fc" id="L122">                 userId, formId, formType, dividendCount);</span>
+
+<span class="fc" id="L124">        return logAction(userId, &quot;FORM_GENERATED&quot;, &quot;FORM&quot;, formId, details, null, null);</span>
+    }
+
+    @Override
+    @Transactional
+    public AuditLog logTaxCalculation(UUID userId, int dividendCount, String totalReclaimable) {
+<span class="fc" id="L130">        Map&lt;String, Object&gt; details = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L131">        details.put(&quot;dividendCount&quot;, dividendCount);</span>
+<span class="fc" id="L132">        details.put(&quot;totalReclaimable&quot;, totalReclaimable);</span>
+
+<span class="fc" id="L134">        log.info(&quot;Tax calculation logged: user={}, dividends={}, total={}&quot;,</span>
+<span class="fc" id="L135">                 userId, dividendCount, totalReclaimable);</span>
+
+<span class="fc" id="L137">        return logAction(userId, &quot;TAX_CALCULATED&quot;, &quot;DIVIDEND&quot;, null, details, null, null);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;AuditLog&gt; getUserLogs(UUID userId, int limit) {
+<span class="fc" id="L143">        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, &quot;createdAt&quot;));</span>
+<span class="fc" id="L144">        return auditLogRepository.findRecentByUserId(userId, pageable);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;AuditLog&gt; getLogsByAction(String action, int limit) {
+<span class="nc" id="L150">        Pageable pageable = PageRequest.of(0, limit);</span>
+<span class="nc" id="L151">        return auditLogRepository.findByAction(action);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List&lt;AuditLog&gt; getFailedLoginAttempts(String ipAddress, LocalDateTime since) {
+<span class="fc" id="L157">        return auditLogRepository.findFailedLoginAttempts(ipAddress, since);</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isRateLimited(String ipAddress, int maxAttempts, int windowMinutes) {
+<span class="fc" id="L163">        LocalDateTime since = LocalDateTime.now().minusMinutes(windowMinutes);</span>
+<span class="fc" id="L164">        List&lt;AuditLog&gt; failedAttempts = getFailedLoginAttempts(ipAddress, since);</span>
+
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        boolean isLimited = failedAttempts.size() &gt;= maxAttempts;</span>
+
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (isLimited) {</span>
+<span class="fc" id="L169">            log.warn(&quot;IP address {} is rate-limited: {} failed attempts in {} minutes&quot;,</span>
+<span class="fc" id="L170">                     ipAddress, failedAttempts.size(), windowMinutes);</span>
+        }
+
+<span class="fc" id="L173">        return isLimited;</span>
+    }
+
+    @Override
+    @Transactional
+    public int cleanupOldLogs(int retentionDays) {
+<span class="fc" id="L179">        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(retentionDays);</span>
+
+<span class="fc" id="L181">        log.info(&quot;Cleaning up audit logs older than {} days (before {})&quot;, retentionDays, cutoffDate);</span>
+
+        // Note: This should be done in batches for large datasets
+<span class="fc" id="L184">        long countBefore = auditLogRepository.count();</span>
+<span class="fc" id="L185">        auditLogRepository.deleteOlderThan(cutoffDate);</span>
+<span class="fc" id="L186">        long countAfter = auditLogRepository.count();</span>
+
+<span class="fc" id="L188">        int deletedCount = (int) (countBefore - countAfter);</span>
+
+<span class="fc" id="L190">        log.info(&quot;Deleted {} old audit logs&quot;, deletedCount);</span>
+
+<span class="fc" id="L192">        return deletedCount;</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map&lt;String, Long&gt; getUserActionStatistics(UUID userId) {
+<span class="fc" id="L198">        List&lt;AuditLog&gt; allLogs = auditLogRepository.findByUserId(userId);</span>
+
+<span class="fc" id="L200">        Map&lt;String, Long&gt; statistics = allLogs.stream()</span>
+<span class="fc" id="L201">                .collect(Collectors.groupingBy(</span>
+                        AuditLog::getAction,
+<span class="fc" id="L203">                        Collectors.counting()</span>
+                ));
+
+<span class="fc" id="L206">        log.debug(&quot;Action statistics for user {}: {}&quot;, userId, statistics);</span>
+
+<span class="fc" id="L208">        return statistics;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

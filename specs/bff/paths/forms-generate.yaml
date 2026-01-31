@@ -1,0 +1,17 @@
+post:
+  tags:
+    - Forms
+  summary: Generate tax forms
+  operationId: generateTaxForms
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/GenerateTaxFormsRequest.yaml'
+  responses:
+    '200':
+      description: Forms generated
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/GenerateTaxFormsResponse.yaml'

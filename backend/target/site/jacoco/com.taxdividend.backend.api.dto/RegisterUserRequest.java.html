@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegisterUserRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.api.dto</a> &gt; <span class="el_source">RegisterUserRequest.java</span></div><h1>RegisterUserRequest.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.api.dto;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import org.springframework.lang.Nullable;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+import jakarta.annotation.Generated;
+
+/**
+ * RegisterUserRequest
+ */
+
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;, date = &quot;2026-01-31T11:27:14.708089+01:00[Europe/Zurich]&quot;, comments = &quot;Generator version: 7.17.0&quot;)
+public class RegisterUserRequest {
+
+  private String email;
+
+  private String password;
+
+  private String fullName;
+
+  private @Nullable String country;
+
+  public RegisterUserRequest() {
+<span class="nc" id="L33">    super();</span>
+<span class="nc" id="L34">  }</span>
+
+  /**
+   * Constructor with only required parameters
+   */
+<span class="nc" id="L39">  public RegisterUserRequest(String email, String password, String fullName) {</span>
+<span class="nc" id="L40">    this.email = email;</span>
+<span class="nc" id="L41">    this.password = password;</span>
+<span class="nc" id="L42">    this.fullName = fullName;</span>
+<span class="nc" id="L43">  }</span>
+
+  public RegisterUserRequest email(String email) {
+<span class="nc" id="L46">    this.email = email;</span>
+<span class="nc" id="L47">    return this;</span>
+  }
+
+  /**
+   * Get email
+   * @return email
+   */
+  @NotNull @jakarta.validation.constraints.Email 
+  @JsonProperty(&quot;email&quot;)
+  public String getEmail() {
+<span class="nc" id="L57">    return email;</span>
+  }
+
+  public void setEmail(String email) {
+<span class="nc" id="L61">    this.email = email;</span>
+<span class="nc" id="L62">  }</span>
+
+  public RegisterUserRequest password(String password) {
+<span class="nc" id="L65">    this.password = password;</span>
+<span class="nc" id="L66">    return this;</span>
+  }
+
+  /**
+   * Get password
+   * @return password
+   */
+  @NotNull @Size(min = 8) 
+  @JsonProperty(&quot;password&quot;)
+  public String getPassword() {
+<span class="nc" id="L76">    return password;</span>
+  }
+
+  public void setPassword(String password) {
+<span class="nc" id="L80">    this.password = password;</span>
+<span class="nc" id="L81">  }</span>
+
+  public RegisterUserRequest fullName(String fullName) {
+<span class="nc" id="L84">    this.fullName = fullName;</span>
+<span class="nc" id="L85">    return this;</span>
+  }
+
+  /**
+   * Get fullName
+   * @return fullName
+   */
+  @NotNull 
+  @JsonProperty(&quot;fullName&quot;)
+  public String getFullName() {
+<span class="nc" id="L95">    return fullName;</span>
+  }
+
+  public void setFullName(String fullName) {
+<span class="nc" id="L99">    this.fullName = fullName;</span>
+<span class="nc" id="L100">  }</span>
+
+  public RegisterUserRequest country(@Nullable String country) {
+<span class="nc" id="L103">    this.country = country;</span>
+<span class="nc" id="L104">    return this;</span>
+  }
+
+  /**
+   * Get country
+   * @return country
+   */
+  
+  @JsonProperty(&quot;country&quot;)
+  public @Nullable String getCountry() {
+<span class="nc" id="L114">    return country;</span>
+  }
+
+  public void setCountry(@Nullable String country) {
+<span class="nc" id="L118">    this.country = country;</span>
+<span class="nc" id="L119">  }</span>
+
+  @Override
+  public boolean equals(Object o) {
+<span class="nc bnc" id="L123" title="All 2 branches missed.">    if (this == o) {</span>
+<span class="nc" id="L124">      return true;</span>
+    }
+<span class="nc bnc" id="L126" title="All 4 branches missed.">    if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L127">      return false;</span>
+    }
+<span class="nc" id="L129">    RegisterUserRequest registerUserRequest = (RegisterUserRequest) o;</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">    return Objects.equals(this.email, registerUserRequest.email) &amp;&amp;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        Objects.equals(this.password, registerUserRequest.password) &amp;&amp;</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        Objects.equals(this.fullName, registerUserRequest.fullName) &amp;&amp;</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        Objects.equals(this.country, registerUserRequest.country);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="nc" id="L138">    return Objects.hash(email, password, fullName, country);</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L143">    StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L144">    sb.append(&quot;class RegisterUserRequest {\n&quot;);</span>
+<span class="nc" id="L145">    sb.append(&quot;    email: &quot;).append(toIndentedString(email)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L146">    sb.append(&quot;    password: &quot;).append(toIndentedString(password)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L147">    sb.append(&quot;    fullName: &quot;).append(toIndentedString(fullName)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L148">    sb.append(&quot;    country: &quot;).append(toIndentedString(country)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L149">    sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L150">    return sb.toString();</span>
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(Object o) {
+<span class="nc bnc" id="L158" title="All 2 branches missed.">    if (o == null) {</span>
+<span class="nc" id="L159">      return &quot;null&quot;;</span>
+    }
+<span class="nc" id="L161">    return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+  }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

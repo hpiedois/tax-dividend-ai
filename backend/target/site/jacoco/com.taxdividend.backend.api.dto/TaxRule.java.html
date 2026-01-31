@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaxRule.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.api.dto</a> &gt; <span class="el_source">TaxRule.java</span></div><h1>TaxRule.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.api.dto;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+import jakarta.annotation.Generated;
+
+/**
+ * TaxRule
+ */
+
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;, date = &quot;2026-01-31T11:27:14.708089+01:00[Europe/Zurich]&quot;, comments = &quot;Generator version: 7.17.0&quot;)
+<span class="fc" id="L26">public class TaxRule {</span>
+
+  private @Nullable UUID id;
+
+  private @Nullable String sourceCountry;
+
+  private @Nullable String residenceCountry;
+
+  private @Nullable String securityType;
+
+  private @Nullable BigDecimal standardWithholdingRate;
+
+  private @Nullable BigDecimal treatyRate;
+
+  private @Nullable Boolean reliefAtSourceAvailable;
+
+  private @Nullable Boolean refundProcedureAvailable;
+
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+  private @Nullable LocalDate effectiveFrom;
+
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+  private @Nullable LocalDate effectiveTo;
+
+  private @Nullable String notes;
+
+  public TaxRule id(@Nullable UUID id) {
+<span class="nc" id="L53">    this.id = id;</span>
+<span class="nc" id="L54">    return this;</span>
+  }
+
+  /**
+   * Get id
+   * @return id
+   */
+  @Valid 
+  @JsonProperty(&quot;id&quot;)
+  public @Nullable UUID getId() {
+<span class="fc" id="L64">    return id;</span>
+  }
+
+  public void setId(@Nullable UUID id) {
+<span class="fc" id="L68">    this.id = id;</span>
+<span class="fc" id="L69">  }</span>
+
+  public TaxRule sourceCountry(@Nullable String sourceCountry) {
+<span class="nc" id="L72">    this.sourceCountry = sourceCountry;</span>
+<span class="nc" id="L73">    return this;</span>
+  }
+
+  /**
+   * Get sourceCountry
+   * @return sourceCountry
+   */
+  
+  @JsonProperty(&quot;sourceCountry&quot;)
+  public @Nullable String getSourceCountry() {
+<span class="fc" id="L83">    return sourceCountry;</span>
+  }
+
+  public void setSourceCountry(@Nullable String sourceCountry) {
+<span class="fc" id="L87">    this.sourceCountry = sourceCountry;</span>
+<span class="fc" id="L88">  }</span>
+
+  public TaxRule residenceCountry(@Nullable String residenceCountry) {
+<span class="nc" id="L91">    this.residenceCountry = residenceCountry;</span>
+<span class="nc" id="L92">    return this;</span>
+  }
+
+  /**
+   * Get residenceCountry
+   * @return residenceCountry
+   */
+  
+  @JsonProperty(&quot;residenceCountry&quot;)
+  public @Nullable String getResidenceCountry() {
+<span class="fc" id="L102">    return residenceCountry;</span>
+  }
+
+  public void setResidenceCountry(@Nullable String residenceCountry) {
+<span class="fc" id="L106">    this.residenceCountry = residenceCountry;</span>
+<span class="fc" id="L107">  }</span>
+
+  public TaxRule securityType(@Nullable String securityType) {
+<span class="nc" id="L110">    this.securityType = securityType;</span>
+<span class="nc" id="L111">    return this;</span>
+  }
+
+  /**
+   * Get securityType
+   * @return securityType
+   */
+  
+  @JsonProperty(&quot;securityType&quot;)
+  public @Nullable String getSecurityType() {
+<span class="fc" id="L121">    return securityType;</span>
+  }
+
+  public void setSecurityType(@Nullable String securityType) {
+<span class="nc" id="L125">    this.securityType = securityType;</span>
+<span class="nc" id="L126">  }</span>
+
+  public TaxRule standardWithholdingRate(@Nullable BigDecimal standardWithholdingRate) {
+<span class="nc" id="L129">    this.standardWithholdingRate = standardWithholdingRate;</span>
+<span class="nc" id="L130">    return this;</span>
+  }
+
+  /**
+   * Get standardWithholdingRate
+   * @return standardWithholdingRate
+   */
+  @Valid 
+  @JsonProperty(&quot;standardWithholdingRate&quot;)
+  public @Nullable BigDecimal getStandardWithholdingRate() {
+<span class="fc" id="L140">    return standardWithholdingRate;</span>
+  }
+
+  public void setStandardWithholdingRate(@Nullable BigDecimal standardWithholdingRate) {
+<span class="fc" id="L144">    this.standardWithholdingRate = standardWithholdingRate;</span>
+<span class="fc" id="L145">  }</span>
+
+  public TaxRule treatyRate(@Nullable BigDecimal treatyRate) {
+<span class="nc" id="L148">    this.treatyRate = treatyRate;</span>
+<span class="nc" id="L149">    return this;</span>
+  }
+
+  /**
+   * Get treatyRate
+   * @return treatyRate
+   */
+  @Valid 
+  @JsonProperty(&quot;treatyRate&quot;)
+  public @Nullable BigDecimal getTreatyRate() {
+<span class="fc" id="L159">    return treatyRate;</span>
+  }
+
+  public void setTreatyRate(@Nullable BigDecimal treatyRate) {
+<span class="fc" id="L163">    this.treatyRate = treatyRate;</span>
+<span class="fc" id="L164">  }</span>
+
+  public TaxRule reliefAtSourceAvailable(@Nullable Boolean reliefAtSourceAvailable) {
+<span class="nc" id="L167">    this.reliefAtSourceAvailable = reliefAtSourceAvailable;</span>
+<span class="nc" id="L168">    return this;</span>
+  }
+
+  /**
+   * Get reliefAtSourceAvailable
+   * @return reliefAtSourceAvailable
+   */
+  
+  @JsonProperty(&quot;reliefAtSourceAvailable&quot;)
+  public @Nullable Boolean getReliefAtSourceAvailable() {
+<span class="fc" id="L178">    return reliefAtSourceAvailable;</span>
+  }
+
+  public void setReliefAtSourceAvailable(@Nullable Boolean reliefAtSourceAvailable) {
+<span class="fc" id="L182">    this.reliefAtSourceAvailable = reliefAtSourceAvailable;</span>
+<span class="fc" id="L183">  }</span>
+
+  public TaxRule refundProcedureAvailable(@Nullable Boolean refundProcedureAvailable) {
+<span class="nc" id="L186">    this.refundProcedureAvailable = refundProcedureAvailable;</span>
+<span class="nc" id="L187">    return this;</span>
+  }
+
+  /**
+   * Get refundProcedureAvailable
+   * @return refundProcedureAvailable
+   */
+  
+  @JsonProperty(&quot;refundProcedureAvailable&quot;)
+  public @Nullable Boolean getRefundProcedureAvailable() {
+<span class="fc" id="L197">    return refundProcedureAvailable;</span>
+  }
+
+  public void setRefundProcedureAvailable(@Nullable Boolean refundProcedureAvailable) {
+<span class="fc" id="L201">    this.refundProcedureAvailable = refundProcedureAvailable;</span>
+<span class="fc" id="L202">  }</span>
+
+  public TaxRule effectiveFrom(@Nullable LocalDate effectiveFrom) {
+<span class="nc" id="L205">    this.effectiveFrom = effectiveFrom;</span>
+<span class="nc" id="L206">    return this;</span>
+  }
+
+  /**
+   * Get effectiveFrom
+   * @return effectiveFrom
+   */
+  @Valid 
+  @JsonProperty(&quot;effectiveFrom&quot;)
+  public @Nullable LocalDate getEffectiveFrom() {
+<span class="fc" id="L216">    return effectiveFrom;</span>
+  }
+
+  public void setEffectiveFrom(@Nullable LocalDate effectiveFrom) {
+<span class="nc" id="L220">    this.effectiveFrom = effectiveFrom;</span>
+<span class="nc" id="L221">  }</span>
+
+  public TaxRule effectiveTo(@Nullable LocalDate effectiveTo) {
+<span class="nc" id="L224">    this.effectiveTo = effectiveTo;</span>
+<span class="nc" id="L225">    return this;</span>
+  }
+
+  /**
+   * Get effectiveTo
+   * @return effectiveTo
+   */
+  @Valid 
+  @JsonProperty(&quot;effectiveTo&quot;)
+  public @Nullable LocalDate getEffectiveTo() {
+<span class="fc" id="L235">    return effectiveTo;</span>
+  }
+
+  public void setEffectiveTo(@Nullable LocalDate effectiveTo) {
+<span class="nc" id="L239">    this.effectiveTo = effectiveTo;</span>
+<span class="nc" id="L240">  }</span>
+
+  public TaxRule notes(@Nullable String notes) {
+<span class="nc" id="L243">    this.notes = notes;</span>
+<span class="nc" id="L244">    return this;</span>
+  }
+
+  /**
+   * Get notes
+   * @return notes
+   */
+  
+  @JsonProperty(&quot;notes&quot;)
+  public @Nullable String getNotes() {
+<span class="fc" id="L254">    return notes;</span>
+  }
+
+  public void setNotes(@Nullable String notes) {
+<span class="fc" id="L258">    this.notes = notes;</span>
+<span class="fc" id="L259">  }</span>
+
+  @Override
+  public boolean equals(Object o) {
+<span class="nc bnc" id="L263" title="All 2 branches missed.">    if (this == o) {</span>
+<span class="nc" id="L264">      return true;</span>
+    }
+<span class="nc bnc" id="L266" title="All 4 branches missed.">    if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L267">      return false;</span>
+    }
+<span class="nc" id="L269">    TaxRule taxRule = (TaxRule) o;</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">    return Objects.equals(this.id, taxRule.id) &amp;&amp;</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">        Objects.equals(this.sourceCountry, taxRule.sourceCountry) &amp;&amp;</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">        Objects.equals(this.residenceCountry, taxRule.residenceCountry) &amp;&amp;</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        Objects.equals(this.securityType, taxRule.securityType) &amp;&amp;</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">        Objects.equals(this.standardWithholdingRate, taxRule.standardWithholdingRate) &amp;&amp;</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">        Objects.equals(this.treatyRate, taxRule.treatyRate) &amp;&amp;</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">        Objects.equals(this.reliefAtSourceAvailable, taxRule.reliefAtSourceAvailable) &amp;&amp;</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        Objects.equals(this.refundProcedureAvailable, taxRule.refundProcedureAvailable) &amp;&amp;</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">        Objects.equals(this.effectiveFrom, taxRule.effectiveFrom) &amp;&amp;</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        Objects.equals(this.effectiveTo, taxRule.effectiveTo) &amp;&amp;</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">        Objects.equals(this.notes, taxRule.notes);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="nc" id="L285">    return Objects.hash(id, sourceCountry, residenceCountry, securityType, standardWithholdingRate, treatyRate, reliefAtSourceAvailable, refundProcedureAvailable, effectiveFrom, effectiveTo, notes);</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L290">    StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L291">    sb.append(&quot;class TaxRule {\n&quot;);</span>
+<span class="nc" id="L292">    sb.append(&quot;    id: &quot;).append(toIndentedString(id)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L293">    sb.append(&quot;    sourceCountry: &quot;).append(toIndentedString(sourceCountry)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L294">    sb.append(&quot;    residenceCountry: &quot;).append(toIndentedString(residenceCountry)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L295">    sb.append(&quot;    securityType: &quot;).append(toIndentedString(securityType)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L296">    sb.append(&quot;    standardWithholdingRate: &quot;).append(toIndentedString(standardWithholdingRate)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L297">    sb.append(&quot;    treatyRate: &quot;).append(toIndentedString(treatyRate)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L298">    sb.append(&quot;    reliefAtSourceAvailable: &quot;).append(toIndentedString(reliefAtSourceAvailable)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L299">    sb.append(&quot;    refundProcedureAvailable: &quot;).append(toIndentedString(refundProcedureAvailable)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L300">    sb.append(&quot;    effectiveFrom: &quot;).append(toIndentedString(effectiveFrom)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L301">    sb.append(&quot;    effectiveTo: &quot;).append(toIndentedString(effectiveTo)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L302">    sb.append(&quot;    notes: &quot;).append(toIndentedString(notes)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L303">    sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L304">    return sb.toString();</span>
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(Object o) {
+<span class="nc bnc" id="L312" title="All 2 branches missed.">    if (o == null) {</span>
+<span class="nc" id="L313">      return &quot;null&quot;;</span>
+    }
+<span class="nc" id="L315">    return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+  }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

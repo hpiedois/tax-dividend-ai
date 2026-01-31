@@ -20,8 +20,8 @@ paths:
     $ref: './paths/dividends-history.yaml'
   /dividends/stats:
     $ref: './paths/dividends-stats.yaml'
-  /dividends/generate-forms:
-    $ref: './paths/dividends-forms.yaml'
+  /forms/generate:
+    $ref: './paths/forms-generate.yaml'
   
   /auth/register:
     post:

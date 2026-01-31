@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaxCalculationResultDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.api.dto</a> &gt; <span class="el_source">TaxCalculationResultDTO.java</span></div><h1>TaxCalculationResultDTO.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.api.dto;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import org.springframework.lang.Nullable;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+import jakarta.annotation.Generated;
+
+/**
+ * TaxCalculationResultDTO
+ */
+
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;, date = &quot;2026-01-31T11:27:14.708089+01:00[Europe/Zurich]&quot;, comments = &quot;Generator version: 7.17.0&quot;)
+<span class="fc" id="L27">public class TaxCalculationResultDTO {</span>
+
+  private @Nullable UUID dividendId;
+
+  private @Nullable Boolean success;
+
+  private @Nullable BigDecimal reclaimableAmount;
+
+  private @Nullable BigDecimal standardRate;
+
+  private @Nullable BigDecimal treatyRate;
+
+  private @Nullable BigDecimal withheldAmount;
+
+<span class="fc" id="L41">  @Valid</span>
+  private List&lt;String&gt; errors = new ArrayList&lt;&gt;();
+
+  public TaxCalculationResultDTO dividendId(@Nullable UUID dividendId) {
+<span class="nc" id="L45">    this.dividendId = dividendId;</span>
+<span class="nc" id="L46">    return this;</span>
+  }
+
+  /**
+   * Get dividendId
+   * @return dividendId
+   */
+  @Valid 
+  @JsonProperty(&quot;dividendId&quot;)
+  public @Nullable UUID getDividendId() {
+<span class="fc" id="L56">    return dividendId;</span>
+  }
+
+  public void setDividendId(@Nullable UUID dividendId) {
+<span class="nc" id="L60">    this.dividendId = dividendId;</span>
+<span class="nc" id="L61">  }</span>
+
+  public TaxCalculationResultDTO success(@Nullable Boolean success) {
+<span class="nc" id="L64">    this.success = success;</span>
+<span class="nc" id="L65">    return this;</span>
+  }
+
+  /**
+   * Get success
+   * @return success
+   */
+  
+  @JsonProperty(&quot;success&quot;)
+  public @Nullable Boolean getSuccess() {
+<span class="fc" id="L75">    return success;</span>
+  }
+
+  public void setSuccess(@Nullable Boolean success) {
+<span class="nc" id="L79">    this.success = success;</span>
+<span class="nc" id="L80">  }</span>
+
+  public TaxCalculationResultDTO reclaimableAmount(@Nullable BigDecimal reclaimableAmount) {
+<span class="nc" id="L83">    this.reclaimableAmount = reclaimableAmount;</span>
+<span class="nc" id="L84">    return this;</span>
+  }
+
+  /**
+   * Get reclaimableAmount
+   * @return reclaimableAmount
+   */
+  @Valid 
+  @JsonProperty(&quot;reclaimableAmount&quot;)
+  public @Nullable BigDecimal getReclaimableAmount() {
+<span class="fc" id="L94">    return reclaimableAmount;</span>
+  }
+
+  public void setReclaimableAmount(@Nullable BigDecimal reclaimableAmount) {
+<span class="fc" id="L98">    this.reclaimableAmount = reclaimableAmount;</span>
+<span class="fc" id="L99">  }</span>
+
+  public TaxCalculationResultDTO standardRate(@Nullable BigDecimal standardRate) {
+<span class="nc" id="L102">    this.standardRate = standardRate;</span>
+<span class="nc" id="L103">    return this;</span>
+  }
+
+  /**
+   * Get standardRate
+   * @return standardRate
+   */
+  @Valid 
+  @JsonProperty(&quot;standardRate&quot;)
+  public @Nullable BigDecimal getStandardRate() {
+<span class="fc" id="L113">    return standardRate;</span>
+  }
+
+  public void setStandardRate(@Nullable BigDecimal standardRate) {
+<span class="nc" id="L117">    this.standardRate = standardRate;</span>
+<span class="nc" id="L118">  }</span>
+
+  public TaxCalculationResultDTO treatyRate(@Nullable BigDecimal treatyRate) {
+<span class="nc" id="L121">    this.treatyRate = treatyRate;</span>
+<span class="nc" id="L122">    return this;</span>
+  }
+
+  /**
+   * Get treatyRate
+   * @return treatyRate
+   */
+  @Valid 
+  @JsonProperty(&quot;treatyRate&quot;)
+  public @Nullable BigDecimal getTreatyRate() {
+<span class="fc" id="L132">    return treatyRate;</span>
+  }
+
+  public void setTreatyRate(@Nullable BigDecimal treatyRate) {
+<span class="nc" id="L136">    this.treatyRate = treatyRate;</span>
+<span class="nc" id="L137">  }</span>
+
+  public TaxCalculationResultDTO withheldAmount(@Nullable BigDecimal withheldAmount) {
+<span class="nc" id="L140">    this.withheldAmount = withheldAmount;</span>
+<span class="nc" id="L141">    return this;</span>
+  }
+
+  /**
+   * Get withheldAmount
+   * @return withheldAmount
+   */
+  @Valid 
+  @JsonProperty(&quot;withheldAmount&quot;)
+  public @Nullable BigDecimal getWithheldAmount() {
+<span class="fc" id="L151">    return withheldAmount;</span>
+  }
+
+  public void setWithheldAmount(@Nullable BigDecimal withheldAmount) {
+<span class="nc" id="L155">    this.withheldAmount = withheldAmount;</span>
+<span class="nc" id="L156">  }</span>
+
+  public TaxCalculationResultDTO errors(List&lt;String&gt; errors) {
+<span class="nc" id="L159">    this.errors = errors;</span>
+<span class="nc" id="L160">    return this;</span>
+  }
+
+  public TaxCalculationResultDTO addErrorsItem(String errorsItem) {
+<span class="nc bnc" id="L164" title="All 2 branches missed.">    if (this.errors == null) {</span>
+<span class="nc" id="L165">      this.errors = new ArrayList&lt;&gt;();</span>
+    }
+<span class="nc" id="L167">    this.errors.add(errorsItem);</span>
+<span class="nc" id="L168">    return this;</span>
+  }
+
+  /**
+   * Get errors
+   * @return errors
+   */
+  
+  @JsonProperty(&quot;errors&quot;)
+  public List&lt;String&gt; getErrors() {
+<span class="fc" id="L178">    return errors;</span>
+  }
+
+  public void setErrors(List&lt;String&gt; errors) {
+<span class="nc" id="L182">    this.errors = errors;</span>
+<span class="nc" id="L183">  }</span>
+
+  @Override
+  public boolean equals(Object o) {
+<span class="nc bnc" id="L187" title="All 2 branches missed.">    if (this == o) {</span>
+<span class="nc" id="L188">      return true;</span>
+    }
+<span class="nc bnc" id="L190" title="All 4 branches missed.">    if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L191">      return false;</span>
+    }
+<span class="nc" id="L193">    TaxCalculationResultDTO taxCalculationResultDTO = (TaxCalculationResultDTO) o;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">    return Objects.equals(this.dividendId, taxCalculationResultDTO.dividendId) &amp;&amp;</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        Objects.equals(this.success, taxCalculationResultDTO.success) &amp;&amp;</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        Objects.equals(this.reclaimableAmount, taxCalculationResultDTO.reclaimableAmount) &amp;&amp;</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        Objects.equals(this.standardRate, taxCalculationResultDTO.standardRate) &amp;&amp;</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">        Objects.equals(this.treatyRate, taxCalculationResultDTO.treatyRate) &amp;&amp;</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        Objects.equals(this.withheldAmount, taxCalculationResultDTO.withheldAmount) &amp;&amp;</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">        Objects.equals(this.errors, taxCalculationResultDTO.errors);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="nc" id="L205">    return Objects.hash(dividendId, success, reclaimableAmount, standardRate, treatyRate, withheldAmount, errors);</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L210">    StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L211">    sb.append(&quot;class TaxCalculationResultDTO {\n&quot;);</span>
+<span class="nc" id="L212">    sb.append(&quot;    dividendId: &quot;).append(toIndentedString(dividendId)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L213">    sb.append(&quot;    success: &quot;).append(toIndentedString(success)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L214">    sb.append(&quot;    reclaimableAmount: &quot;).append(toIndentedString(reclaimableAmount)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L215">    sb.append(&quot;    standardRate: &quot;).append(toIndentedString(standardRate)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L216">    sb.append(&quot;    treatyRate: &quot;).append(toIndentedString(treatyRate)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L217">    sb.append(&quot;    withheldAmount: &quot;).append(toIndentedString(withheldAmount)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L218">    sb.append(&quot;    errors: &quot;).append(toIndentedString(errors)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L219">    sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L220">    return sb.toString();</span>
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(Object o) {
+<span class="nc bnc" id="L228" title="All 2 branches missed.">    if (o == null) {</span>
+<span class="nc" id="L229">      return &quot;null&quot;;</span>
+    }
+<span class="nc" id="L231">    return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+  }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

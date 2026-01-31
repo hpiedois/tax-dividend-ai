@@ -45,9 +45,11 @@ Tax Dividend AI automates the entire tax reclaim workflow:
 - ✅ Transaction history view
 - ✅ Responsive design for mobile and desktop
 
-### Roadmap
+### Roadmap (See [PROJECT_STATUS.md](PROJECT_STATUS.md) for detailed progress)
 
-- 🔄 Backend API integration
+- 🔄 **Phase 1**: Backend API development (30% complete)
+- 🔄 **Phase 2**: BFF Gateway (upcoming)
+- 🔄 **Phase 3**: Frontend integration (upcoming)
 - 🔄 Real PDF parsing with AI/ML models
 - 🔄 Form 5000/5001 PDF generation
 - 🔄 User authentication and profiles
@@ -58,34 +60,57 @@ Tax Dividend AI automates the entire tax reclaim workflow:
 
 ---
 
+## 📊 Project Status
+
+**Current Phase**: Backend Development (30% complete)
+
+For detailed progress tracking, milestones, and technical status, see **[PROJECT_STATUS.md](PROJECT_STATUS.md)**.
+
+**Quick links:**
+- [Infrastructure Setup](infrastructure/QUICKSTART.md) ✅ Complete
+- [Backend Development](backend/README.md) 🚧 In Progress (30%)
+- [Frontend MVP](frontend/README.md) ✅ Complete (mock data)
+
+---
+
 ## 🚀 Getting Started
 
-### Prerequisites
+### Full Stack Setup (Backend + Frontend)
 
-- Node.js 18+ and npm
-- Modern web browser (Chrome, Firefox, Safari, Edge)
+**Infrastructure (Required for backend):**
+```bash
+cd infrastructure
+./setup.sh      # First time only
+./start-dev.sh  # Start PostgreSQL, MinIO, Redis
+```
 
-### Installation
+**Backend (API Server):**
+```bash
+cd backend
+./dev-setup.sh  # First time only
+./run-dev.sh    # Start on port 8081
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/tax-dividend-ai.git
-   cd tax-dividend-ai
-   ```
+**Frontend (UI):**
+```bash
+cd frontend
+npm install
+npm run dev     # Start on port 5173
+```
 
-2. **Install dependencies**
-   ```bash
-   cd frontend
-   npm install
-   ```
+### Frontend Only (Mock Data)
 
-3. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+If you just want to explore the UI with mock data:
 
-4. **Open your browser**
-   Navigate to `http://localhost:5173`
+```bash
+cd frontend
+npm install
+npm run dev     # Start on port 5173
+```
+
+Open `http://localhost:5173` in your browser.
+
+**Note**: Frontend MVP works with mock data only. For real functionality, set up the full stack above.
 
 ### Building for Production
 
@@ -108,12 +133,14 @@ npm run preview  # Preview production build locally
 - **i18n**: i18next with browser language detection
 - **State**: React hooks + Context API (no external state library)
 
-### Backend (Planned)
+### Backend (In Development - 30%)
 
-- Python FastAPI or Node.js (Express/Fastify)
-- PostgreSQL database
-- PDF processing: pdfplumber, Tesseract OCR
-- AI/ML: OpenAI GPT-4 or custom models for data extraction
+- **Framework**: Spring Boot 3.5+ with Java 21
+- **Database**: PostgreSQL 16 with Flyway migrations
+- **Storage**: MinIO (S3-compatible)
+- **Cache**: Redis
+- **PDF**: Apache PDFBox for parsing and generation
+- **Infrastructure**: Docker Compose (multi-environment)
 
 ---
 
@@ -121,18 +148,32 @@ npm run preview  # Preview production build locally
 
 ```
 tax-dividend-ai/
-├── frontend/              # React TypeScript application
+├── infrastructure/        # 🐳 Multi-environment Docker setup
+│   ├── docker-compose.dev.yml   # Development (PostgreSQL, MinIO, Redis)
+│   ├── docker-compose.uat.yml   # UAT/Staging
+│   ├── docker-compose.prod.yml  # Production template
+│   ├── start-dev.sh            # Quick start script
+│   └── README.md               # Full infrastructure guide
+├── backend/              # ☕ Spring Boot backend (Java 21)
+│   ├── src/main/java/           # Application code
+│   ├── src/main/resources/
+│   │   └── db/migration/        # Flyway SQL migrations
+│   ├── dev-setup.sh            # First-time setup
+│   ├── run-dev.sh              # Start development server
+│   └── README.md               # Backend guide
+├── frontend/             # ⚛️  React TypeScript application
 │   ├── src/
-│   │   ├── components/    # UI components organized by domain
-│   │   ├── lib/           # Utilities and mock data
-│   │   ├── locales/       # i18n translation files
-│   │   └── App.tsx        # Main application component
-│   ├── public/            # Static assets
-│   └── package.json
-├── docs/                  # Business case and specifications
-│   ├── project_definition/
-│   └── officials/         # Sample French tax forms (PDFs)
-└── specs/                 # Future technical specifications
+│   │   ├── components/         # UI components
+│   │   ├── lib/                # Utilities and mock data
+│   │   ├── locales/            # i18n (FR, EN, DE, IT)
+│   │   └── App.tsx             # Main app
+│   └── README.md               # Frontend guide
+├── docs/                 # 📚 Documentation
+│   ├── project_definition/     # Business case
+│   └── officials/              # French tax forms (PDFs)
+├── PROJECT_STATUS.md     # 📊 Detailed project status & roadmap
+├── README.md             # This file
+└── CLAUDE.md             # Development guidelines for AI
 ```
 
 ---

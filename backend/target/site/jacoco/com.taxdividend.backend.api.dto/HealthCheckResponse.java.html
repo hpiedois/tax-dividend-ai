@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HealthCheckResponse.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.api.dto</a> &gt; <span class="el_source">HealthCheckResponse.java</span></div><h1>HealthCheckResponse.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.api.dto;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import org.springframework.lang.Nullable;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+import jakarta.annotation.Generated;
+
+/**
+ * HealthCheckResponse
+ */
+
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;, date = &quot;2026-01-31T11:27:14.708089+01:00[Europe/Zurich]&quot;, comments = &quot;Generator version: 7.17.0&quot;)
+<span class="fc" id="L22">public class HealthCheckResponse {</span>
+
+  private @Nullable String status;
+
+  private @Nullable String application;
+
+  private @Nullable Object database;
+
+  private @Nullable Object storage;
+
+  private @Nullable Object taxRules;
+
+  private @Nullable Object services;
+
+  public HealthCheckResponse status(@Nullable String status) {
+<span class="nc" id="L37">    this.status = status;</span>
+<span class="nc" id="L38">    return this;</span>
+  }
+
+  /**
+   * Get status
+   * @return status
+   */
+  
+  @JsonProperty(&quot;status&quot;)
+  public @Nullable String getStatus() {
+<span class="fc" id="L48">    return status;</span>
+  }
+
+  public void setStatus(@Nullable String status) {
+<span class="fc" id="L52">    this.status = status;</span>
+<span class="fc" id="L53">  }</span>
+
+  public HealthCheckResponse application(@Nullable String application) {
+<span class="nc" id="L56">    this.application = application;</span>
+<span class="nc" id="L57">    return this;</span>
+  }
+
+  /**
+   * Get application
+   * @return application
+   */
+  
+  @JsonProperty(&quot;application&quot;)
+  public @Nullable String getApplication() {
+<span class="fc" id="L67">    return application;</span>
+  }
+
+  public void setApplication(@Nullable String application) {
+<span class="fc" id="L71">    this.application = application;</span>
+<span class="fc" id="L72">  }</span>
+
+  public HealthCheckResponse database(@Nullable Object database) {
+<span class="nc" id="L75">    this.database = database;</span>
+<span class="nc" id="L76">    return this;</span>
+  }
+
+  /**
+   * Get database
+   * @return database
+   */
+  
+  @JsonProperty(&quot;database&quot;)
+  public @Nullable Object getDatabase() {
+<span class="fc" id="L86">    return database;</span>
+  }
+
+  public void setDatabase(@Nullable Object database) {
+<span class="fc" id="L90">    this.database = database;</span>
+<span class="fc" id="L91">  }</span>
+
+  public HealthCheckResponse storage(@Nullable Object storage) {
+<span class="nc" id="L94">    this.storage = storage;</span>
+<span class="nc" id="L95">    return this;</span>
+  }
+
+  /**
+   * Get storage
+   * @return storage
+   */
+  
+  @JsonProperty(&quot;storage&quot;)
+  public @Nullable Object getStorage() {
+<span class="fc" id="L105">    return storage;</span>
+  }
+
+  public void setStorage(@Nullable Object storage) {
+<span class="fc" id="L109">    this.storage = storage;</span>
+<span class="fc" id="L110">  }</span>
+
+  public HealthCheckResponse taxRules(@Nullable Object taxRules) {
+<span class="nc" id="L113">    this.taxRules = taxRules;</span>
+<span class="nc" id="L114">    return this;</span>
+  }
+
+  /**
+   * Get taxRules
+   * @return taxRules
+   */
+  
+  @JsonProperty(&quot;taxRules&quot;)
+  public @Nullable Object getTaxRules() {
+<span class="fc" id="L124">    return taxRules;</span>
+  }
+
+  public void setTaxRules(@Nullable Object taxRules) {
+<span class="fc" id="L128">    this.taxRules = taxRules;</span>
+<span class="fc" id="L129">  }</span>
+
+  public HealthCheckResponse services(@Nullable Object services) {
+<span class="nc" id="L132">    this.services = services;</span>
+<span class="nc" id="L133">    return this;</span>
+  }
+
+  /**
+   * Get services
+   * @return services
+   */
+  
+  @JsonProperty(&quot;services&quot;)
+  public @Nullable Object getServices() {
+<span class="fc" id="L143">    return services;</span>
+  }
+
+  public void setServices(@Nullable Object services) {
+<span class="nc" id="L147">    this.services = services;</span>
+<span class="nc" id="L148">  }</span>
+
+  @Override
+  public boolean equals(Object o) {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">    if (this == o) {</span>
+<span class="nc" id="L153">      return true;</span>
+    }
+<span class="nc bnc" id="L155" title="All 4 branches missed.">    if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L156">      return false;</span>
+    }
+<span class="nc" id="L158">    HealthCheckResponse healthCheckResponse = (HealthCheckResponse) o;</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">    return Objects.equals(this.status, healthCheckResponse.status) &amp;&amp;</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        Objects.equals(this.application, healthCheckResponse.application) &amp;&amp;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        Objects.equals(this.database, healthCheckResponse.database) &amp;&amp;</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        Objects.equals(this.storage, healthCheckResponse.storage) &amp;&amp;</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        Objects.equals(this.taxRules, healthCheckResponse.taxRules) &amp;&amp;</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">        Objects.equals(this.services, healthCheckResponse.services);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="nc" id="L169">    return Objects.hash(status, application, database, storage, taxRules, services);</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L174">    StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L175">    sb.append(&quot;class HealthCheckResponse {\n&quot;);</span>
+<span class="nc" id="L176">    sb.append(&quot;    status: &quot;).append(toIndentedString(status)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L177">    sb.append(&quot;    application: &quot;).append(toIndentedString(application)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L178">    sb.append(&quot;    database: &quot;).append(toIndentedString(database)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L179">    sb.append(&quot;    storage: &quot;).append(toIndentedString(storage)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L180">    sb.append(&quot;    taxRules: &quot;).append(toIndentedString(taxRules)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L181">    sb.append(&quot;    services: &quot;).append(toIndentedString(services)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L182">    sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L183">    return sb.toString();</span>
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(Object o) {
+<span class="nc bnc" id="L191" title="All 2 branches missed.">    if (o == null) {</span>
+<span class="nc" id="L192">      return &quot;null&quot;;</span>
+    }
+<span class="nc" id="L194">    return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+  }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.service.impl</a> &gt; <span class="el_source">FormServiceImpl.java</span></div><h1>FormServiceImpl.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.service.impl;
+
+import com.taxdividend.backend.api.dto.GeneratedForm;
+import com.taxdividend.backend.mapper.FormMapper;
+import com.taxdividend.backend.repository.GeneratedFormRepository;
+import com.taxdividend.backend.service.AuditService;
+import com.taxdividend.backend.service.FormService;
+import com.taxdividend.backend.service.StorageService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.ByteArrayInputStream;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+<span class="nc" id="L24">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class FormServiceImpl implements FormService {
+
+    private final GeneratedFormRepository generatedFormRepository;
+    private final StorageService storageService;
+    private final AuditService auditService;
+    private final FormMapper formMapper;
+
+    @Override
+    public List&lt;GeneratedForm&gt; listForms(UUID userId, Integer taxYear, String formType) {
+        List&lt;com.taxdividend.backend.model.GeneratedForm&gt; forms;
+
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (taxYear != null) {</span>
+<span class="nc" id="L40">            forms = generatedFormRepository.findByUserIdAndTaxYear(userId, taxYear);</span>
+        } else {
+<span class="nc" id="L42">            forms = generatedFormRepository.findByUserId(userId);</span>
+        }
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        if (formType != null) {</span>
+<span class="nc" id="L46">            forms = forms.stream()</span>
+<span class="nc" id="L47">                    .filter(f -&gt; f.getFormType().equalsIgnoreCase(formType))</span>
+<span class="nc" id="L48">                    .toList();</span>
+        }
+
+<span class="nc" id="L51">        return formMapper.toApiDtoList(forms);</span>
+    }
+
+    @Override
+    public Optional&lt;GeneratedForm&gt; getForm(UUID id, UUID userId) {
+<span class="nc" id="L56">        return generatedFormRepository.findById(id)</span>
+<span class="nc" id="L57">                .filter(form -&gt; form.getUser().getId().equals(userId))</span>
+<span class="nc" id="L58">                .map(formMapper::toApiDto);</span>
+    }
+
+    @Override
+    public ResponseEntity&lt;Resource&gt; downloadForm(UUID id, UUID userId) {
+<span class="nc" id="L63">        com.taxdividend.backend.model.GeneratedForm form = generatedFormRepository.findById(id)</span>
+<span class="nc" id="L64">                .filter(f -&gt; f.getUser().getId().equals(userId))</span>
+<span class="nc" id="L65">                .orElse(null);</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        if (form == null) {</span>
+<span class="nc" id="L68">            return ResponseEntity.notFound().build();</span>
+        }
+
+        try {
+<span class="nc" id="L72">            byte[] fileBytes = storageService.downloadFileAsBytes(form.getS3Key());</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            String contentType = &quot;BUNDLE&quot;.equals(form.getFormType())</span>
+<span class="nc" id="L75">                    ? &quot;application/zip&quot;</span>
+<span class="nc" id="L76">                    : &quot;application/pdf&quot;;</span>
+
+<span class="nc" id="L78">            HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc" id="L79">            headers.setContentType(MediaType.parseMediaType(contentType));</span>
+<span class="nc" id="L80">            headers.setContentDispositionFormData(&quot;attachment&quot;, form.getFileName());</span>
+<span class="nc" id="L81">            headers.setContentLength(fileBytes.length);</span>
+
+<span class="nc" id="L83">            log.info(&quot;Downloading form {} for user {}: {} ({} bytes)&quot;,</span>
+<span class="nc" id="L84">                    id, userId, form.getFileName(), fileBytes.length);</span>
+
+<span class="nc" id="L86">            auditService.logAction(userId, &quot;FORM_DOWNLOADED&quot;, &quot;FORM&quot;, id, null, null, null);</span>
+
+<span class="nc" id="L88">            return ResponseEntity.ok()</span>
+<span class="nc" id="L89">                    .headers(headers)</span>
+<span class="nc" id="L90">                    .body(new InputStreamResource(new ByteArrayInputStream(fileBytes)));</span>
+
+<span class="nc" id="L92">        } catch (Exception e) {</span>
+<span class="nc" id="L93">            log.error(&quot;Failed to download form {}&quot;, id, e);</span>
+<span class="nc" id="L94">            return ResponseEntity.internalServerError().build();</span>
+        }
+    }
+
+    @Override
+    public Optional&lt;String&gt; getDownloadUrl(UUID id, UUID userId, int expirationHours) {
+<span class="nc" id="L100">        com.taxdividend.backend.model.GeneratedForm form = generatedFormRepository.findById(id)</span>
+<span class="nc" id="L101">                .filter(f -&gt; f.getUser().getId().equals(userId))</span>
+<span class="nc" id="L102">                .orElse(null);</span>
+
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        if (form == null) {</span>
+<span class="nc" id="L105">            return Optional.empty();</span>
+        }
+
+        try {
+<span class="nc" id="L109">            String url = storageService.generatePresignedUrl(</span>
+<span class="nc" id="L110">                    form.getS3Key(),</span>
+<span class="nc" id="L111">                    java.time.Duration.ofHours(expirationHours));</span>
+<span class="nc" id="L112">            return Optional.of(url);</span>
+<span class="nc" id="L113">        } catch (Exception e) {</span>
+<span class="nc" id="L114">            log.error(&quot;Failed to generate download URL for form {}&quot;, id, e);</span>
+<span class="nc" id="L115">            return Optional.empty();</span>
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteForm(UUID id, UUID userId) {
+<span class="nc" id="L122">        com.taxdividend.backend.model.GeneratedForm form = generatedFormRepository.findById(id)</span>
+<span class="nc" id="L123">                .filter(f -&gt; f.getUser().getId().equals(userId))</span>
+<span class="nc" id="L124">                .orElse(null);</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (form == null) {</span>
+            // Already gone or not owned
+<span class="nc" id="L128">            return;</span>
+        }
+
+        try {
+<span class="nc" id="L132">            boolean deleted = storageService.deleteFile(form.getS3Key());</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            if (!deleted) {</span>
+<span class="nc" id="L134">                log.warn(&quot;Failed to delete file from storage: {}&quot;, form.getS3Key());</span>
+            }
+
+<span class="nc" id="L137">            generatedFormRepository.delete(form);</span>
+<span class="nc" id="L138">            auditService.logAction(userId, &quot;FORM_DELETED&quot;, &quot;FORM&quot;, id, null, null, null);</span>
+<span class="nc" id="L139">            log.info(&quot;Deleted form {} for user {}&quot;, id, userId);</span>
+
+<span class="nc" id="L141">        } catch (Exception e) {</span>
+<span class="nc" id="L142">            log.error(&quot;Failed to delete form {}&quot;, id, e);</span>
+<span class="nc" id="L143">            throw new RuntimeException(&quot;Failed to delete form&quot;, e);</span>
+<span class="nc" id="L144">        }</span>
+<span class="nc" id="L145">    }</span>
+
+    @Override
+    public List&lt;GeneratedForm&gt; getFormsByStatus(UUID userId, String status) {
+        // Assuming repository method exists or we filter
+<span class="nc" id="L150">        List&lt;com.taxdividend.backend.model.GeneratedForm&gt; forms = generatedFormRepository.findByUserAndStatus(null,</span>
+                status);
+        // Note: Repository method findByUserAndStatus was called with null user in
+        // controller?
+        // &quot;generatedFormRepository.findByUserAndStatus(null, status);&quot;
+        // This implies fetching for ALL users or there was a bug in controller (it took
+        // userIdHeader but didn't use it?)
+        // Controller code:
+        // UUID userId = UUID.fromString(userIdHeader);
+        // List&lt;GeneratedForm&gt; forms = generatedFormRepository.findByUserAndStatus(null,
+        // status);
+
+        // Use userId if the repo supports it. Ideally we should.
+        // I'll assume we should use userId if provided.
+        // But for now matching controller behavior (which passed null??).
+        // Actually, looking at controller snippet:
+        // &quot;List&lt;GeneratedForm&gt; forms =
+        // generatedFormRepository.findByUserAndStatus(null, status); // Need to
+        // implement this in repository&quot;
+        // It seems it was a placeholder.
+
+        // I will implement a safer version filtering by user.
+        // generatedFormRepository might not have findByUserAndStatus.
+        // But let's assume standard JPA naming or similar.
+
+        // If repo doesn't have it, I'll fetch by user and filter.
+<span class="nc" id="L176">        List&lt;com.taxdividend.backend.model.GeneratedForm&gt; userForms = generatedFormRepository.findByUserId(userId);</span>
+<span class="nc" id="L177">        return userForms.stream()</span>
+<span class="nc" id="L178">                .filter(f -&gt; status.equalsIgnoreCase(f.getStatus()))</span>
+<span class="nc" id="L179">                .map(formMapper::toApiDto)</span>
+<span class="nc" id="L180">                .toList();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

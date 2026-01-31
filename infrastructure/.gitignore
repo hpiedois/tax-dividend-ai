@@ -1,0 +1,22 @@
+# Environment files with real credentials
+.env.prod
+
+# Backups (can be large)
+backups/
+
+# Docker volumes data (managed by Docker)
+postgres_data/
+minio_data/
+redis_data/
+
+# Logs
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.swp
+*~

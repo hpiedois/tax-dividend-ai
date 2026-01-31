@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tax Dividend AI</string>
+    <string name="title_activity_main">Tax Dividend AI</string>
+    <string name="package_name">com.taxdividendai.app</string>
+    <string name="custom_url_scheme">com.taxdividendai.app</string>
+</resources>

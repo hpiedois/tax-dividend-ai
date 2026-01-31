@@ -2,37 +2,617 @@ openapi: 3.0.3
 info:
   title: Tax Dividend AI Backend Internal API
   version: 1.0.0
-  description: Internal API for Backend Services (PDF, Storage, Auth)
+  description: Internal API for Backend Services
 servers:
   - url: http://localhost:8081/internal
+    description: Local development server
+
+components:
+  schemas:
+    # Dividend schemas
+    Dividend:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        securityName:
+          type: string
+        isin:
+          type: string
+        grossAmount:
+          type: number
+        currency:
+          type: string
+        paymentDate:
+          type: string
+          format: date
+        withholdingTax:
+          type: number
+        reclaimableAmount:
+          type: number
+
+    TaxCalculationResultDTO:
+      type: object
+      properties:
+        dividendId:
+          type: string
+          format: uuid
+        success:
+          type: boolean
+        reclaimableAmount:
+          type: number
+        standardRate:
+          type: number
+        treatyRate:
+          type: number
+        withheldAmount:
+          type: number
+        errors:
+          type: array
+          items:
+            type: string
+
+    TaxCalculationBatchResultDTO:
+      type: object
+      properties:
+        successCount:
+          type: integer
+        failureCount:
+          type: integer
+        totalReclaimableAmount:
+          type: number
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxCalculationResultDTO'
+
+    # Form schemas
+    FormGenerationRequest:
+      $ref: './schemas/FormGenerationRequest.yaml'
+
+    GenerateFormResultDTO:
+      $ref: './schemas/GenerateFormResultDTO.yaml'
+
+    VerifyEmailResponseDTO:
+      $ref: './schemas/VerifyEmailResponseDTO.yaml'
+
+
+    GeneratedForm:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        formType:
+          type: string
+        taxYear:
+          type: integer
+        fileName:
+          type: string
+        s3Key:
+          type: string
+        fileSize:
+          type: integer
+          format: int64
+        generatedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    # TaxRule schemas
+    TaxRule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sourceCountry:
+          type: string
+        residenceCountry:
+          type: string
+        securityType:
+          type: string
+        standardWithholdingRate:
+          type: number
+        treatyRate:
+          type: number
+        reliefAtSourceAvailable:
+          type: boolean
+        refundProcedureAvailable:
+          type: boolean
+        effectiveFrom:
+          type: string
+          format: date
+        effectiveTo:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    TreatyRateResponse:
+      type: object
+      properties:
+        standardRate:
+          type: number
+        treatyRate:
+          type: number
+        reliefAtSourceAvailable:
+          type: boolean
+        refundProcedureAvailable:
+          type: boolean
+        notes:
+          type: string
+
+    # Health schemas
+    HealthCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        application:
+          type: string
+        database:
+          type: object
+        storage:
+          type: object
+        taxRules:
+          type: object
+        services:
+          type: object
+
+    # Auth schemas
+    RegisterUserRequest:
+      $ref: './schemas/RegisterUserRequest.yaml'
+
 paths:
-  /auth/validate-token:
-    post:
+  # Dividend endpoints
+  /dividends:
+    get:
       tags:
-        - Auth
-      summary: Validate a JWT token
-      operationId: validateToken
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                token:
-                  type: string
+        - Dividends
+      summary: List user's dividends
+      operationId: listDividends
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
-          description: Token is valid
+          description: List of dividends
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  valid:
-                    type: boolean
-                  userId:
-                    type: string
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Dividend'
 
+  /dividends/{id}:
+    get:
+      tags:
+        - Dividends
+      summary: Get dividend by ID
+      operationId: getDividend
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dividend details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dividend'
+        '404':
+          description: Not found
+
+    delete:
+      tags:
+        - Dividends
+      summary: Delete dividend
+      operationId: deleteDividend
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+
+  /dividends/{id}/calculate:
+    post:
+      tags:
+        - Dividends
+      summary: Calculate tax for dividend
+      operationId: calculateTax
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: residenceCountry
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calculation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxCalculationResultDTO'
+
+  /dividends/calculate-batch:
+    post:
+      tags:
+        - Dividends
+      summary: Calculate tax for multiple dividends
+      operationId: calculateBatch
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+      responses:
+        '200':
+          description: Batch calculation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxCalculationBatchResultDTO'
+
+  # Forms endpoints
+  /forms/generate:
+    post:
+      tags:
+        - Forms
+      summary: Generate tax forms
+      operationId: generateForms
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FormGenerationRequest'
+      responses:
+        '200':
+          description: Form generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateFormResultDTO'
+
+  /forms:
+    get:
+      tags:
+        - Forms
+      summary: List user's forms
+      operationId: listForms
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: taxYear
+          in: query
+          schema:
+            type: integer
+        - name: formType
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of forms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GeneratedForm'
+
+  /forms/{id}:
+    get:
+      tags:
+        - Forms
+      summary: Get form metadata
+      operationId: getForm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Form metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratedForm'
+        '404':
+          description: Not found
+
+    delete:
+      tags:
+        - Forms
+      summary: Delete form
+      operationId: deleteForm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+
+  /forms/{id}/download:
+    get:
+      tags:
+        - Forms
+      summary: Download form
+      operationId: downloadForm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Form file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/zip:
+              schema:
+                type: string
+                format: binary
+
+  # Tax Rules endpoints
+  /tax-rules:
+    get:
+      tags:
+        - TaxRules
+      summary: List all tax rules
+      operationId: getAllTaxRules
+      responses:
+        '200':
+          description: List of tax rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxRule'
+
+  /tax-rules/{id}:
+    get:
+      tags:
+        - TaxRules
+      summary: Get tax rule by ID
+      operationId: getTaxRule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tax rule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRule'
+        '404':
+          description: Not found
+
+  /tax-rules/applicable:
+    get:
+      tags:
+        - TaxRules
+      summary: Find applicable tax rule
+      operationId: findApplicableRule
+      parameters:
+        - name: sourceCountry
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: residenceCountry
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: securityType
+          in: query
+          schema:
+            type: string
+            default: EQUITY
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Applicable rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxRule'
+        '404':
+          description: No rule found
+
+  /tax-rules/treaty-rate:
+    get:
+      tags:
+        - TaxRules
+      summary: Get treaty rate
+      operationId: getTreatyRate
+      parameters:
+        - name: sourceCountry
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: residenceCountry
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: securityType
+          in: query
+          schema:
+            type: string
+            default: EQUITY
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Treaty rate details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreatyRateResponse'
+        '404':
+          description: No treaty found
+
+  # Health endpoints
+  /health/deep:
+    get:
+      tags:
+        - Health
+      summary: Deep health check
+      operationId: deepHealthCheck
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+
+  /health/live:
+    get:
+      tags:
+        - Health
+      summary: Liveness probe
+      operationId: liveness
+      responses:
+        '200':
+          description: Alive
+
+  /health/ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness probe
+      operationId: readiness
+      responses:
+        '200':
+          description: Ready
+        '503':
+          description: Not ready
+
+  # Auth endpoints (existing)
   /auth/register:
     post:
       tags:
@@ -40,17 +620,11 @@ paths:
       summary: Register a new user
       operationId: registerUser
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
-                fullName:
-                  type: string
+              $ref: '#/components/schemas/RegisterUserRequest'
       responses:
         '200':
           description: Registration pending verification
@@ -60,6 +634,9 @@ paths:
                 type: object
                 properties:
                   id:
+                    type: string
+                    format: uuid
+                  message:
                     type: string
 
   /auth/verify:
@@ -76,117 +653,14 @@ paths:
             type: string
       responses:
         '200':
-          description: Verification successful
+          description: Email verified successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  verified:
-                    type: boolean
-                  message:
-                    type: string
+                $ref: './schemas/VerifyEmailResponseDTO.yaml'
+        '400':
+          description: Invalid token
 
+  # PDF endpoints (existing)
   /pdf/generate:
-    post:
-      tags:
-        - Pdf
-      summary: Generate Tax Forms PDF
-      operationId: generatePdf
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FormGenerationRequest'
-      responses:
-        '200':
-          description: PDF Generated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PdfGenerationResponse'
-
-  /pdf/parse:
-    post:
-      tags:
-        - Pdf
-      summary: Parse Dividend PDF
-      operationId: parseMakePdf
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-      responses:
-        '200':
-          description: Parsing result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  rawText:
-                    type: string
-
-  /storage/upload:
-    post:
-      tags:
-        - Storage
-      summary: Upload file to storage
-      operationId: uploadFile
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                bucket: 
-                  type: string
-      responses:
-        '200':
-          description: Upload successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  key:
-                    type: string
-                  url:
-                    type: string
-
-components:
-  schemas:
-    FormGenerationRequest:
-      type: object
-      properties:
-        taxpayerName:
-          type: string
-        taxId:
-          type: string
-        taxYear:
-          type: integer
-        country:
-          type: string
-          example: "FR"
-        dividends:
-          type: array
-          items:
-            type: object # Simplified for now
-    
-    PdfGenerationResponse:
-      type: object
-      properties:
-        formId:
-          type: string
-        downloadUrl:
-          type: string
-        fileName:
-          type: string
+    $ref: './paths/pdf-generate.yaml'

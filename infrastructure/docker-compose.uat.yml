@@ -1,0 +1,145 @@
+version: '3.8'
+
+# ============================================================================
+# UAT ENVIRONMENT - Tax Dividend AI (User Acceptance Testing / Staging)
+# ============================================================================
+# Usage: docker-compose -f docker-compose.uat.yml --env-file .env.uat up -d
+# ============================================================================
+
+services:
+  # PostgreSQL Database - UAT
+  postgres-uat:
+    image: postgres:16-alpine
+    container_name: tax-dividend-postgres-uat
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-taxdividend_uat}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Required from .env.uat
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      # UAT settings - closer to production
+      POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-256MB}
+      POSTGRES_EFFECTIVE_CACHE_SIZE: ${POSTGRES_EFFECTIVE_CACHE_SIZE:-1GB}
+      POSTGRES_MAX_CONNECTIONS: ${POSTGRES_MAX_CONNECTIONS:-100}
+      POSTGRES_WORK_MEM: ${POSTGRES_WORK_MEM:-4MB}
+      POSTGRES_MAINTENANCE_WORK_MEM: ${POSTGRES_MAINTENANCE_WORK_MEM:-64MB}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"  # Different port to avoid conflicts
+    volumes:
+      - postgres_uat_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+      - ./backups/uat:/backups
+    networks:
+      - tax-dividend-uat-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-taxdividend_uat}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    labels:
+      com.taxdividend.env: "uat"
+      com.taxdividend.service: "database"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MinIO (S3-compatible storage) - UAT
+  minio-uat:
+    image: minio/minio:latest
+    container_name: tax-dividend-minio-uat
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}  # Required from .env.uat
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}  # Required from .env.uat
+      MINIO_BROWSER: ${MINIO_BROWSER:-on}
+    ports:
+      - "${MINIO_API_PORT:-9002}:9000"  # Different port to avoid conflicts
+      - "${MINIO_CONSOLE_PORT:-9003}:9001"
+    volumes:
+      - minio_uat_data:/data
+    networks:
+      - tax-dividend-uat-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    labels:
+      com.taxdividend.env: "uat"
+      com.taxdividend.service: "storage"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MinIO Client - Auto-create buckets
+  minio-client-uat:
+    image: minio/mc:latest
+    container_name: tax-dividend-minio-client-uat
+    depends_on:
+      minio-uat:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set uat http://minio-uat:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      mc mb uat/tax-dividend-forms-uat --ignore-existing;
+      mc mb uat/tax-dividend-exports-uat --ignore-existing;
+      mc mb uat/tax-dividend-archives-uat --ignore-existing;
+      mc policy set download uat/tax-dividend-forms-uat;
+      mc versioning enable uat/tax-dividend-forms-uat;
+      echo 'UAT buckets configured with versioning';
+      exit 0;
+      "
+    networks:
+      - tax-dividend-uat-network
+    labels:
+      com.taxdividend.env: "uat"
+
+  # Redis - Caching (UAT)
+  redis-uat:
+    image: redis:7-alpine
+    container_name: tax-dividend-redis-uat
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6380}:6379"  # Different port to avoid conflicts
+    volumes:
+      - redis_uat_data:/data
+    networks:
+      - tax-dividend-uat-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      com.taxdividend.env: "uat"
+      com.taxdividend.service: "cache"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_uat_data:
+    driver: local
+    labels:
+      com.taxdividend.env: "uat"
+  minio_uat_data:
+    driver: local
+    labels:
+      com.taxdividend.env: "uat"
+  redis_uat_data:
+    driver: local
+    labels:
+      com.taxdividend.env: "uat"
+
+networks:
+  tax-dividend-uat-network:
+    driver: bridge
+    labels:
+      com.taxdividend.env: "uat"

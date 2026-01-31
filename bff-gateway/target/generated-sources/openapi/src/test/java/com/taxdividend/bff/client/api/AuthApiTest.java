@@ -1,6 +1,6 @@
 /*
  * Tax Dividend AI Backend Internal API
- * Internal API for Backend Services (PDF, Storage, Auth)
+ * Internal API for Backend Services
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -15,11 +15,10 @@ package com.taxdividend.bff.client.api;
 
 import com.taxdividend.bff.client.model.RegisterUser200Response;
 import com.taxdividend.bff.client.model.RegisterUserRequest;
-import com.taxdividend.bff.client.model.ValidateToken200Response;
-import com.taxdividend.bff.client.model.ValidateTokenRequest;
-import com.taxdividend.bff.client.model.VerifyEmail200Response;
-import org.junit.Test;
-import org.junit.Ignore;
+import com.taxdividend.bff.client.model.VerifyEmailResponseDTO;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +29,7 @@ import java.util.stream.Collectors;
 /**
  * API tests for AuthApi
  */
-@Ignore
+@Disabled
 public class AuthApiTest {
 
     private final AuthApi api = new AuthApi();
@@ -43,21 +42,9 @@ public class AuthApiTest {
      */
     @Test
     public void registerUserTest()  {
-        RegisterUserRequest registerUserRequest = null;
-        RegisterUser200Response response = api.registerUser(registerUserRequest).block();
-
-        // TODO: test validations
-    }
-    
-    /**
-     * Validate a JWT token
-     *
-     * 
-     */
-    @Test
-    public void validateTokenTest()  {
-        ValidateTokenRequest validateTokenRequest = null;
-        ValidateToken200Response response = api.validateToken(validateTokenRequest).block();
+        // uncomment below to test the function
+        //RegisterUserRequest registerUserRequest = null;
+        //RegisterUser200Response response = api.registerUser(registerUserRequest).block();
 
         // TODO: test validations
     }
@@ -69,8 +56,9 @@ public class AuthApiTest {
      */
     @Test
     public void verifyEmailTest()  {
-        String token = null;
-        VerifyEmail200Response response = api.verifyEmail(token).block();
+        // uncomment below to test the function
+        //String token = null;
+        //VerifyEmailResponseDTO response = api.verifyEmail(token).block();
 
         // TODO: test validations
     }

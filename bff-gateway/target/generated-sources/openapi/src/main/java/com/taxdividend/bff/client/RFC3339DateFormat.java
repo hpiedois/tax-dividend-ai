@@ -1,6 +1,6 @@
 /*
  * Tax Dividend AI Backend Internal API
- * Internal API for Backend Services (PDF, Storage, Auth)
+ * Internal API for Backend Services
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -22,6 +22,7 @@ import java.text.DecimalFormat;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-31T12:02:59.936362+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class RFC3339DateFormat extends DateFormat {
   private static final long serialVersionUID = 1L;
   private static final TimeZone TIMEZONE_Z = TimeZone.getTimeZone("UTC");

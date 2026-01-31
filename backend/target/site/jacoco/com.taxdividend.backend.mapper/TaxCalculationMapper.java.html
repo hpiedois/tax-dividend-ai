@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaxCalculationMapper.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.mapper</a> &gt; <span class="el_source">TaxCalculationMapper.java</span></div><h1>TaxCalculationMapper.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.mapper;
+
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Mapper for converting between TaxCalculation DTOs (internal vs API).
+ */
+@Component
+<span class="nc" id="L12">public class TaxCalculationMapper {</span>
+
+    public com.taxdividend.backend.api.dto.TaxCalculationResultDTO toApiDto(
+            com.taxdividend.backend.dto.TaxCalculationResultDTO internal) {
+<span class="nc bnc" id="L16" title="All 2 branches missed.">        if (internal == null) {</span>
+<span class="nc" id="L17">            return null;</span>
+        }
+
+<span class="nc" id="L20">        com.taxdividend.backend.api.dto.TaxCalculationResultDTO api =</span>
+                new com.taxdividend.backend.api.dto.TaxCalculationResultDTO();
+
+<span class="nc" id="L23">        api.setDividendId(internal.getDividendId());</span>
+<span class="nc bnc" id="L24" title="All 2 branches missed.">        api.setSuccess(internal.getTreatyApplied() != null ? internal.getTreatyApplied() : false);</span>
+<span class="nc" id="L25">        api.setReclaimableAmount(internal.getReclaimableAmount());</span>
+<span class="nc" id="L26">        api.setStandardRate(internal.getWithholdingRate());</span>
+<span class="nc" id="L27">        api.setTreatyRate(internal.getTreatyRate());</span>
+<span class="nc" id="L28">        api.setWithheldAmount(internal.getWithholdingTax());</span>
+
+<span class="nc bnc" id="L30" title="All 4 branches missed.">        if (internal.getNotes() != null &amp;&amp; !internal.getNotes().isEmpty()) {</span>
+<span class="nc" id="L31">            List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L32">            errors.add(internal.getNotes());</span>
+<span class="nc" id="L33">            api.setErrors(errors);</span>
+        }
+
+<span class="nc" id="L36">        return api;</span>
+    }
+
+    public com.taxdividend.backend.api.dto.TaxCalculationBatchResultDTO toApiBatchDto(
+            com.taxdividend.backend.dto.TaxCalculationBatchResultDTO internal) {
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (internal == null) {</span>
+<span class="nc" id="L42">            return null;</span>
+        }
+
+<span class="nc" id="L45">        com.taxdividend.backend.api.dto.TaxCalculationBatchResultDTO api =</span>
+                new com.taxdividend.backend.api.dto.TaxCalculationBatchResultDTO();
+
+<span class="nc" id="L48">        api.setSuccessCount(internal.getSuccessCount());</span>
+<span class="nc" id="L49">        api.setFailureCount(internal.getFailureCount());</span>
+<span class="nc" id="L50">        api.setTotalReclaimableAmount(internal.getTotalReclaimableAmount());</span>
+
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (internal.getResults() != null) {</span>
+<span class="nc" id="L53">            List&lt;com.taxdividend.backend.api.dto.TaxCalculationResultDTO&gt; apiResults =</span>
+<span class="nc" id="L54">                    internal.getResults().stream()</span>
+<span class="nc" id="L55">                            .map(this::toApiDto)</span>
+<span class="nc" id="L56">                            .toList();</span>
+<span class="nc" id="L57">            api.setResults(apiResults);</span>
+        }
+
+<span class="nc" id="L60">        return api;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

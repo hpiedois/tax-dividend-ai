@@ -8,6 +8,7 @@ import com.taxdividend.bff.model.DividendCase;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.springframework.lang.Nullable;
 import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
@@ -22,17 +23,17 @@ import jakarta.annotation.Generated;
  * DividendHistoryResponse
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-26T22:26:13.283645+01:00[Europe/Zurich]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T12:02:59.126017+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class DividendHistoryResponse {
 
   @Valid
-  private List<@Valid DividendCase> data;
+  private List<@Valid DividendCase> data = new ArrayList<>();
 
-  private Integer total;
+  private @Nullable Integer total;
 
-  private Integer page;
+  private @Nullable Integer page;
 
-  private Integer pageSize;
+  private @Nullable Integer pageSize;
 
   public DividendHistoryResponse data(List<@Valid DividendCase> data) {
     this.data = data;
@@ -50,7 +51,7 @@ public class DividendHistoryResponse {
   /**
    * Get data
    * @return data
-  */
+   */
   @Valid 
   @Schema(name = "data", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("data")
@@ -62,7 +63,7 @@ public class DividendHistoryResponse {
     this.data = data;
   }
 
-  public DividendHistoryResponse total(Integer total) {
+  public DividendHistoryResponse total(@Nullable Integer total) {
     this.total = total;
     return this;
   }
@@ -70,19 +71,19 @@ public class DividendHistoryResponse {
   /**
    * Get total
    * @return total
-  */
+   */
   
   @Schema(name = "total", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("total")
-  public Integer getTotal() {
+  public @Nullable Integer getTotal() {
     return total;
   }
 
-  public void setTotal(Integer total) {
+  public void setTotal(@Nullable Integer total) {
     this.total = total;
   }
 
-  public DividendHistoryResponse page(Integer page) {
+  public DividendHistoryResponse page(@Nullable Integer page) {
     this.page = page;
     return this;
   }
@@ -90,19 +91,19 @@ public class DividendHistoryResponse {
   /**
    * Get page
    * @return page
-  */
+   */
   
   @Schema(name = "page", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("page")
-  public Integer getPage() {
+  public @Nullable Integer getPage() {
     return page;
   }
 
-  public void setPage(Integer page) {
+  public void setPage(@Nullable Integer page) {
     this.page = page;
   }
 
-  public DividendHistoryResponse pageSize(Integer pageSize) {
+  public DividendHistoryResponse pageSize(@Nullable Integer pageSize) {
     this.pageSize = pageSize;
     return this;
   }
@@ -110,15 +111,15 @@ public class DividendHistoryResponse {
   /**
    * Get pageSize
    * @return pageSize
-  */
+   */
   
   @Schema(name = "pageSize", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("pageSize")
-  public Integer getPageSize() {
+  public @Nullable Integer getPageSize() {
     return pageSize;
   }
 
-  public void setPageSize(Integer pageSize) {
+  public void setPageSize(@Nullable Integer pageSize) {
     this.pageSize = pageSize;
   }
 

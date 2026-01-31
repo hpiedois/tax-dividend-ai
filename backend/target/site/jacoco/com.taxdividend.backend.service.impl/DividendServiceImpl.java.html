@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DividendServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.service.impl</a> &gt; <span class="el_source">DividendServiceImpl.java</span></div><h1>DividendServiceImpl.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.service.impl;
+
+import com.taxdividend.backend.api.dto.Dividend;
+import com.taxdividend.backend.api.dto.ListDividends200Response;
+import com.taxdividend.backend.mapper.DividendMapper;
+import com.taxdividend.backend.repository.DividendRepository;
+import com.taxdividend.backend.service.AuditService;
+import com.taxdividend.backend.service.DividendService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+<span class="nc" id="L21">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class DividendServiceImpl implements DividendService {
+
+    private final DividendRepository dividendRepository;
+    private final DividendMapper dividendMapper;
+    private final AuditService auditService;
+
+    @Override
+    public ListDividends200Response listDividends(UUID userId, Pageable pageable) {
+<span class="nc" id="L33">        List&lt;com.taxdividend.backend.model.Dividend&gt; dividends = dividendRepository.findByUserId(userId);</span>
+        // Note: Repository returns List, but we need Page for mapper.
+        // Assuming we want to support actual pagination later, but for now logic was:
+        // List&lt;Dividend&gt; dividends = dividendRepository.findByUserId(xUserId);
+        // Page&lt;Dividend&gt; dividendPage = Page.empty(pageable);
+        // wait, the original code had:
+        // List&lt;Dividend&gt; dividends = dividendRepository.findByUserId(xUserId);
+        // Page&lt;Dividend&gt; dividendPage = Page.empty(pageable);
+        // return ResponseEntity.ok(dividendMapper.toPageResponse(dividendPage));
+        // It seems the original code was BROKEN or placeholder regarding listing. It
+        // fetched list but returned empty page?
+        // Ah: Page&lt;Dividend&gt; dividendPage = Page.empty(pageable);
+        // It seems it was returning empty page.
+        // I will attempt to fix this to return actual data if possible, or replicate
+        // behavior.
+        // Let's replicate behavior but map the list if the mapper supports it, or just
+        // use the logic from controller.
+
+        // Actually, let's just return what the controller was doing but correctly.
+        // The current implementation seemed to ignore the fetched dividends and return
+        // empty page?
+        // &quot;List&lt;Dividend&gt; dividends = dividendRepository.findByUserId(xUserId);&quot;
+        // &quot;Page&lt;Dividend&gt; dividendPage = Page.empty(pageable);&quot;
+        // &quot;return ResponseEntity.ok(dividendMapper.toPageResponse(dividendPage));&quot;
+
+        // Use PageImpl to wrap the list (suboptimal for large data but matches current
+        // repo method)
+        // Or if repo supports Pageable... it likely extends JpaRepository which does.
+        // But findByUserId returns List.
+
+<span class="nc" id="L63">        Page&lt;com.taxdividend.backend.model.Dividend&gt; dividendPage = org.springframework.data.support.PageableExecutionUtils</span>
+<span class="nc" id="L64">                .getPage(</span>
+<span class="nc" id="L65">                        dividends, pageable, dividends::size);</span>
+
+<span class="nc" id="L67">        return dividendMapper.toPageResponse(dividendPage);</span>
+    }
+
+    @Override
+    public Optional&lt;Dividend&gt; getDividend(UUID id, UUID userId) {
+<span class="nc" id="L72">        return dividendRepository.findById(id)</span>
+<span class="nc" id="L73">                .filter(dividend -&gt; dividend.getUser().getId().equals(userId))</span>
+<span class="nc" id="L74">                .map(dividendMapper::toDto);</span>
+    }
+
+    @Override
+    public List&lt;Dividend&gt; getDividendsByDateRange(UUID userId, LocalDate startDate, LocalDate endDate) {
+<span class="nc" id="L79">        return dividendRepository.findByUserIdAndPaymentDateBetween(userId, startDate, endDate)</span>
+<span class="nc" id="L80">                .stream()</span>
+<span class="nc" id="L81">                .map(dividendMapper::toDto)</span>
+<span class="nc" id="L82">                .toList();</span>
+    }
+
+    @Override
+    public List&lt;Dividend&gt; getUnsubmittedDividends(UUID userId) {
+<span class="nc" id="L87">        return dividendRepository.findByUserIdAndFormIsNull(userId)</span>
+<span class="nc" id="L88">                .stream()</span>
+<span class="nc" id="L89">                .map(dividendMapper::toDto)</span>
+<span class="nc" id="L90">                .toList();</span>
+    }
+
+    @Override
+    @Transactional
+    public void deleteDividend(UUID id, UUID userId) {
+<span class="nc" id="L96">        dividendRepository.findById(id)</span>
+<span class="nc" id="L97">                .filter(dividend -&gt; dividend.getUser().getId().equals(userId))</span>
+<span class="nc" id="L98">                .ifPresent(dividend -&gt; {</span>
+<span class="nc" id="L99">                    dividendRepository.delete(dividend);</span>
+<span class="nc" id="L100">                    log.info(&quot;Deleted dividend {} for user {}&quot;, id, userId);</span>
+<span class="nc" id="L101">                    auditService.logAction(userId, &quot;DIVIDEND_DELETED&quot;, &quot;DIVIDEND&quot;, id, null, null, null);</span>
+<span class="nc" id="L102">                });</span>
+<span class="nc" id="L103">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

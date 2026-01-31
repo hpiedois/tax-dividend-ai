@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { api } from '../api';
+import React, { createContext, useEffect, useState } from 'react';
+import { useAuth as useOidcAuth } from 'react-oidc-context';
 
 export interface User {
     id: string;
@@ -7,77 +7,57 @@ export interface User {
     fullName: string;
 }
 
-export interface LoginCredentials {
-    email: string;
-    password: string;
-}
-
-export interface RegisterData {
-    email: string;
-    password: string;
-    fullName: string;
-}
-
 export interface AuthContextType {
     user: User | null;
     isLoading: boolean;
-    login: (credentials: LoginCredentials) => Promise<void>;
-    register: (data: RegisterData) => Promise<void>;
+    isAuthenticated: boolean;
+    login: () => Promise<void>;
+    register: () => Promise<void>; // Deprecated but kept for type safety temporarily
     logout: () => Promise<void>;
-    verifyEmail: (token: string) => Promise<void>;
+    token?: string;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const auth = useOidcAuth();
     const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
 
-    // Check if user is authenticated on mount (optional, requires /me endpoint)
     useEffect(() => {
-        // For now we assume session is not persistent across refresh unless we implement /me
-        // Or we rely on the cookie being there and we just need client state.
-        // Let's implement a simple /me check if possible, or just default specific state.
-        // Since backend doesn't have /me yet, we will start with null.
-        setIsLoading(false);
-    }, []);
+        if (auth.user?.profile) {
+            setUser({
+                id: auth.user.profile.sub || '',
+                email: auth.user.profile.email || '',
+                fullName: auth.user.profile.name || auth.user.profile.preferred_username || 'User',
+            });
+        } else {
+            setUser(null);
+        }
+    }, [auth.user]);
 
-    const login = async (credentials: LoginCredentials) => {
-        // Mock login for development
-        console.log('Mock login with:', credentials);
-        setUser({
-            id: 'mock-user-id',
-            email: 'john.doe@example.com',
-            fullName: 'John Doe'
-        });
-
-        // Original API call preserved but commented out for reference
-        // const res = await api.post('/auth/login', credentials);
-        // setUser(res.data);
-    };
-
-    const register = async (data: RegisterData) => {
-        // Mock registration for development
-        console.log('Mock register with:', data);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
-        // Simulate successful registration
-        // In a real app we might auto-login or just return
-    };
-
-    const verifyEmail = async (token: string) => {
-        await api.post(`/auth/verify?token=${token}`);
+    const login = async () => {
+        await auth.signinRedirect();
     };
 
     const logout = async () => {
-        try {
-            await api.post('/auth/logout');
-        } finally {
-            setUser(null);
-        }
+        await auth.signoutRedirect();
+    };
+
+    const register = async () => {
+        // Redirect to Keycloak Registration page if configured, or just login
+        await auth.signinRedirect({ extraQueryParams: { kc_action: 'register' } });
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, register, verifyEmail, logout }}>
+        <AuthContext.Provider value={{
+            user,
+            isLoading: auth.isLoading,
+            isAuthenticated: auth.isAuthenticated,
+            login,
+            register,
+            logout,
+            token: auth.user?.access_token
+        }}>
             {children}
         </AuthContext.Provider>
     );

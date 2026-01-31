@@ -1,6 +1,6 @@
 /*
  * Tax Dividend AI Backend Internal API
- * Internal API for Backend Services (PDF, Storage, Auth)
+ * Internal API for Backend Services
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -15,6 +15,7 @@ package com.taxdividend.bff.client.model;
 
 import java.util.Objects;
 import java.util.Arrays;
+import java.util.Locale;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -30,70 +32,314 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  * FormGenerationRequest
  */
 @JsonPropertyOrder({
-  FormGenerationRequest.JSON_PROPERTY_TAXPAYER_NAME,
-  FormGenerationRequest.JSON_PROPERTY_TAX_ID,
+  FormGenerationRequest.JSON_PROPERTY_USER_ID,
   FormGenerationRequest.JSON_PROPERTY_TAX_YEAR,
-  FormGenerationRequest.JSON_PROPERTY_COUNTRY,
-  FormGenerationRequest.JSON_PROPERTY_DIVIDENDS
+  FormGenerationRequest.JSON_PROPERTY_FORM_TYPE,
+  FormGenerationRequest.JSON_PROPERTY_DIVIDEND_IDS,
+  FormGenerationRequest.JSON_PROPERTY_INCLUDE_ATTESTATION,
+  FormGenerationRequest.JSON_PROPERTY_INCLUDE_DIVIDENDS,
+  FormGenerationRequest.JSON_PROPERTY_CANTON,
+  FormGenerationRequest.JSON_PROPERTY_ADDRESS,
+  FormGenerationRequest.JSON_PROPERTY_TAX_ID
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-26T22:26:13.434473+01:00[Europe/Zurich]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-31T12:02:59.936362+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class FormGenerationRequest {
-  public static final String JSON_PROPERTY_TAXPAYER_NAME = "taxpayerName";
-  private String taxpayerName;
-
-  public static final String JSON_PROPERTY_TAX_ID = "taxId";
-  private String taxId;
+  public static final String JSON_PROPERTY_USER_ID = "userId";
+  @jakarta.annotation.Nonnull
+  private UUID userId;
 
   public static final String JSON_PROPERTY_TAX_YEAR = "taxYear";
+  @jakarta.annotation.Nonnull
   private Integer taxYear;
 
-  public static final String JSON_PROPERTY_COUNTRY = "country";
-  private String country;
+  /**
+   * Gets or Sets formType
+   */
+  public enum FormTypeEnum {
+    _5000(String.valueOf("5000")),
+    
+    _5001(String.valueOf("5001")),
+    
+    BUNDLE(String.valueOf("BUNDLE"));
 
-  public static final String JSON_PROPERTY_DIVIDENDS = "dividends";
-  private List<Object> dividends;
+    private String value;
+
+    FormTypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static FormTypeEnum fromValue(String value) {
+      for (FormTypeEnum b : FormTypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  public static final String JSON_PROPERTY_FORM_TYPE = "formType";
+  @jakarta.annotation.Nonnull
+  private FormTypeEnum formType;
+
+  public static final String JSON_PROPERTY_DIVIDEND_IDS = "dividendIds";
+  @jakarta.annotation.Nullable
+  private List<UUID> dividendIds = new ArrayList<>();
+
+  public static final String JSON_PROPERTY_INCLUDE_ATTESTATION = "includeAttestation";
+  @jakarta.annotation.Nullable
+  private Boolean includeAttestation = false;
+
+  public static final String JSON_PROPERTY_INCLUDE_DIVIDENDS = "includeDividends";
+  @jakarta.annotation.Nullable
+  private Boolean includeDividends = false;
+
+  public static final String JSON_PROPERTY_CANTON = "canton";
+  @jakarta.annotation.Nullable
+  private String canton;
+
+  public static final String JSON_PROPERTY_ADDRESS = "address";
+  @jakarta.annotation.Nullable
+  private String address;
+
+  public static final String JSON_PROPERTY_TAX_ID = "taxId";
+  @jakarta.annotation.Nullable
+  private String taxId;
 
   public FormGenerationRequest() {
   }
 
-  public FormGenerationRequest taxpayerName(String taxpayerName) {
+  public FormGenerationRequest userId(@jakarta.annotation.Nonnull UUID userId) {
     
-    this.taxpayerName = taxpayerName;
+    this.userId = userId;
     return this;
   }
 
-   /**
-   * Get taxpayerName
-   * @return taxpayerName
-  **/
+  /**
+   * Get userId
+   * @return userId
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_USER_ID, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+
+  public UUID getUserId() {
+    return userId;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_USER_ID, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setUserId(@jakarta.annotation.Nonnull UUID userId) {
+    this.userId = userId;
+  }
+
+  public FormGenerationRequest taxYear(@jakarta.annotation.Nonnull Integer taxYear) {
+    
+    this.taxYear = taxYear;
+    return this;
+  }
+
+  /**
+   * Get taxYear
+   * @return taxYear
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_TAX_YEAR, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+
+  public Integer getTaxYear() {
+    return taxYear;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_TAX_YEAR, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setTaxYear(@jakarta.annotation.Nonnull Integer taxYear) {
+    this.taxYear = taxYear;
+  }
+
+  public FormGenerationRequest formType(@jakarta.annotation.Nonnull FormTypeEnum formType) {
+    
+    this.formType = formType;
+    return this;
+  }
+
+  /**
+   * Get formType
+   * @return formType
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_FORM_TYPE, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+
+  public FormTypeEnum getFormType() {
+    return formType;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_FORM_TYPE, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setFormType(@jakarta.annotation.Nonnull FormTypeEnum formType) {
+    this.formType = formType;
+  }
+
+  public FormGenerationRequest dividendIds(@jakarta.annotation.Nullable List<UUID> dividendIds) {
+    
+    this.dividendIds = dividendIds;
+    return this;
+  }
+
+  public FormGenerationRequest addDividendIdsItem(UUID dividendIdsItem) {
+    if (this.dividendIds == null) {
+      this.dividendIds = new ArrayList<>();
+    }
+    this.dividendIds.add(dividendIdsItem);
+    return this;
+  }
+
+  /**
+   * Get dividendIds
+   * @return dividendIds
+   */
   @jakarta.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_TAXPAYER_NAME)
+  @JsonProperty(value = JSON_PROPERTY_DIVIDEND_IDS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getTaxpayerName() {
-    return taxpayerName;
+  public List<UUID> getDividendIds() {
+    return dividendIds;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_TAXPAYER_NAME)
+  @JsonProperty(value = JSON_PROPERTY_DIVIDEND_IDS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setTaxpayerName(String taxpayerName) {
-    this.taxpayerName = taxpayerName;
+  public void setDividendIds(@jakarta.annotation.Nullable List<UUID> dividendIds) {
+    this.dividendIds = dividendIds;
+  }
+
+  public FormGenerationRequest includeAttestation(@jakarta.annotation.Nullable Boolean includeAttestation) {
+    
+    this.includeAttestation = includeAttestation;
+    return this;
+  }
+
+  /**
+   * Get includeAttestation
+   * @return includeAttestation
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_INCLUDE_ATTESTATION, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public Boolean getIncludeAttestation() {
+    return includeAttestation;
   }
 
 
-  public FormGenerationRequest taxId(String taxId) {
+  @JsonProperty(value = JSON_PROPERTY_INCLUDE_ATTESTATION, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setIncludeAttestation(@jakarta.annotation.Nullable Boolean includeAttestation) {
+    this.includeAttestation = includeAttestation;
+  }
+
+  public FormGenerationRequest includeDividends(@jakarta.annotation.Nullable Boolean includeDividends) {
+    
+    this.includeDividends = includeDividends;
+    return this;
+  }
+
+  /**
+   * Get includeDividends
+   * @return includeDividends
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_INCLUDE_DIVIDENDS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public Boolean getIncludeDividends() {
+    return includeDividends;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_INCLUDE_DIVIDENDS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setIncludeDividends(@jakarta.annotation.Nullable Boolean includeDividends) {
+    this.includeDividends = includeDividends;
+  }
+
+  public FormGenerationRequest canton(@jakarta.annotation.Nullable String canton) {
+    
+    this.canton = canton;
+    return this;
+  }
+
+  /**
+   * Get canton
+   * @return canton
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_CANTON, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getCanton() {
+    return canton;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_CANTON, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setCanton(@jakarta.annotation.Nullable String canton) {
+    this.canton = canton;
+  }
+
+  public FormGenerationRequest address(@jakarta.annotation.Nullable String address) {
+    
+    this.address = address;
+    return this;
+  }
+
+  /**
+   * Get address
+   * @return address
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_ADDRESS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getAddress() {
+    return address;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_ADDRESS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setAddress(@jakarta.annotation.Nullable String address) {
+    this.address = address;
+  }
+
+  public FormGenerationRequest taxId(@jakarta.annotation.Nullable String taxId) {
     
     this.taxId = taxId;
     return this;
   }
 
-   /**
+  /**
    * Get taxId
    * @return taxId
-  **/
+   */
   @jakarta.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_TAX_ID)
+  @JsonProperty(value = JSON_PROPERTY_TAX_ID, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
   public String getTaxId() {
@@ -101,97 +347,12 @@ public class FormGenerationRequest {
   }
 
 
-  @JsonProperty(JSON_PROPERTY_TAX_ID)
+  @JsonProperty(value = JSON_PROPERTY_TAX_ID, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setTaxId(String taxId) {
+  public void setTaxId(@jakarta.annotation.Nullable String taxId) {
     this.taxId = taxId;
   }
 
-
-  public FormGenerationRequest taxYear(Integer taxYear) {
-    
-    this.taxYear = taxYear;
-    return this;
-  }
-
-   /**
-   * Get taxYear
-   * @return taxYear
-  **/
-  @jakarta.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_TAX_YEAR)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public Integer getTaxYear() {
-    return taxYear;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_TAX_YEAR)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setTaxYear(Integer taxYear) {
-    this.taxYear = taxYear;
-  }
-
-
-  public FormGenerationRequest country(String country) {
-    
-    this.country = country;
-    return this;
-  }
-
-   /**
-   * Get country
-   * @return country
-  **/
-  @jakarta.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_COUNTRY)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public String getCountry() {
-    return country;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_COUNTRY)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setCountry(String country) {
-    this.country = country;
-  }
-
-
-  public FormGenerationRequest dividends(List<Object> dividends) {
-    
-    this.dividends = dividends;
-    return this;
-  }
-
-  public FormGenerationRequest addDividendsItem(Object dividendsItem) {
-    if (this.dividends == null) {
-      this.dividends = new ArrayList<>();
-    }
-    this.dividends.add(dividendsItem);
-    return this;
-  }
-
-   /**
-   * Get dividends
-   * @return dividends
-  **/
-  @jakarta.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_DIVIDENDS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public List<Object> getDividends() {
-    return dividends;
-  }
-
-
-  @JsonProperty(JSON_PROPERTY_DIVIDENDS)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setDividends(List<Object> dividends) {
-    this.dividends = dividends;
-  }
 
   @Override
   public boolean equals(Object o) {
@@ -202,27 +363,35 @@ public class FormGenerationRequest {
       return false;
     }
     FormGenerationRequest formGenerationRequest = (FormGenerationRequest) o;
-    return Objects.equals(this.taxpayerName, formGenerationRequest.taxpayerName) &&
-        Objects.equals(this.taxId, formGenerationRequest.taxId) &&
+    return Objects.equals(this.userId, formGenerationRequest.userId) &&
         Objects.equals(this.taxYear, formGenerationRequest.taxYear) &&
-        Objects.equals(this.country, formGenerationRequest.country) &&
-        Objects.equals(this.dividends, formGenerationRequest.dividends);
+        Objects.equals(this.formType, formGenerationRequest.formType) &&
+        Objects.equals(this.dividendIds, formGenerationRequest.dividendIds) &&
+        Objects.equals(this.includeAttestation, formGenerationRequest.includeAttestation) &&
+        Objects.equals(this.includeDividends, formGenerationRequest.includeDividends) &&
+        Objects.equals(this.canton, formGenerationRequest.canton) &&
+        Objects.equals(this.address, formGenerationRequest.address) &&
+        Objects.equals(this.taxId, formGenerationRequest.taxId);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(taxpayerName, taxId, taxYear, country, dividends);
+    return Objects.hash(userId, taxYear, formType, dividendIds, includeAttestation, includeDividends, canton, address, taxId);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class FormGenerationRequest {\n");
-    sb.append("    taxpayerName: ").append(toIndentedString(taxpayerName)).append("\n");
-    sb.append("    taxId: ").append(toIndentedString(taxId)).append("\n");
+    sb.append("    userId: ").append(toIndentedString(userId)).append("\n");
     sb.append("    taxYear: ").append(toIndentedString(taxYear)).append("\n");
-    sb.append("    country: ").append(toIndentedString(country)).append("\n");
-    sb.append("    dividends: ").append(toIndentedString(dividends)).append("\n");
+    sb.append("    formType: ").append(toIndentedString(formType)).append("\n");
+    sb.append("    dividendIds: ").append(toIndentedString(dividendIds)).append("\n");
+    sb.append("    includeAttestation: ").append(toIndentedString(includeAttestation)).append("\n");
+    sb.append("    includeDividends: ").append(toIndentedString(includeDividends)).append("\n");
+    sb.append("    canton: ").append(toIndentedString(canton)).append("\n");
+    sb.append("    address: ").append(toIndentedString(address)).append("\n");
+    sb.append("    taxId: ").append(toIndentedString(taxId)).append("\n");
     sb.append("}");
     return sb.toString();
   }

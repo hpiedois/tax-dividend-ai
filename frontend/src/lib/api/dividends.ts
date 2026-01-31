@@ -78,7 +78,7 @@ export const getDividendStats = async (): Promise<{
 export const generateTaxForms = async (
   dividendIds: string[]
 ): Promise<{ formUrl: string }> => {
-  const { data } = await apiClient.post('/dividends/generate-forms', {
+  const { data } = await apiClient.post('/forms/generate', {
     dividendIds,
   });
   return data;

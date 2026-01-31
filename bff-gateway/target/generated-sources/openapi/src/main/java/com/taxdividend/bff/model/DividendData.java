@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
 import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
@@ -21,25 +22,25 @@ import jakarta.annotation.Generated;
  * DividendData
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-26T22:26:13.283645+01:00[Europe/Zurich]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T12:02:59.126017+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class DividendData {
 
   private String securityName;
 
-  private String isin;
+  private @Nullable String isin;
 
   private BigDecimal grossAmount;
 
   private String currency;
 
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private LocalDate paymentDate;
+  private @Nullable LocalDate paymentDate;
 
-  private BigDecimal withholdingTax;
+  private @Nullable BigDecimal withholdingTax;
 
-  private BigDecimal reclaimableAmount;
+  private @Nullable BigDecimal reclaimableAmount;
 
-  private BigDecimal frenchRate;
+  private @Nullable BigDecimal frenchRate;
 
   public DividendData() {
     super();
@@ -62,7 +63,7 @@ public class DividendData {
   /**
    * Get securityName
    * @return securityName
-  */
+   */
   @NotNull 
   @Schema(name = "securityName", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("securityName")
@@ -74,7 +75,7 @@ public class DividendData {
     this.securityName = securityName;
   }
 
-  public DividendData isin(String isin) {
+  public DividendData isin(@Nullable String isin) {
     this.isin = isin;
     return this;
   }
@@ -82,15 +83,15 @@ public class DividendData {
   /**
    * Get isin
    * @return isin
-  */
+   */
   
   @Schema(name = "isin", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("isin")
-  public String getIsin() {
+  public @Nullable String getIsin() {
     return isin;
   }
 
-  public void setIsin(String isin) {
+  public void setIsin(@Nullable String isin) {
     this.isin = isin;
   }
 
@@ -102,7 +103,7 @@ public class DividendData {
   /**
    * Get grossAmount
    * @return grossAmount
-  */
+   */
   @NotNull @Valid 
   @Schema(name = "grossAmount", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("grossAmount")
@@ -122,7 +123,7 @@ public class DividendData {
   /**
    * Get currency
    * @return currency
-  */
+   */
   @NotNull 
   @Schema(name = "currency", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("currency")
@@ -134,7 +135,7 @@ public class DividendData {
     this.currency = currency;
   }
 
-  public DividendData paymentDate(LocalDate paymentDate) {
+  public DividendData paymentDate(@Nullable LocalDate paymentDate) {
     this.paymentDate = paymentDate;
     return this;
   }
@@ -142,19 +143,19 @@ public class DividendData {
   /**
    * Get paymentDate
    * @return paymentDate
-  */
+   */
   @Valid 
   @Schema(name = "paymentDate", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("paymentDate")
-  public LocalDate getPaymentDate() {
+  public @Nullable LocalDate getPaymentDate() {
     return paymentDate;
   }
 
-  public void setPaymentDate(LocalDate paymentDate) {
+  public void setPaymentDate(@Nullable LocalDate paymentDate) {
     this.paymentDate = paymentDate;
   }
 
-  public DividendData withholdingTax(BigDecimal withholdingTax) {
+  public DividendData withholdingTax(@Nullable BigDecimal withholdingTax) {
     this.withholdingTax = withholdingTax;
     return this;
   }
@@ -162,19 +163,19 @@ public class DividendData {
   /**
    * Get withholdingTax
    * @return withholdingTax
-  */
+   */
   @Valid 
   @Schema(name = "withholdingTax", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("withholdingTax")
-  public BigDecimal getWithholdingTax() {
+  public @Nullable BigDecimal getWithholdingTax() {
     return withholdingTax;
   }
 
-  public void setWithholdingTax(BigDecimal withholdingTax) {
+  public void setWithholdingTax(@Nullable BigDecimal withholdingTax) {
     this.withholdingTax = withholdingTax;
   }
 
-  public DividendData reclaimableAmount(BigDecimal reclaimableAmount) {
+  public DividendData reclaimableAmount(@Nullable BigDecimal reclaimableAmount) {
     this.reclaimableAmount = reclaimableAmount;
     return this;
   }
@@ -182,19 +183,19 @@ public class DividendData {
   /**
    * Get reclaimableAmount
    * @return reclaimableAmount
-  */
+   */
   @Valid 
   @Schema(name = "reclaimableAmount", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("reclaimableAmount")
-  public BigDecimal getReclaimableAmount() {
+  public @Nullable BigDecimal getReclaimableAmount() {
     return reclaimableAmount;
   }
 
-  public void setReclaimableAmount(BigDecimal reclaimableAmount) {
+  public void setReclaimableAmount(@Nullable BigDecimal reclaimableAmount) {
     this.reclaimableAmount = reclaimableAmount;
   }
 
-  public DividendData frenchRate(BigDecimal frenchRate) {
+  public DividendData frenchRate(@Nullable BigDecimal frenchRate) {
     this.frenchRate = frenchRate;
     return this;
   }
@@ -202,15 +203,15 @@ public class DividendData {
   /**
    * Tracks which rate was applied (PFU or progressive)
    * @return frenchRate
-  */
+   */
   @Valid 
   @Schema(name = "frenchRate", description = "Tracks which rate was applied (PFU or progressive)", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("frenchRate")
-  public BigDecimal getFrenchRate() {
+  public @Nullable BigDecimal getFrenchRate() {
     return frenchRate;
   }
 
-  public void setFrenchRate(BigDecimal frenchRate) {
+  public void setFrenchRate(@Nullable BigDecimal frenchRate) {
     this.frenchRate = frenchRate;
   }
 

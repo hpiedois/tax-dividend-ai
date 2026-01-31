@@ -10,7 +10,10 @@ The project supports two market segments:
 - **B2C**: Individual investors importing broker statements to generate pre-filled tax forms
 - **B2B**: Fiduciaries and wealth managers processing reclaims for multiple clients
 
-Currently, the repository contains only the frontend MVP with mock data. The architecture is designed to support future backend integration.
+The repository contains:
+- **Frontend**: React + TypeScript MVP with mock data
+- **Backend**: Spring Boot 4.0.2 + Java 25 API (see `backend/CLAUDE.md`)
+- **Infrastructure**: Docker Compose setup (PostgreSQL, MinIO)
 
 ## Development Commands
 
@@ -36,10 +39,14 @@ Note: There is no testing infrastructure configured yet.
 
 ### Project Structure
 
-This is a **frontend-only monorepo-ready structure**:
+This is a **full-stack monorepo**:
 - `/frontend` - React + TypeScript + Vite application
+- `/backend` - Spring Boot 4.0.2 + Java 25 API (**see backend/CLAUDE.md for details**)
+- `/infrastructure` - Docker Compose, database migrations
 - `/docs` - Business case, functional specs, and official French tax forms (PDFs)
-- `/specs` - Empty directory for future specifications
+- `/specs` - OpenAPI specifications for contract-first development
+  - `/specs/backend` - Backend API contract (OpenAPI 3.0)
+  - `/specs/bff` - BFF API contract (future)
 
 ### Tech Stack
 
@@ -159,6 +166,39 @@ The application deals with **France-Switzerland double taxation treaties**:
 - **Tax Refund**: Forms submitted after payment to reclaim excess withholding
 
 The current MVP focuses on the **Tax Refund (Aval)** workflow for individual investors.
+
+## AI Autonomous Agents (Architecture)
+
+### Agent 1: Dividend Statement Parser
+
+**Purpose**: Parse broker dividend statements (PDF) to extract dividend data
+
+**Status**: 🚧 To be implemented (external service)
+
+**Design**:
+- Independent microservice (not part of Spring Boot backend)
+- LLM-assisted PDF parsing (handles various broker formats: Interactive Brokers, Swissquote, etc.)
+- Triggered by backend when user uploads PDF
+- Returns structured dividend data (JSON)
+- Backend creates Dividend entities from returned data
+
+**Note**: The `PdfParsingService` in backend has been removed - this functionality is delegated to the AI agent.
+
+### Agent 2: Tax Rules Updater
+
+**Purpose**: Maintain tax treaty rules up-to-date by monitoring official sources
+
+**Status**: 🚧 To be implemented (external service)
+
+**Design**:
+- Independent microservice with write access to backend database
+- Monitors official tax treaty publications (France, Switzerland, etc.)
+- LLM-assisted analysis of treaty changes
+- Proposes updates to TaxRule entities
+- Requires admin approval before applying changes
+- Maintains audit trail of all rule modifications
+
+**Database impact**: Updates `tax_rules` table in PostgreSQL
 
 ## Future Integration Points
 

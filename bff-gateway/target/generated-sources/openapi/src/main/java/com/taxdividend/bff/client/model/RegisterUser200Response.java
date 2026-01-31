@@ -1,6 +1,6 @@
 /*
  * Tax Dividend AI Backend Internal API
- * Internal API for Backend Services (PDF, Storage, Auth)
+ * Internal API for Backend Services
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -15,11 +15,13 @@ package com.taxdividend.bff.client.model;
 
 import java.util.Objects;
 import java.util.Arrays;
+import java.util.Locale;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
@@ -27,41 +29,73 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
  * RegisterUser200Response
  */
 @JsonPropertyOrder({
-  RegisterUser200Response.JSON_PROPERTY_ID
+  RegisterUser200Response.JSON_PROPERTY_ID,
+  RegisterUser200Response.JSON_PROPERTY_MESSAGE
 })
 @JsonTypeName("registerUser_200_response")
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-26T22:26:13.434473+01:00[Europe/Zurich]")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-31T12:02:59.936362+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class RegisterUser200Response {
   public static final String JSON_PROPERTY_ID = "id";
-  private String id;
+  @jakarta.annotation.Nullable
+  private UUID id;
+
+  public static final String JSON_PROPERTY_MESSAGE = "message";
+  @jakarta.annotation.Nullable
+  private String message;
 
   public RegisterUser200Response() {
   }
 
-  public RegisterUser200Response id(String id) {
+  public RegisterUser200Response id(@jakarta.annotation.Nullable UUID id) {
     
     this.id = id;
     return this;
   }
 
-   /**
+  /**
    * Get id
    * @return id
-  **/
+   */
   @jakarta.annotation.Nullable
-  @JsonProperty(JSON_PROPERTY_ID)
+  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public String getId() {
+  public UUID getId() {
     return id;
   }
 
 
-  @JsonProperty(JSON_PROPERTY_ID)
+  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setId(String id) {
+  public void setId(@jakarta.annotation.Nullable UUID id) {
     this.id = id;
   }
+
+  public RegisterUser200Response message(@jakarta.annotation.Nullable String message) {
+    
+    this.message = message;
+    return this;
+  }
+
+  /**
+   * Get message
+   * @return message
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_MESSAGE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public String getMessage() {
+    return message;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_MESSAGE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setMessage(@jakarta.annotation.Nullable String message) {
+    this.message = message;
+  }
+
 
   @Override
   public boolean equals(Object o) {
@@ -72,12 +106,13 @@ public class RegisterUser200Response {
       return false;
     }
     RegisterUser200Response registerUser200Response = (RegisterUser200Response) o;
-    return Objects.equals(this.id, registerUser200Response.id);
+    return Objects.equals(this.id, registerUser200Response.id) &&
+        Objects.equals(this.message, registerUser200Response.message);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id);
+    return Objects.hash(id, message);
   }
 
   @Override
@@ -85,6 +120,7 @@ public class RegisterUser200Response {
     StringBuilder sb = new StringBuilder();
     sb.append("class RegisterUser200Response {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
+    sb.append("    message: ").append(toIndentedString(message)).append("\n");
     sb.append("}");
     return sb.toString();
   }

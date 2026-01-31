@@ -1,0 +1,15 @@
+server:
+  port: 8083 # Different port from Backend (8081) and BFF (8080)
+
+spring:
+  application:
+#    name: mock-dividend-agent
+    name: mock-dividend-agent
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+logging:
+  level:
+    com.taxdividend: DEBUG

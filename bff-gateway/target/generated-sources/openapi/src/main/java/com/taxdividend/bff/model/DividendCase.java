@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
 import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
@@ -22,19 +23,19 @@ import jakarta.annotation.Generated;
  * DividendCase
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-26T22:26:13.283645+01:00[Europe/Zurich]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T12:02:59.126017+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class DividendCase {
 
-  private String id;
+  private @Nullable String id;
 
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-  private LocalDate date;
+  private @Nullable LocalDate date;
 
-  private String security;
+  private @Nullable String security;
 
-  private BigDecimal grossAmount;
+  private @Nullable BigDecimal grossAmount;
 
-  private BigDecimal reclaimedAmount;
+  private @Nullable BigDecimal reclaimedAmount;
 
   /**
    * Gets or Sets status
@@ -46,7 +47,7 @@ public class DividendCase {
     
     REFUNDED("refunded");
 
-    private String value;
+    private final String value;
 
     StatusEnum(String value) {
       this.value = value;
@@ -73,9 +74,9 @@ public class DividendCase {
     }
   }
 
-  private StatusEnum status;
+  private @Nullable StatusEnum status;
 
-  public DividendCase id(String id) {
+  public DividendCase id(@Nullable String id) {
     this.id = id;
     return this;
   }
@@ -83,19 +84,19 @@ public class DividendCase {
   /**
    * Get id
    * @return id
-  */
+   */
   
   @Schema(name = "id", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("id")
-  public String getId() {
+  public @Nullable String getId() {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(@Nullable String id) {
     this.id = id;
   }
 
-  public DividendCase date(LocalDate date) {
+  public DividendCase date(@Nullable LocalDate date) {
     this.date = date;
     return this;
   }
@@ -103,19 +104,19 @@ public class DividendCase {
   /**
    * Get date
    * @return date
-  */
+   */
   @Valid 
   @Schema(name = "date", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("date")
-  public LocalDate getDate() {
+  public @Nullable LocalDate getDate() {
     return date;
   }
 
-  public void setDate(LocalDate date) {
+  public void setDate(@Nullable LocalDate date) {
     this.date = date;
   }
 
-  public DividendCase security(String security) {
+  public DividendCase security(@Nullable String security) {
     this.security = security;
     return this;
   }
@@ -123,19 +124,19 @@ public class DividendCase {
   /**
    * Get security
    * @return security
-  */
+   */
   
   @Schema(name = "security", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("security")
-  public String getSecurity() {
+  public @Nullable String getSecurity() {
     return security;
   }
 
-  public void setSecurity(String security) {
+  public void setSecurity(@Nullable String security) {
     this.security = security;
   }
 
-  public DividendCase grossAmount(BigDecimal grossAmount) {
+  public DividendCase grossAmount(@Nullable BigDecimal grossAmount) {
     this.grossAmount = grossAmount;
     return this;
   }
@@ -143,19 +144,19 @@ public class DividendCase {
   /**
    * Get grossAmount
    * @return grossAmount
-  */
+   */
   @Valid 
   @Schema(name = "grossAmount", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("grossAmount")
-  public BigDecimal getGrossAmount() {
+  public @Nullable BigDecimal getGrossAmount() {
     return grossAmount;
   }
 
-  public void setGrossAmount(BigDecimal grossAmount) {
+  public void setGrossAmount(@Nullable BigDecimal grossAmount) {
     this.grossAmount = grossAmount;
   }
 
-  public DividendCase reclaimedAmount(BigDecimal reclaimedAmount) {
+  public DividendCase reclaimedAmount(@Nullable BigDecimal reclaimedAmount) {
     this.reclaimedAmount = reclaimedAmount;
     return this;
   }
@@ -163,19 +164,19 @@ public class DividendCase {
   /**
    * Get reclaimedAmount
    * @return reclaimedAmount
-  */
+   */
   @Valid 
   @Schema(name = "reclaimedAmount", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("reclaimedAmount")
-  public BigDecimal getReclaimedAmount() {
+  public @Nullable BigDecimal getReclaimedAmount() {
     return reclaimedAmount;
   }
 
-  public void setReclaimedAmount(BigDecimal reclaimedAmount) {
+  public void setReclaimedAmount(@Nullable BigDecimal reclaimedAmount) {
     this.reclaimedAmount = reclaimedAmount;
   }
 
-  public DividendCase status(StatusEnum status) {
+  public DividendCase status(@Nullable StatusEnum status) {
     this.status = status;
     return this;
   }
@@ -183,15 +184,15 @@ public class DividendCase {
   /**
    * Get status
    * @return status
-  */
+   */
   
   @Schema(name = "status", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("status")
-  public StatusEnum getStatus() {
+  public @Nullable StatusEnum getStatus() {
     return status;
   }
 
-  public void setStatus(StatusEnum status) {
+  public void setStatus(@Nullable StatusEnum status) {
     this.status = status;
   }
 

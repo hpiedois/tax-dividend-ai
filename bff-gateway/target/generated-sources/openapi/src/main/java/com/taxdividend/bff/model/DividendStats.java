@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import java.math.BigDecimal;
+import org.springframework.lang.Nullable;
 import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
@@ -19,16 +20,16 @@ import jakarta.annotation.Generated;
  * DividendStats
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-26T22:26:13.283645+01:00[Europe/Zurich]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T12:02:59.126017+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class DividendStats {
 
-  private BigDecimal totalReclaimed;
+  private @Nullable BigDecimal totalReclaimed;
 
-  private BigDecimal pendingAmount;
+  private @Nullable BigDecimal pendingAmount;
 
-  private Integer casesCount;
+  private @Nullable Integer casesCount;
 
-  public DividendStats totalReclaimed(BigDecimal totalReclaimed) {
+  public DividendStats totalReclaimed(@Nullable BigDecimal totalReclaimed) {
     this.totalReclaimed = totalReclaimed;
     return this;
   }
@@ -36,19 +37,19 @@ public class DividendStats {
   /**
    * Get totalReclaimed
    * @return totalReclaimed
-  */
+   */
   @Valid 
   @Schema(name = "totalReclaimed", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("totalReclaimed")
-  public BigDecimal getTotalReclaimed() {
+  public @Nullable BigDecimal getTotalReclaimed() {
     return totalReclaimed;
   }
 
-  public void setTotalReclaimed(BigDecimal totalReclaimed) {
+  public void setTotalReclaimed(@Nullable BigDecimal totalReclaimed) {
     this.totalReclaimed = totalReclaimed;
   }
 
-  public DividendStats pendingAmount(BigDecimal pendingAmount) {
+  public DividendStats pendingAmount(@Nullable BigDecimal pendingAmount) {
     this.pendingAmount = pendingAmount;
     return this;
   }
@@ -56,19 +57,19 @@ public class DividendStats {
   /**
    * Get pendingAmount
    * @return pendingAmount
-  */
+   */
   @Valid 
   @Schema(name = "pendingAmount", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("pendingAmount")
-  public BigDecimal getPendingAmount() {
+  public @Nullable BigDecimal getPendingAmount() {
     return pendingAmount;
   }
 
-  public void setPendingAmount(BigDecimal pendingAmount) {
+  public void setPendingAmount(@Nullable BigDecimal pendingAmount) {
     this.pendingAmount = pendingAmount;
   }
 
-  public DividendStats casesCount(Integer casesCount) {
+  public DividendStats casesCount(@Nullable Integer casesCount) {
     this.casesCount = casesCount;
     return this;
   }
@@ -76,15 +77,15 @@ public class DividendStats {
   /**
    * Get casesCount
    * @return casesCount
-  */
+   */
   
   @Schema(name = "casesCount", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("casesCount")
-  public Integer getCasesCount() {
+  public @Nullable Integer getCasesCount() {
     return casesCount;
   }
 
-  public void setCasesCount(Integer casesCount) {
+  public void setCasesCount(@Nullable Integer casesCount) {
     this.casesCount = casesCount;
   }
 

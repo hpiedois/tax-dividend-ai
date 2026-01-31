@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.taxdividend.bff.model.DividendData;
+import org.springframework.lang.Nullable;
 import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.OffsetDateTime;
 import jakarta.validation.Valid;
@@ -19,12 +20,12 @@ import jakarta.annotation.Generated;
  * ParsePDFResponse
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-26T22:26:13.283645+01:00[Europe/Zurich]")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T12:02:59.126017+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class ParsePDFResponse {
 
-  private DividendData data;
+  private @Nullable DividendData data;
 
-  public ParsePDFResponse data(DividendData data) {
+  public ParsePDFResponse data(@Nullable DividendData data) {
     this.data = data;
     return this;
   }
@@ -32,15 +33,15 @@ public class ParsePDFResponse {
   /**
    * Get data
    * @return data
-  */
+   */
   @Valid 
   @Schema(name = "data", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("data")
-  public DividendData getData() {
+  public @Nullable DividendData getData() {
     return data;
   }
 
-  public void setData(DividendData data) {
+  public void setData(@Nullable DividendData data) {
     this.data = data;
   }
 

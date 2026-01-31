@@ -20,49 +20,42 @@ export const apiClient: AxiosInstance = axios.create({
   withCredentials: true, // Send Cookies (HttpOnly)
 });
 
-// Response interceptor - handle errors and refresh token
+import { User } from 'oidc-client-ts';
+
+// Request interceptor - inject OIDC Token
+apiClient.interceptors.request.use(
+  (config) => {
+    // Attempt to retrieve token from sessionStorage (default storage for oidc-client-ts)
+    // Key pattern: oidc.user:<authority>:<client_id>
+    const oidcStorageKey = `oidc.user:http://localhost:8180/realms/tax-dividend:frontend`;
+    const oidcStorage = sessionStorage.getItem(oidcStorageKey);
+
+    if (oidcStorage) {
+      try {
+        const user = User.fromStorageString(oidcStorage);
+        if (user && user.access_token) {
+          config.headers.Authorization = `Bearer ${user.access_token}`;
+        }
+      } catch (e) {
+        console.warn('Failed to parse OIDC user from storage', e);
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor - handle errors
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config;
-
-    // Handle 401 Unauthorized
-    if (error.response?.status === 401 && originalRequest) {
-      // Prevent infinite loops
-      // @ts-expect-error - _retry is a custom property we add dynamically
-      if (originalRequest._retry) {
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
-      // @ts-expect-error - Adding custom property to track retry attempts
-      originalRequest._retry = true;
-
-      try {
-        // Attempt to refresh token
-        // Use a separate axios instance or fetch to avoid interceptor loop if this fails contextually 
-        // (though 401 here means access token expired, refresh endpoint should work directly with refresh cookie)
-        await axios.post(`${API_BASE_URL.replace('/api', '')}/auth/refresh`, {}, { withCredentials: true });
-
-        // Retry original request
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
+    // If 401, mostly handled by oidc-client automaticSilentRenew.
+    // If explicitly failing here, we might redirect to login via window.location but prefer relying on AuthProvider
+    if (error.response?.status === 401) {
+      console.error('Unauthorized API Call', error);
+      // Optional: Force login if token is definitely invalid?
+      // window.location.href = '/'; 
     }
-
-    // Handle 403 Forbidden
-    if (error.response?.status === 403) {
-      console.error('Access forbidden:', error.response.data);
-    }
-
-    // Handle network errors
-    if (!error.response) {
-      console.error('Network error:', error.message);
-    }
-
     return Promise.reject(error);
   }
 );

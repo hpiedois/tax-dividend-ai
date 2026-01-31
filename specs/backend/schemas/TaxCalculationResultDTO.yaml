@@ -1,0 +1,23 @@
+type: object
+properties:
+  dividendId:
+    type: string
+    format: uuid
+  success:
+    type: boolean
+  reclaimableAmount:
+    type: number
+    format: double
+  standardRate:
+    type: number
+    format: double
+  treatyRate:
+    type: number
+    format: double
+  withheldAmount:
+    type: number
+    format: double
+  errors:
+    type: array
+    items:
+      type: string

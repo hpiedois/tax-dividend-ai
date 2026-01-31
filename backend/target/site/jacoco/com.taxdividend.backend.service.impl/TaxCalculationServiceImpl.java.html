@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaxCalculationServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.service.impl</a> &gt; <span class="el_source">TaxCalculationServiceImpl.java</span></div><h1>TaxCalculationServiceImpl.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.service.impl;
+
+import com.taxdividend.backend.dto.TaxCalculationBatchResultDTO;
+import com.taxdividend.backend.dto.TaxCalculationResultDTO;
+import com.taxdividend.backend.exception.TaxCalculationException;
+import com.taxdividend.backend.model.Dividend;
+import com.taxdividend.backend.model.TaxRule;
+import com.taxdividend.backend.model.User;
+import com.taxdividend.backend.repository.DividendRepository;
+import com.taxdividend.backend.repository.TaxRuleRepository;
+import com.taxdividend.backend.repository.UserRepository;
+import com.taxdividend.backend.service.TaxCalculationService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * Implementation of tax calculation service.
+ *
+ * Calculates reclaimable amounts based on double taxation treaties.
+ */
+<span class="fc" id="L32">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+public class TaxCalculationServiceImpl implements TaxCalculationService {
+
+    private final DividendRepository dividendRepository;
+    private final TaxRuleRepository taxRuleRepository;
+    private final UserRepository userRepository;
+
+    private static final int CALCULATION_SCALE = 2; // 2 decimal places
+<span class="fc" id="L42">    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;</span>
+
+    @Override
+    public TaxCalculationResultDTO calculateForDividend(Dividend dividend, String residenceCountry) {
+<span class="fc" id="L46">        log.debug(&quot;Calculating tax for dividend {} from {} to {}&quot;,</span>
+<span class="fc" id="L47">                dividend.getIsin(), dividend.getSourceCountry(), residenceCountry);</span>
+
+<span class="fc" id="L49">        TaxCalculationResultDTO.TaxCalculationResultDTOBuilder builder = TaxCalculationResultDTO.builder()</span>
+<span class="fc" id="L50">                .dividendId(dividend.getId())</span>
+<span class="fc" id="L51">                .securityName(dividend.getSecurityName())</span>
+<span class="fc" id="L52">                .isin(dividend.getIsin())</span>
+<span class="fc" id="L53">                .grossAmount(dividend.getGrossAmount())</span>
+<span class="fc" id="L54">                .currency(dividend.getCurrency())</span>
+<span class="fc" id="L55">                .withholdingTax(dividend.getWithholdingTax())</span>
+<span class="fc" id="L56">                .withholdingRate(dividend.getWithholdingRate())</span>
+<span class="fc" id="L57">                .sourceCountry(dividend.getSourceCountry())</span>
+<span class="fc" id="L58">                .residenceCountry(residenceCountry);</span>
+
+        // Determine security type (default to EQUITY)
+<span class="fc" id="L61">        String securityType = determineSecurityType(dividend);</span>
+
+        // Find applicable tax rule
+<span class="fc" id="L64">        Optional&lt;TaxRule&gt; taxRuleOpt = taxRuleRepository.findApplicableRule(</span>
+<span class="fc" id="L65">                dividend.getSourceCountry(),</span>
+                residenceCountry,
+                securityType,
+<span class="fc" id="L68">                dividend.getPaymentDate());</span>
+
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (taxRuleOpt.isEmpty()) {</span>
+            // No tax treaty found
+<span class="fc" id="L72">            log.warn(&quot;No tax treaty found for {} -&gt; {} on {}&quot;,</span>
+<span class="fc" id="L73">                    dividend.getSourceCountry(), residenceCountry, dividend.getPaymentDate());</span>
+
+<span class="fc" id="L75">            builder.treatyApplied(false)</span>
+<span class="fc" id="L76">                    .treatyRate(null)</span>
+<span class="fc" id="L77">                    .treatyWithholdingTax(BigDecimal.ZERO)</span>
+<span class="fc" id="L78">                    .reclaimableAmount(BigDecimal.ZERO)</span>
+<span class="fc" id="L79">                    .notes(&quot;No tax treaty available. Cannot reclaim withholding tax.&quot;);</span>
+
+<span class="fc" id="L81">            return builder.build();</span>
+        }
+
+        // Tax treaty found - calculate reclaimable amount
+<span class="fc" id="L85">        TaxRule taxRule = taxRuleOpt.get();</span>
+
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (taxRule.getTreatyRate() == null) {</span>
+            // Treaty exists but no reduced rate
+<span class="nc" id="L89">            log.warn(&quot;Tax treaty exists but no treaty rate defined for rule {}&quot;, taxRule.getId());</span>
+
+<span class="nc" id="L91">            builder.treatyApplied(false)</span>
+<span class="nc" id="L92">                    .treatyRate(null)</span>
+<span class="nc" id="L93">                    .treatyWithholdingTax(BigDecimal.ZERO)</span>
+<span class="nc" id="L94">                    .reclaimableAmount(BigDecimal.ZERO)</span>
+<span class="nc" id="L95">                    .taxRuleId(taxRule.getId())</span>
+<span class="nc" id="L96">                    .notes(&quot;Tax treaty exists but no reduced rate defined.&quot;);</span>
+
+<span class="nc" id="L98">            return builder.build();</span>
+        }
+
+        // Calculate treaty withholding tax (what should have been withheld)
+<span class="fc" id="L102">        BigDecimal treatyWithholdingTax = dividend.getGrossAmount()</span>
+<span class="fc" id="L103">                .multiply(taxRule.getTreatyRate())</span>
+<span class="fc" id="L104">                .divide(BigDecimal.valueOf(100), CALCULATION_SCALE, ROUNDING_MODE);</span>
+
+        // Calculate reclaimable amount (actual withholding - treaty withholding)
+<span class="fc" id="L107">        BigDecimal reclaimableAmount = dividend.getWithholdingTax()</span>
+<span class="fc" id="L108">                .subtract(treatyWithholdingTax)</span>
+<span class="fc" id="L109">                .setScale(CALCULATION_SCALE, ROUNDING_MODE);</span>
+
+        // Ensure non-negative
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (reclaimableAmount.compareTo(BigDecimal.ZERO) &lt; 0) {</span>
+<span class="fc" id="L113">            log.warn(&quot;Calculated negative reclaimable amount for dividend {}. Setting to zero.&quot;, dividend.getId());</span>
+<span class="fc" id="L114">            reclaimableAmount = BigDecimal.ZERO;</span>
+        }
+
+<span class="fc" id="L117">        builder.treatyApplied(true)</span>
+<span class="fc" id="L118">                .treatyRate(taxRule.getTreatyRate())</span>
+<span class="fc" id="L119">                .treatyWithholdingTax(treatyWithholdingTax)</span>
+<span class="fc" id="L120">                .reclaimableAmount(reclaimableAmount)</span>
+<span class="fc" id="L121">                .taxRuleId(taxRule.getId());</span>
+
+        // Add notes based on reclaim options
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if (reclaimableAmount.compareTo(BigDecimal.ZERO) &gt; 0) {</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">            if (taxRule.getRefundProcedureAvailable()) {</span>
+<span class="fc" id="L126">                builder.notes(&quot;Refund procedure available. Can reclaim via forms 5000/5001.&quot;);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            } else if (taxRule.getReliefAtSourceAvailable()) {</span>
+<span class="nc" id="L128">                builder.notes(&quot;Only relief at source available. Refund not possible.&quot;);</span>
+            } else {
+<span class="nc" id="L130">                builder.notes(&quot;No reclaim procedure available despite treaty.&quot;);</span>
+            }
+        } else {
+<span class="fc" id="L133">            builder.notes(&quot;Treaty rate already applied. No additional reclaim possible.&quot;);</span>
+        }
+
+<span class="fc" id="L136">        log.debug(&quot;Calculated reclaimable amount: {} {} for dividend {}&quot;,</span>
+<span class="fc" id="L137">                reclaimableAmount, dividend.getCurrency(), dividend.getId());</span>
+
+<span class="fc" id="L139">        return builder.build();</span>
+    }
+
+    @Override
+    public TaxCalculationResultDTO calculateForDividend(UUID dividendId, String residenceCountry) {
+<span class="nc" id="L144">        Dividend dividend = dividendRepository.findById(dividendId)</span>
+<span class="nc" id="L145">                .orElseThrow(() -&gt; new TaxCalculationException(&quot;Dividend not found: &quot; + dividendId));</span>
+
+<span class="nc" id="L147">        return calculateForDividend(dividend, residenceCountry);</span>
+    }
+
+    @Override
+    @Transactional
+    public TaxCalculationResultDTO calculateAndUpdate(UUID dividendId, String residenceCountry) {
+<span class="fc" id="L153">        Dividend dividend = dividendRepository.findById(dividendId)</span>
+<span class="fc" id="L154">                .orElseThrow(() -&gt; new TaxCalculationException(&quot;Dividend not found: &quot; + dividendId));</span>
+
+<span class="fc" id="L156">        TaxCalculationResultDTO result = calculateForDividend(dividend, residenceCountry);</span>
+
+        // Update dividend entity
+<span class="fc" id="L159">        dividend.setReclaimableAmount(result.getReclaimableAmount());</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        if (result.getTreatyRate() != null) {</span>
+<span class="fc" id="L161">            dividend.setTreatyRate(result.getTreatyRate());</span>
+        }
+<span class="fc" id="L163">        dividendRepository.save(dividend);</span>
+
+<span class="fc" id="L165">        log.info(&quot;Updated dividend {} with reclaimable amount: {}&quot;,</span>
+<span class="fc" id="L166">                dividendId, result.getReclaimableAmount());</span>
+
+<span class="fc" id="L168">        return result;</span>
+    }
+
+    @Override
+    @Transactional
+    public TaxCalculationBatchResultDTO calculateBatchByIds(List&lt;UUID&gt; dividendIds, UUID userId) {
+<span class="nc" id="L174">        List&lt;Dividend&gt; dividends = dividendRepository.findAllById(dividendIds);</span>
+
+        // Filter to ensure user owns all dividends
+<span class="nc" id="L177">        dividends = dividends.stream()</span>
+<span class="nc" id="L178">                .filter(d -&gt; d.getUser().getId().equals(userId))</span>
+<span class="nc" id="L179">                .toList();</span>
+
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        if (dividends.isEmpty()) {</span>
+<span class="nc" id="L182">            return TaxCalculationBatchResultDTO.builder()</span>
+<span class="nc" id="L183">                    .processedCount(0)</span>
+<span class="nc" id="L184">                    .successCount(0)</span>
+<span class="nc" id="L185">                    .failureCount(0)</span>
+<span class="nc" id="L186">                    .totalGrossAmount(BigDecimal.ZERO)</span>
+<span class="nc" id="L187">                    .totalWithholdingTax(BigDecimal.ZERO)</span>
+<span class="nc" id="L188">                    .totalReclaimableAmount(BigDecimal.ZERO)</span>
+<span class="nc" id="L189">                    .calculatedAt(LocalDateTime.now())</span>
+<span class="nc" id="L190">                    .build();</span>
+        }
+
+<span class="nc" id="L193">        String country = dividends.get(0).getUser().getCountry();</span>
+<span class="nc" id="L194">        return calculateBatch(dividends, country);</span>
+    }
+
+    @Override
+    public TaxCalculationBatchResultDTO calculateBatch(List&lt;Dividend&gt; dividends, String residenceCountry) {
+<span class="fc" id="L199">        long startTime = System.currentTimeMillis();</span>
+
+        TaxCalculationBatchResultDTO.TaxCalculationBatchResultDTOBuilder builder = TaxCalculationBatchResultDTO
+<span class="fc" id="L202">                .builder()</span>
+<span class="fc" id="L203">                .processedCount(dividends.size())</span>
+<span class="fc" id="L204">                .calculatedAt(LocalDateTime.now());</span>
+
+<span class="fc" id="L206">        List&lt;TaxCalculationResultDTO&gt; results = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L207">        int successCount = 0;</span>
+<span class="fc" id="L208">        int failureCount = 0;</span>
+
+<span class="fc" id="L210">        BigDecimal totalGross = BigDecimal.ZERO;</span>
+<span class="fc" id="L211">        BigDecimal totalWithholding = BigDecimal.ZERO;</span>
+<span class="fc" id="L212">        BigDecimal totalReclaimable = BigDecimal.ZERO;</span>
+
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        for (Dividend dividend : dividends) {</span>
+            try {
+<span class="fc" id="L216">                TaxCalculationResultDTO result = calculateForDividend(dividend, residenceCountry);</span>
+<span class="fc" id="L217">                results.add(result);</span>
+<span class="fc" id="L218">                successCount++;</span>
+
+                // Accumulate totals
+<span class="fc" id="L221">                totalGross = totalGross.add(result.getGrossAmount());</span>
+<span class="fc" id="L222">                totalWithholding = totalWithholding.add(result.getWithholdingTax());</span>
+<span class="fc" id="L223">                totalReclaimable = totalReclaimable.add(result.getReclaimableAmount());</span>
+
+<span class="nc" id="L225">            } catch (Exception e) {</span>
+<span class="nc" id="L226">                log.error(&quot;Failed to calculate tax for dividend {}&quot;, dividend.getId(), e);</span>
+<span class="nc" id="L227">                builder.errors(addToList(builder.build().getErrors(),</span>
+<span class="nc" id="L228">                        &quot;Failed for dividend &quot; + dividend.getId() + &quot;: &quot; + e.getMessage()));</span>
+<span class="nc" id="L229">                failureCount++;</span>
+<span class="fc" id="L230">            }</span>
+<span class="fc" id="L231">        }</span>
+
+<span class="fc" id="L233">        builder.results(results)</span>
+<span class="fc" id="L234">                .successCount(successCount)</span>
+<span class="fc" id="L235">                .failureCount(failureCount)</span>
+<span class="fc" id="L236">                .totalGrossAmount(totalGross.setScale(CALCULATION_SCALE, ROUNDING_MODE))</span>
+<span class="fc" id="L237">                .totalWithholdingTax(totalWithholding.setScale(CALCULATION_SCALE, ROUNDING_MODE))</span>
+<span class="fc" id="L238">                .totalReclaimableAmount(totalReclaimable.setScale(CALCULATION_SCALE, ROUNDING_MODE))</span>
+<span class="fc" id="L239">                .processingTimeMs(System.currentTimeMillis() - startTime);</span>
+
+<span class="fc" id="L241">        log.info(&quot;Batch calculation completed: {} success, {} failures, total reclaimable: {}&quot;,</span>
+<span class="fc" id="L242">                successCount, failureCount, totalReclaimable);</span>
+
+<span class="fc" id="L244">        return builder.build();</span>
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TaxCalculationBatchResultDTO calculateForUser(UUID userId) {
+<span class="fc" id="L250">        User user = userRepository.findById(userId)</span>
+<span class="fc" id="L251">                .orElseThrow(() -&gt; new TaxCalculationException(&quot;User not found: &quot; + userId));</span>
+
+<span class="fc" id="L253">        String residenceCountry = user.getCountry();</span>
+<span class="pc bpc" id="L254" title="2 of 4 branches missed.">        if (residenceCountry == null || residenceCountry.isEmpty()) {</span>
+<span class="nc" id="L255">            throw new TaxCalculationException(&quot;User has no residence country defined&quot;);</span>
+        }
+
+<span class="fc" id="L258">        List&lt;Dividend&gt; dividends = dividendRepository.findByUserId(userId);</span>
+
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if (dividends.isEmpty()) {</span>
+<span class="nc" id="L261">            log.info(&quot;No dividends found for user {}&quot;, userId);</span>
+<span class="nc" id="L262">            return TaxCalculationBatchResultDTO.builder()</span>
+<span class="nc" id="L263">                    .processedCount(0)</span>
+<span class="nc" id="L264">                    .successCount(0)</span>
+<span class="nc" id="L265">                    .failureCount(0)</span>
+<span class="nc" id="L266">                    .totalGrossAmount(BigDecimal.ZERO)</span>
+<span class="nc" id="L267">                    .totalWithholdingTax(BigDecimal.ZERO)</span>
+<span class="nc" id="L268">                    .totalReclaimableAmount(BigDecimal.ZERO)</span>
+<span class="nc" id="L269">                    .calculatedAt(LocalDateTime.now())</span>
+<span class="nc" id="L270">                    .build();</span>
+        }
+
+<span class="fc" id="L273">        return calculateBatch(dividends, residenceCountry);</span>
+    }
+
+    @Override
+    @Transactional
+    public TaxCalculationBatchResultDTO calculateAndUpdateForUser(UUID userId) {
+<span class="nc" id="L279">        User user = userRepository.findById(userId)</span>
+<span class="nc" id="L280">                .orElseThrow(() -&gt; new TaxCalculationException(&quot;User not found: &quot; + userId));</span>
+
+<span class="nc" id="L282">        String residenceCountry = user.getCountry();</span>
+<span class="nc bnc" id="L283" title="All 4 branches missed.">        if (residenceCountry == null || residenceCountry.isEmpty()) {</span>
+<span class="nc" id="L284">            throw new TaxCalculationException(&quot;User has no residence country defined&quot;);</span>
+        }
+
+<span class="nc" id="L287">        List&lt;Dividend&gt; dividends = dividendRepository.findByUserId(userId);</span>
+<span class="nc" id="L288">        TaxCalculationBatchResultDTO result = calculateBatch(dividends, residenceCountry);</span>
+
+        // Update all dividends with calculated values
+<span class="nc bnc" id="L291" title="All 2 branches missed.">        for (TaxCalculationResultDTO calcResult : result.getResults()) {</span>
+<span class="nc" id="L292">            Dividend dividend = dividendRepository.findById(calcResult.getDividendId())</span>
+<span class="nc" id="L293">                    .orElseThrow(</span>
+<span class="nc" id="L294">                            () -&gt; new TaxCalculationException(&quot;Dividend not found: &quot; + calcResult.getDividendId()));</span>
+
+<span class="nc" id="L296">            dividend.setReclaimableAmount(calcResult.getReclaimableAmount());</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">            if (calcResult.getTreatyRate() != null) {</span>
+<span class="nc" id="L298">                dividend.setTreatyRate(calcResult.getTreatyRate());</span>
+            }
+<span class="nc" id="L300">            dividendRepository.save(dividend);</span>
+<span class="nc" id="L301">        }</span>
+
+<span class="nc" id="L303">        log.info(&quot;Updated {} dividends for user {} with calculated values&quot;,</span>
+<span class="nc" id="L304">                result.getSuccessCount(), userId);</span>
+
+<span class="nc" id="L306">        return result;</span>
+    }
+
+    @Override
+    public UUID findApplicableTaxRule(String sourceCountry, String residenceCountry,
+            String securityType, LocalDate paymentDate) {
+<span class="fc" id="L312">        Optional&lt;TaxRule&gt; taxRule = taxRuleRepository.findApplicableRule(</span>
+                sourceCountry, residenceCountry, securityType, paymentDate);
+
+<span class="fc" id="L315">        return taxRule.map(TaxRule::getId).orElse(null);</span>
+    }
+
+    @Override
+    @Transactional
+    public TaxCalculationBatchResultDTO recalculateUnsubmittedDividends() {
+<span class="nc" id="L321">        log.info(&quot;Recalculating all unsubmitted dividends&quot;);</span>
+
+<span class="nc" id="L323">        List&lt;Dividend&gt; unsubmittedDividends = dividendRepository.findByFormIsNull();</span>
+
+<span class="nc bnc" id="L325" title="All 2 branches missed.">        if (unsubmittedDividends.isEmpty()) {</span>
+<span class="nc" id="L326">            log.info(&quot;No unsubmitted dividends found&quot;);</span>
+<span class="nc" id="L327">            return TaxCalculationBatchResultDTO.builder()</span>
+<span class="nc" id="L328">                    .processedCount(0)</span>
+<span class="nc" id="L329">                    .successCount(0)</span>
+<span class="nc" id="L330">                    .failureCount(0)</span>
+<span class="nc" id="L331">                    .totalGrossAmount(BigDecimal.ZERO)</span>
+<span class="nc" id="L332">                    .totalWithholdingTax(BigDecimal.ZERO)</span>
+<span class="nc" id="L333">                    .totalReclaimableAmount(BigDecimal.ZERO)</span>
+<span class="nc" id="L334">                    .calculatedAt(LocalDateTime.now())</span>
+<span class="nc" id="L335">                    .build();</span>
+        }
+
+        // Group by user and calculate
+<span class="nc" id="L339">        List&lt;TaxCalculationResultDTO&gt; allResults = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L340">        int totalSuccess = 0;</span>
+<span class="nc" id="L341">        int totalFailure = 0;</span>
+
+<span class="nc bnc" id="L343" title="All 2 branches missed.">        for (Dividend dividend : unsubmittedDividends) {</span>
+            try {
+<span class="nc" id="L345">                User user = dividend.getUser();</span>
+<span class="nc" id="L346">                String residenceCountry = user.getCountry();</span>
+
+<span class="nc bnc" id="L348" title="All 4 branches missed.">                if (residenceCountry == null || residenceCountry.isEmpty()) {</span>
+<span class="nc" id="L349">                    log.warn(&quot;Skipping dividend {} - user has no residence country&quot;, dividend.getId());</span>
+<span class="nc" id="L350">                    totalFailure++;</span>
+<span class="nc" id="L351">                    continue;</span>
+                }
+
+<span class="nc" id="L354">                TaxCalculationResultDTO result = calculateForDividend(dividend, residenceCountry);</span>
+
+                // Update dividend
+<span class="nc" id="L357">                dividend.setReclaimableAmount(result.getReclaimableAmount());</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">                if (result.getTreatyRate() != null) {</span>
+<span class="nc" id="L359">                    dividend.setTreatyRate(result.getTreatyRate());</span>
+                }
+<span class="nc" id="L361">                dividendRepository.save(dividend);</span>
+
+<span class="nc" id="L363">                allResults.add(result);</span>
+<span class="nc" id="L364">                totalSuccess++;</span>
+
+<span class="nc" id="L366">            } catch (Exception e) {</span>
+<span class="nc" id="L367">                log.error(&quot;Failed to recalculate dividend {}&quot;, dividend.getId(), e);</span>
+<span class="nc" id="L368">                totalFailure++;</span>
+<span class="nc" id="L369">            }</span>
+<span class="nc" id="L370">        }</span>
+
+        // Calculate totals
+<span class="nc" id="L373">        BigDecimal totalGross = allResults.stream()</span>
+<span class="nc" id="L374">                .map(TaxCalculationResultDTO::getGrossAmount)</span>
+<span class="nc" id="L375">                .reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+
+<span class="nc" id="L377">        BigDecimal totalWithholding = allResults.stream()</span>
+<span class="nc" id="L378">                .map(TaxCalculationResultDTO::getWithholdingTax)</span>
+<span class="nc" id="L379">                .reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+
+<span class="nc" id="L381">        BigDecimal totalReclaimable = allResults.stream()</span>
+<span class="nc" id="L382">                .map(TaxCalculationResultDTO::getReclaimableAmount)</span>
+<span class="nc" id="L383">                .reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+
+<span class="nc" id="L385">        log.info(&quot;Recalculation completed: {} success, {} failures&quot;, totalSuccess, totalFailure);</span>
+
+<span class="nc" id="L387">        return TaxCalculationBatchResultDTO.builder()</span>
+<span class="nc" id="L388">                .results(allResults)</span>
+<span class="nc" id="L389">                .processedCount(unsubmittedDividends.size())</span>
+<span class="nc" id="L390">                .successCount(totalSuccess)</span>
+<span class="nc" id="L391">                .failureCount(totalFailure)</span>
+<span class="nc" id="L392">                .totalGrossAmount(totalGross.setScale(CALCULATION_SCALE, ROUNDING_MODE))</span>
+<span class="nc" id="L393">                .totalWithholdingTax(totalWithholding.setScale(CALCULATION_SCALE, ROUNDING_MODE))</span>
+<span class="nc" id="L394">                .totalReclaimableAmount(totalReclaimable.setScale(CALCULATION_SCALE, ROUNDING_MODE))</span>
+<span class="nc" id="L395">                .calculatedAt(LocalDateTime.now())</span>
+<span class="nc" id="L396">                .build();</span>
+    }
+
+    // ========================================
+    // Private Helper Methods
+    // ========================================
+
+    /**
+     * Determine security type from ISIN or other heuristics.
+     * Default to EQUITY if cannot be determined.
+     */
+    private String determineSecurityType(Dividend dividend) {
+        // Future enhancement: Parse ISIN to determine type
+        // For now, default to EQUITY
+<span class="fc" id="L410">        return &quot;EQUITY&quot;;</span>
+    }
+
+    /**
+     * Helper to add item to list (handles null lists).
+     */
+    private &lt;T&gt; List&lt;T&gt; addToList(List&lt;T&gt; list, T item) {
+<span class="nc bnc" id="L417" title="All 2 branches missed.">        if (list == null) {</span>
+<span class="nc" id="L418">            list = new ArrayList&lt;&gt;();</span>
+        }
+<span class="nc" id="L420">        list.add(item);</span>
+<span class="nc" id="L421">        return list;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

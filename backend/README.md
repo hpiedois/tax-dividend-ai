@@ -43,21 +43,17 @@ MinIO/S3 :9000
 
 ## Development Setup
 
-### 1. Start Infrastructure
-
-```bash
-cd ../infrastructure
-docker-compose up -d postgres minio minio-client
-```
-
-### 2. Run Backend
+### Quick Start
 
 ```bash
 cd backend
-./mvnw spring-boot:run
-```
 
-Or with your IDE (Run `TaxDividendBackendApplication.java`).
+# 1. First time setup (installs dependencies + starts infrastructure)
+./dev-setup.sh
+
+# 2. Run backend
+./run-dev.sh
+```
 
 **Default port**: `8081`
 
@@ -123,9 +119,76 @@ Configuration is in `src/main/resources/application.yml`.
 | GET | `/internal/forms?userId={id}` | List user forms |
 | POST | `/internal/forms` | Save generated form metadata |
 
-## Database Schema
+## Database Migrations (Flyway)
 
-See `../infrastructure/init-db/01-create-schema.sql` for full schema.
+This project uses **Flyway** for database schema management.
+
+### Migration Strategy
+
+**Infrastructure Layer** (Docker):
+- ✅ Extensions PostgreSQL (`uuid-ossp`, `pgcrypto`, etc.)
+- ✅ Schema `taxdividend`
+- ✅ User `taxdividend_user`
+
+Managed by Docker Compose via `../infrastructure/migrations/`
+
+**Application Layer** (Flyway):
+- ✅ **All application tables** (users, dividends, forms, etc.)
+- ✅ Indexes and constraints
+- ✅ Initial data (tax rules)
+
+Managed by Flyway via `src/main/resources/db/migration/`
+
+### Database Schema
+
+**Single initialization script:**
+- `V1__init_schema.sql` - Complete database schema initialization
+  - Creates all tables: users, generated_forms, dividends, form_submissions, audit_logs, tax_rules
+  - Inserts default tax rules (France → Switzerland)
+  - Sets up all indexes and triggers
+
+**On first startup**, Flyway automatically:
+1. Creates `flyway_schema_history` table to track migrations
+2. Runs V1__init_schema.sql to create all tables
+3. Backend is ready to use
+
+### Verify Schema
+
+```bash
+# Connect to database
+docker exec -it tax-dividend-postgres-dev psql -U postgres -d taxdividend_dev
+
+# Check Flyway history
+SELECT * FROM flyway_schema_history;
+
+# List tables
+\dt
+
+# Describe users table
+\d users
+```
+
+### Reset Database (Development Only)
+
+```bash
+# ⚠️ Deletes all data and recreates schema
+./reset-db.sh dev
+```
+
+### Adding New Migrations
+
+For schema changes AFTER initialization:
+
+```bash
+# Naming convention: V{version}__{description}.sql
+touch src/main/resources/db/migration/V2__add_user_preferences.sql
+```
+
+**Important**:
+- Version numbers must be sequential (V2, V3, etc.)
+- Use double underscore `__` after version
+- Use snake_case for description
+- **Never modify V1__init_schema.sql after it has run**
 
 **Tables**:
 - `users` - User accounts
@@ -137,19 +200,20 @@ See `../infrastructure/init-db/01-create-schema.sql` for full schema.
 
 ## Testing
 
-### Run Unit Tests
+### Run Tests
 
 ```bash
-./mvnw test
+# All tests (unit + integration)
+./run-tests.sh all
+
+# Unit tests only
+./run-tests.sh unit
+
+# Integration tests only (with Testcontainers)
+./run-tests.sh integration
 ```
 
-### Run Integration Tests (with Testcontainers)
-
-```bash
-./mvnw verify
-```
-
-This automatically starts PostgreSQL in Docker for testing.
+Integration tests automatically start PostgreSQL in Docker via Testcontainers.
 
 ### Manual Testing
 

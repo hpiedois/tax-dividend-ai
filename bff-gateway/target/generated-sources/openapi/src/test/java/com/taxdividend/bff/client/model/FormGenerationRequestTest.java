@@ -1,6 +1,6 @@
 /*
  * Tax Dividend AI Backend Internal API
- * Internal API for Backend Services (PDF, Storage, Auth)
+ * Internal API for Backend Services
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -21,62 +21,95 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import java.util.UUID;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 /**
  * Model tests for FormGenerationRequest
  */
-public class FormGenerationRequestTest {
+class FormGenerationRequestTest {
     private final FormGenerationRequest model = new FormGenerationRequest();
 
     /**
      * Model tests for FormGenerationRequest
      */
     @Test
-    public void testFormGenerationRequest() {
+    void testFormGenerationRequest() {
         // TODO: test FormGenerationRequest
     }
 
     /**
-     * Test the property 'taxpayerName'
+     * Test the property 'userId'
      */
     @Test
-    public void taxpayerNameTest() {
-        // TODO: test taxpayerName
-    }
-
-    /**
-     * Test the property 'taxId'
-     */
-    @Test
-    public void taxIdTest() {
-        // TODO: test taxId
+    void userIdTest() {
+        // TODO: test userId
     }
 
     /**
      * Test the property 'taxYear'
      */
     @Test
-    public void taxYearTest() {
+    void taxYearTest() {
         // TODO: test taxYear
     }
 
     /**
-     * Test the property 'country'
+     * Test the property 'formType'
      */
     @Test
-    public void countryTest() {
-        // TODO: test country
+    void formTypeTest() {
+        // TODO: test formType
     }
 
     /**
-     * Test the property 'dividends'
+     * Test the property 'dividendIds'
      */
     @Test
-    public void dividendsTest() {
-        // TODO: test dividends
+    void dividendIdsTest() {
+        // TODO: test dividendIds
+    }
+
+    /**
+     * Test the property 'includeAttestation'
+     */
+    @Test
+    void includeAttestationTest() {
+        // TODO: test includeAttestation
+    }
+
+    /**
+     * Test the property 'includeDividends'
+     */
+    @Test
+    void includeDividendsTest() {
+        // TODO: test includeDividends
+    }
+
+    /**
+     * Test the property 'canton'
+     */
+    @Test
+    void cantonTest() {
+        // TODO: test canton
+    }
+
+    /**
+     * Test the property 'address'
+     */
+    @Test
+    void addressTest() {
+        // TODO: test address
+    }
+
+    /**
+     * Test the property 'taxId'
+     */
+    @Test
+    void taxIdTest() {
+        // TODO: test taxId
     }
 
 }

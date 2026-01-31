@@ -1,22 +1,74 @@
+# ============================================================================
+# Tax Dividend AI - Backend Application Configuration
+# ============================================================================
+
 server:
   port: 8081
+  error:
+    include-stacktrace: always  # Show stack traces in error responses (dev only!)
 
 spring:
   application:
-    name: backend
+    name: tax-dividend-backend
+
+  # ========================================
+  # Database Configuration
+  # ========================================
   datasource:
-    url: jdbc:postgresql://localhost:5432/taxdividend
-    username: taxdividend
-    password: secret
+    url: jdbc:postgresql://localhost:5432/taxdividend_dev?currentSchema=taxdividend
+    username: taxdividend_user
+    password: dev_password_123
+    driver-class-name: org.postgresql.Driver
+    # Connection pool (HikariCP)
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      auto-commit: false
+      register-mbeans: true  # Enable JMX for monitoring
+
+  # ========================================
+  # JPA / Hibernate Configuration
+  # ========================================
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: true
+      ddl-auto: none  # Let Flyway handle schema
+    show-sql: true  # Log SQL queries (disable in production)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true  # Pretty-print SQL
+        jdbc:
+          time_zone: UTC
+          use_streams_for_binary: true
+        connection:
+          autocommit: false
+          provider_disables_autocommit: true
+        default_schema: taxdividend
+    open-in-view: false  # Prevent lazy loading outside transactions
+    defer-datasource-initialization: false
+
+  # ========================================
+  # Flyway Database Migrations
+  # ========================================
   flyway:
     enabled: true
     locations: classpath:db/migration
+    schemas: taxdividend
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    ignore-migration-patterns: repeatable:missing
+    create-schemas: false
+
+  # ========================================
+  # Email Configuration (MailHog for dev)
+  # ========================================
   mail:
-    host: mailhog
+    host: localhost
     port: 1025
     properties:
       mail:
@@ -25,10 +77,129 @@ spring:
           starttls:
             enable: false
 
-# MinIO Config (Placeholder)
+  # ========================================
+  # SQL Init (Disable - Let Flyway Handle)
+  # ========================================
+  sql:
+    init:
+      mode: never
+
+  # ========================================
+  # Bean Override
+  # ========================================
+  main:
+    allow-bean-definition-overriding: true
+
+# ========================================
+# MinIO / S3 Storage Configuration
+# ========================================
 storage:
   s3:
     endpoint: http://localhost:9000
-    bucket: tax-dividend-forms
+    bucket: tax-dividend-forms-dev
     access-key: minioadmin
-    secret-key: minioadmin
+    secret-key: minioadmin123
+
+# ========================================
+# Actuator & Monitoring
+# ========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always  # Always show health details
+      probes:
+        enabled: true  # Enable liveness/readiness probes (Kubernetes)
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      service: backend
+      environment: development
+    export:
+      prometheus:
+        enabled: true
+    enable:
+      hikaricp: true  # HikariCP connection pool metrics
+      jvm: true
+      logback: true
+      process: true
+      system: true
+    distribution:
+      percentiles-histogram:
+        hikaricp: true
+        http: true
+      percentiles:
+        hikaricp: 0.5,0.95,0.99
+        http.server.requests: 0.5,0.95,0.99
+  tracing:
+    enabled: true
+    sampling:
+      probability: ${OTEL_TRACES_SAMPLER_PROBABILITY:1.0}  # 100% in dev, lower in prod
+
+# ========================================
+# OpenTelemetry Distributed Tracing
+# ========================================
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+      protocol: grpc
+      timeout: 30s
+  service:
+    name: ${spring.application.name}
+    version: ${PROJECT_VERSION:0.0.1-SNAPSHOT}
+  traces:
+    sampler:
+      probability: ${OTEL_TRACES_SAMPLER_PROBABILITY:1.0}
+  resource:
+    attributes:
+      deployment:
+        environment: ${ENVIRONMENT:development}
+      service:
+        namespace: tax-dividend
+        instance:
+          id: ${HOSTNAME:localhost}
+
+# ========================================
+# Logging Configuration
+# ========================================
+logging:
+  level:
+    root: INFO
+    com.taxdividend: DEBUG  # Our application logs
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG  # Security debugging
+    org.hibernate.SQL: DEBUG  # SQL queries
+    org.hibernate.orm.jdbc.bind: TRACE  # SQL parameter binding
+    com.zaxxer.hikari: DEBUG  # HikariCP connection pool
+    org.flywaydb: INFO
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+  exception-conversion-word: '%wEx'  # Full stack traces
+
+# ========================================
+# Application-Specific Configuration
+# ========================================
+app:
+  # PDF Processing
+  pdf:
+    max-file-size: 50MB
+    allowed-types: application/pdf
+    temp-directory: /tmp/tax-dividend/uploads
+
+  # Tax Calculation
+  tax:
+    rules:
+      cache-ttl: 1h
+      reload-interval: 24h
+
+  # Form Generation
+  forms:
+    expiry-days: 30  # Generated PDFs expire after 30 days
+    watermark-enabled: false  # Watermark in dev mode

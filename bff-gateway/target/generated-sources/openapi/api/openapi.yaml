@@ -1,31 +1,536 @@
 openapi: 3.0.3
 info:
-  description: "Internal API for Backend Services (PDF, Storage, Auth)"
+  description: Internal API for Backend Services
   title: Tax Dividend AI Backend Internal API
   version: 1.0.0
 servers:
-- url: http://localhost:8081/internal
+- description: Local development server
+  url: http://localhost:8081/internal
 paths:
-  /auth/validate-token:
-    post:
-      operationId: validateToken
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/validateToken_request'
+  /dividends:
+    get:
+      operationId: listDividends
+      parameters:
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: size
+        required: false
+        schema:
+          default: 20
+          type: integer
+        style: form
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/validateToken_200_response'
-          description: Token is valid
-      summary: Validate a JWT token
+                $ref: "#/components/schemas/listDividends_200_response"
+          description: List of dividends
+      summary: List user's dividends
       tags:
-      - Auth
+      - Dividends
+      x-accepts:
+      - application/json
+  /dividends/{id}:
+    delete:
+      operationId: deleteDividend
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+      summary: Delete dividend
+      tags:
+      - Dividends
+      x-accepts:
+      - application/json
+    get:
+      operationId: getDividend
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dividend"
+          description: Dividend details
+        "404":
+          description: Not found
+      summary: Get dividend by ID
+      tags:
+      - Dividends
+      x-accepts:
+      - application/json
+  /dividends/{id}/calculate:
+    post:
+      operationId: calculateTax
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: residenceCountry
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxCalculationResultDTO"
+          description: Calculation result
+      summary: Calculate tax for dividend
+      tags:
+      - Dividends
+      x-accepts:
+      - application/json
+  /dividends/calculate-batch:
+    post:
+      operationId: calculateBatch
+      parameters:
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                format: uuid
+                type: string
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxCalculationBatchResultDTO"
+          description: Batch calculation result
+      summary: Calculate tax for multiple dividends
+      tags:
+      - Dividends
       x-content-type: application/json
-      x-accepts: application/json
+      x-accepts:
+      - application/json
+  /forms/generate:
+    post:
+      operationId: generateForms
+      parameters:
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FormGenerationRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateFormResultDTO"
+          description: Form generated
+      summary: Generate tax forms
+      tags:
+      - Forms
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /forms:
+    get:
+      operationId: listForms
+      parameters:
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: taxYear
+        required: false
+        schema:
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: formType
+        required: false
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/GeneratedForm"
+                type: array
+          description: List of forms
+      summary: List user's forms
+      tags:
+      - Forms
+      x-accepts:
+      - application/json
+  /forms/{id}:
+    delete:
+      operationId: deleteForm
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Deleted
+      summary: Delete form
+      tags:
+      - Forms
+      x-accepts:
+      - application/json
+    get:
+      operationId: getForm
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedForm"
+          description: Form metadata
+        "404":
+          description: Not found
+      summary: Get form metadata
+      tags:
+      - Forms
+      x-accepts:
+      - application/json
+  /forms/{id}/download:
+    get:
+      operationId: downloadForm
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: X-User-Id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/pdf:
+              schema:
+                format: binary
+                type: string
+            application/zip:
+              schema:
+                format: binary
+                type: string
+          description: Form file
+      summary: Download form
+      tags:
+      - Forms
+      x-accepts:
+      - application/pdf
+      - application/zip
+  /tax-rules:
+    get:
+      operationId: getAllTaxRules
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/TaxRule"
+                type: array
+          description: List of tax rules
+      summary: List all tax rules
+      tags:
+      - TaxRules
+      x-accepts:
+      - application/json
+  /tax-rules/{id}:
+    get:
+      operationId: getTaxRule
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxRule"
+          description: Tax rule details
+        "404":
+          description: Not found
+      summary: Get tax rule by ID
+      tags:
+      - TaxRules
+      x-accepts:
+      - application/json
+  /tax-rules/applicable:
+    get:
+      operationId: findApplicableRule
+      parameters:
+      - explode: true
+        in: query
+        name: sourceCountry
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: residenceCountry
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: securityType
+        required: false
+        schema:
+          default: EQUITY
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: date
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxRule"
+          description: Applicable rule
+        "404":
+          description: No rule found
+      summary: Find applicable tax rule
+      tags:
+      - TaxRules
+      x-accepts:
+      - application/json
+  /tax-rules/treaty-rate:
+    get:
+      operationId: getTreatyRate
+      parameters:
+      - explode: true
+        in: query
+        name: sourceCountry
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: residenceCountry
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: securityType
+        required: false
+        schema:
+          default: EQUITY
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: date
+        required: false
+        schema:
+          format: date
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TreatyRateResponse"
+          description: Treaty rate details
+        "404":
+          description: No treaty found
+      summary: Get treaty rate
+      tags:
+      - TaxRules
+      x-accepts:
+      - application/json
+  /health/deep:
+    get:
+      operationId: deepHealthCheck
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthCheckResponse"
+          description: Health status
+      summary: Deep health check
+      tags:
+      - Health
+      x-accepts:
+      - application/json
+  /health/live:
+    get:
+      operationId: liveness
+      responses:
+        "200":
+          description: Alive
+      summary: Liveness probe
+      tags:
+      - Health
+      x-accepts:
+      - application/json
+  /health/ready:
+    get:
+      operationId: readiness
+      responses:
+        "200":
+          description: Ready
+        "503":
+          description: Not ready
+      summary: Readiness probe
+      tags:
+      - Health
+      x-accepts:
+      - application/json
   /auth/register:
     post:
       operationId: registerUser
@@ -33,19 +538,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/registerUser_request'
+              $ref: "#/components/schemas/RegisterUserRequest"
+        required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/registerUser_200_response'
+                $ref: "#/components/schemas/registerUser_200_response"
           description: Registration pending verification
       summary: Register a new user
       tags:
       - Auth
       x-content-type: application/json
-      x-accepts: application/json
+      x-accepts:
+      - application/json
   /auth/verify:
     post:
       operationId: verifyEmail
@@ -62,12 +569,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/verifyEmail_200_response'
-          description: Verification successful
+                $ref: "#/components/schemas/VerifyEmailResponseDTO"
+          description: Email verified successfully
+        "400":
+          description: Invalid token
       summary: Verify user email
       tags:
       - Auth
-      x-accepts: application/json
+      x-accepts:
+      - application/json
   /pdf/generate:
     post:
       operationId: generatePdf
@@ -75,130 +585,201 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/FormGenerationRequest'
+              $ref: "#/components/schemas/FormGenerationRequest"
+        required: true
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PdfGenerationResponse'
+                $ref: "#/components/schemas/GenerateFormResultDTO"
           description: PDF Generated
+        "400":
+          description: Bad request
+        "500":
+          description: Generation failed
       summary: Generate Tax Forms PDF
       tags:
       - Pdf
       x-content-type: application/json
-      x-accepts: application/json
-  /pdf/parse:
-    post:
-      operationId: parseMakePdf
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/parseMakePdf_request'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/parseMakePdf_200_response'
-          description: Parsing result
-      summary: Parse Dividend PDF
-      tags:
-      - Pdf
-      x-content-type: multipart/form-data
-      x-accepts: application/json
-  /storage/upload:
-    post:
-      operationId: uploadFile
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/uploadFile_request'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/uploadFile_200_response'
-          description: Upload successful
-      summary: Upload file to storage
-      tags:
-      - Storage
-      x-content-type: multipart/form-data
-      x-accepts: application/json
+      x-accepts:
+      - application/json
 components:
   schemas:
+    Dividend:
+      example:
+        securityName: securityName
+        reclaimableAmount: 1.4658129805029452
+        withholdingTax: 6.027456183070403
+        currency: currency
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        grossAmount: 0.8008281904610115
+        paymentDate: 2000-01-23
+        isin: isin
+      properties:
+        id:
+          format: uuid
+          type: string
+        securityName:
+          type: string
+        isin:
+          type: string
+        grossAmount:
+          type: number
+        currency:
+          type: string
+        paymentDate:
+          format: date
+          type: string
+        withholdingTax:
+          type: number
+        reclaimableAmount:
+          type: number
+      type: object
+    TaxCalculationResultDTO:
+      example:
+        standardRate: 6.027456183070403
+        withheldAmount: 5.962133916683182
+        reclaimableAmount: 0.8008281904610115
+        success: true
+        dividendId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        treatyRate: 1.4658129805029452
+        errors:
+        - errors
+        - errors
+      properties:
+        dividendId:
+          format: uuid
+          type: string
+        success:
+          type: boolean
+        reclaimableAmount:
+          type: number
+        standardRate:
+          type: number
+        treatyRate:
+          type: number
+        withheldAmount:
+          type: number
+        errors:
+          items:
+            type: string
+          type: array
+      type: object
+    TaxCalculationBatchResultDTO:
+      example:
+        totalReclaimableAmount: 1.4658129805029452
+        successCount: 0
+        results:
+        - standardRate: 6.027456183070403
+          withheldAmount: 5.962133916683182
+          reclaimableAmount: 0.8008281904610115
+          success: true
+          dividendId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          treatyRate: 1.4658129805029452
+          errors:
+          - errors
+          - errors
+        - standardRate: 6.027456183070403
+          withheldAmount: 5.962133916683182
+          reclaimableAmount: 0.8008281904610115
+          success: true
+          dividendId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          treatyRate: 1.4658129805029452
+          errors:
+          - errors
+          - errors
+        failureCount: 6
+      properties:
+        successCount:
+          type: integer
+        failureCount:
+          type: integer
+        totalReclaimableAmount:
+          type: number
+        results:
+          items:
+            $ref: "#/components/schemas/TaxCalculationResultDTO"
+          type: array
+      type: object
     FormGenerationRequest:
       example:
-        country: FR
+        includeDividends: false
+        formType: "5000"
+        address: address
+        includeAttestation: false
         taxYear: 0
         taxId: taxId
-        dividends:
-        - "{}"
-        - "{}"
-        taxpayerName: taxpayerName
+        dividendIds:
+        - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        canton: canton
+        userId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
-        taxpayerName:
-          type: string
-        taxId:
+        userId:
+          format: uuid
           type: string
         taxYear:
           type: integer
-        country:
-          example: FR
+        formType:
+          enum:
+          - "5000"
+          - "5001"
+          - BUNDLE
           type: string
-        dividends:
+        dividendIds:
           items:
-            type: object
+            format: uuid
+            type: string
           type: array
+        includeAttestation:
+          default: false
+          type: boolean
+        includeDividends:
+          default: false
+          type: boolean
+        canton:
+          type: string
+        address:
+          type: string
+        taxId:
+          type: string
+      required:
+      - formType
+      - taxYear
+      - userId
       type: object
-    PdfGenerationResponse:
+    GenerateFormResultDTO:
       example:
-        formId: formId
+        formId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        formType: formType
         fileName: fileName
+        success: true
         downloadUrl: downloadUrl
+        dividendCount: 0
+        errors:
+        - errors
+        - errors
       properties:
+        success:
+          type: boolean
         formId:
+          format: uuid
+          type: string
+        formType:
           type: string
         downloadUrl:
           type: string
         fileName:
           type: string
+        dividendCount:
+          type: integer
+        errors:
+          items:
+            type: string
+          type: array
       type: object
-    validateToken_request:
-      properties:
-        token:
-          type: string
-      type: object
-    validateToken_200_response:
-      example:
-        valid: true
-        userId: userId
-      properties:
-        valid:
-          type: boolean
-        userId:
-          type: string
-      type: object
-    registerUser_request:
-      properties:
-        email:
-          type: string
-        password:
-          type: string
-        fullName:
-          type: string
-      type: object
-    registerUser_200_response:
-      example:
-        id: id
-      properties:
-        id:
-          type: string
-      type: object
-    verifyEmail_200_response:
+    VerifyEmailResponseDTO:
       example:
         verified: true
         message: message
@@ -208,35 +789,175 @@ components:
         message:
           type: string
       type: object
-    parseMakePdf_request:
-      properties:
-        file:
-          format: binary
-          type: string
-      type: object
-    parseMakePdf_200_response:
+    GeneratedForm:
       example:
-        rawText: rawText
+        formType: formType
+        fileName: fileName
+        s3Key: s3Key
+        taxYear: 0
+        fileSize: 6
+        generatedAt: 2000-01-23T04:56:07.000+00:00
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        expiresAt: 2000-01-23T04:56:07.000+00:00
       properties:
-        rawText:
+        id:
+          format: uuid
+          type: string
+        formType:
+          type: string
+        taxYear:
+          type: integer
+        fileName:
+          type: string
+        s3Key:
+          type: string
+        fileSize:
+          format: int64
+          type: integer
+        generatedAt:
+          format: date-time
+          type: string
+        expiresAt:
+          format: date-time
           type: string
       type: object
-    uploadFile_request:
-      properties:
-        file:
-          format: binary
-          type: string
-        bucket:
-          type: string
-      type: object
-    uploadFile_200_response:
+    TaxRule:
       example:
-        key: key
-        url: url
+        residenceCountry: residenceCountry
+        effectiveTo: 2000-01-23
+        sourceCountry: sourceCountry
+        standardWithholdingRate: 0.8008281904610115
+        notes: notes
+        securityType: securityType
+        reliefAtSourceAvailable: true
+        treatyRate: 6.027456183070403
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        refundProcedureAvailable: true
+        effectiveFrom: 2000-01-23
       properties:
-        key:
+        id:
+          format: uuid
           type: string
-        url:
+        sourceCountry:
+          type: string
+        residenceCountry:
+          type: string
+        securityType:
+          type: string
+        standardWithholdingRate:
+          type: number
+        treatyRate:
+          type: number
+        reliefAtSourceAvailable:
+          type: boolean
+        refundProcedureAvailable:
+          type: boolean
+        effectiveFrom:
+          format: date
+          type: string
+        effectiveTo:
+          format: date
+          type: string
+        notes:
+          type: string
+      type: object
+    TreatyRateResponse:
+      example:
+        standardRate: 0.8008281904610115
+        notes: notes
+        reliefAtSourceAvailable: true
+        treatyRate: 6.027456183070403
+        refundProcedureAvailable: true
+      properties:
+        standardRate:
+          type: number
+        treatyRate:
+          type: number
+        reliefAtSourceAvailable:
+          type: boolean
+        refundProcedureAvailable:
+          type: boolean
+        notes:
+          type: string
+      type: object
+    HealthCheckResponse:
+      example:
+        database: "{}"
+        application: application
+        taxRules: "{}"
+        storage: "{}"
+        services: "{}"
+        status: status
+      properties:
+        status:
+          type: string
+        application:
+          type: string
+        database:
+          type: object
+        storage:
+          type: object
+        taxRules:
+          type: object
+        services:
+          type: object
+      type: object
+    RegisterUserRequest:
+      example:
+        country: country
+        password: password
+        fullName: fullName
+        email: email
+      properties:
+        email:
+          format: email
+          type: string
+        password:
+          minLength: 8
+          type: string
+        fullName:
+          type: string
+        country:
+          type: string
+      required:
+      - email
+      - fullName
+      - password
+      type: object
+    listDividends_200_response:
+      example:
+        content:
+        - securityName: securityName
+          reclaimableAmount: 1.4658129805029452
+          withholdingTax: 6.027456183070403
+          currency: currency
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          grossAmount: 0.8008281904610115
+          paymentDate: 2000-01-23
+          isin: isin
+        - securityName: securityName
+          reclaimableAmount: 1.4658129805029452
+          withholdingTax: 6.027456183070403
+          currency: currency
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          grossAmount: 0.8008281904610115
+          paymentDate: 2000-01-23
+          isin: isin
+      properties:
+        content:
+          items:
+            $ref: "#/components/schemas/Dividend"
+          type: array
+      type: object
+    registerUser_200_response:
+      example:
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        message: message
+      properties:
+        id:
+          format: uuid
+          type: string
+        message:
           type: string
       type: object
 

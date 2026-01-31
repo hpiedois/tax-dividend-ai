@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Dividend.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.backend.api.dto</a> &gt; <span class="el_source">Dividend.java</span></div><h1>Dividend.java</h1><pre class="source lang-java linenums">package com.taxdividend.backend.api.dto;
+
+import java.net.URI;
+import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.lang.Nullable;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.OffsetDateTime;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+
+
+import java.util.*;
+import jakarta.annotation.Generated;
+
+/**
+ * Dividend
+ */
+
+@Generated(value = &quot;org.openapitools.codegen.languages.SpringCodegen&quot;, date = &quot;2026-01-31T11:27:14.708089+01:00[Europe/Zurich]&quot;, comments = &quot;Generator version: 7.17.0&quot;)
+<span class="fc" id="L26">public class Dividend {</span>
+
+  private @Nullable UUID id;
+
+  private @Nullable String securityName;
+
+  private @Nullable String isin;
+
+  private @Nullable BigDecimal grossAmount;
+
+  private @Nullable String currency;
+
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+  private @Nullable LocalDate paymentDate;
+
+  private @Nullable BigDecimal withholdingTax;
+
+  private @Nullable BigDecimal reclaimableAmount;
+
+  public Dividend id(@Nullable UUID id) {
+<span class="nc" id="L46">    this.id = id;</span>
+<span class="nc" id="L47">    return this;</span>
+  }
+
+  /**
+   * Get id
+   * @return id
+   */
+  @Valid 
+  @JsonProperty(&quot;id&quot;)
+  public @Nullable UUID getId() {
+<span class="fc" id="L57">    return id;</span>
+  }
+
+  public void setId(@Nullable UUID id) {
+<span class="fc" id="L61">    this.id = id;</span>
+<span class="fc" id="L62">  }</span>
+
+  public Dividend securityName(@Nullable String securityName) {
+<span class="nc" id="L65">    this.securityName = securityName;</span>
+<span class="nc" id="L66">    return this;</span>
+  }
+
+  /**
+   * Get securityName
+   * @return securityName
+   */
+  
+  @JsonProperty(&quot;securityName&quot;)
+  public @Nullable String getSecurityName() {
+<span class="fc" id="L76">    return securityName;</span>
+  }
+
+  public void setSecurityName(@Nullable String securityName) {
+<span class="fc" id="L80">    this.securityName = securityName;</span>
+<span class="fc" id="L81">  }</span>
+
+  public Dividend isin(@Nullable String isin) {
+<span class="nc" id="L84">    this.isin = isin;</span>
+<span class="nc" id="L85">    return this;</span>
+  }
+
+  /**
+   * Get isin
+   * @return isin
+   */
+  
+  @JsonProperty(&quot;isin&quot;)
+  public @Nullable String getIsin() {
+<span class="fc" id="L95">    return isin;</span>
+  }
+
+  public void setIsin(@Nullable String isin) {
+<span class="fc" id="L99">    this.isin = isin;</span>
+<span class="fc" id="L100">  }</span>
+
+  public Dividend grossAmount(@Nullable BigDecimal grossAmount) {
+<span class="nc" id="L103">    this.grossAmount = grossAmount;</span>
+<span class="nc" id="L104">    return this;</span>
+  }
+
+  /**
+   * Get grossAmount
+   * @return grossAmount
+   */
+  @Valid 
+  @JsonProperty(&quot;grossAmount&quot;)
+  public @Nullable BigDecimal getGrossAmount() {
+<span class="fc" id="L114">    return grossAmount;</span>
+  }
+
+  public void setGrossAmount(@Nullable BigDecimal grossAmount) {
+<span class="nc" id="L118">    this.grossAmount = grossAmount;</span>
+<span class="nc" id="L119">  }</span>
+
+  public Dividend currency(@Nullable String currency) {
+<span class="nc" id="L122">    this.currency = currency;</span>
+<span class="nc" id="L123">    return this;</span>
+  }
+
+  /**
+   * Get currency
+   * @return currency
+   */
+  
+  @JsonProperty(&quot;currency&quot;)
+  public @Nullable String getCurrency() {
+<span class="fc" id="L133">    return currency;</span>
+  }
+
+  public void setCurrency(@Nullable String currency) {
+<span class="nc" id="L137">    this.currency = currency;</span>
+<span class="nc" id="L138">  }</span>
+
+  public Dividend paymentDate(@Nullable LocalDate paymentDate) {
+<span class="nc" id="L141">    this.paymentDate = paymentDate;</span>
+<span class="nc" id="L142">    return this;</span>
+  }
+
+  /**
+   * Get paymentDate
+   * @return paymentDate
+   */
+  @Valid 
+  @JsonProperty(&quot;paymentDate&quot;)
+  public @Nullable LocalDate getPaymentDate() {
+<span class="fc" id="L152">    return paymentDate;</span>
+  }
+
+  public void setPaymentDate(@Nullable LocalDate paymentDate) {
+<span class="nc" id="L156">    this.paymentDate = paymentDate;</span>
+<span class="nc" id="L157">  }</span>
+
+  public Dividend withholdingTax(@Nullable BigDecimal withholdingTax) {
+<span class="nc" id="L160">    this.withholdingTax = withholdingTax;</span>
+<span class="nc" id="L161">    return this;</span>
+  }
+
+  /**
+   * Get withholdingTax
+   * @return withholdingTax
+   */
+  @Valid 
+  @JsonProperty(&quot;withholdingTax&quot;)
+  public @Nullable BigDecimal getWithholdingTax() {
+<span class="fc" id="L171">    return withholdingTax;</span>
+  }
+
+  public void setWithholdingTax(@Nullable BigDecimal withholdingTax) {
+<span class="nc" id="L175">    this.withholdingTax = withholdingTax;</span>
+<span class="nc" id="L176">  }</span>
+
+  public Dividend reclaimableAmount(@Nullable BigDecimal reclaimableAmount) {
+<span class="nc" id="L179">    this.reclaimableAmount = reclaimableAmount;</span>
+<span class="nc" id="L180">    return this;</span>
+  }
+
+  /**
+   * Get reclaimableAmount
+   * @return reclaimableAmount
+   */
+  @Valid 
+  @JsonProperty(&quot;reclaimableAmount&quot;)
+  public @Nullable BigDecimal getReclaimableAmount() {
+<span class="fc" id="L190">    return reclaimableAmount;</span>
+  }
+
+  public void setReclaimableAmount(@Nullable BigDecimal reclaimableAmount) {
+<span class="nc" id="L194">    this.reclaimableAmount = reclaimableAmount;</span>
+<span class="nc" id="L195">  }</span>
+
+  @Override
+  public boolean equals(Object o) {
+<span class="nc bnc" id="L199" title="All 2 branches missed.">    if (this == o) {</span>
+<span class="nc" id="L200">      return true;</span>
+    }
+<span class="nc bnc" id="L202" title="All 4 branches missed.">    if (o == null || getClass() != o.getClass()) {</span>
+<span class="nc" id="L203">      return false;</span>
+    }
+<span class="nc" id="L205">    Dividend dividend = (Dividend) o;</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">    return Objects.equals(this.id, dividend.id) &amp;&amp;</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">        Objects.equals(this.securityName, dividend.securityName) &amp;&amp;</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        Objects.equals(this.isin, dividend.isin) &amp;&amp;</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        Objects.equals(this.grossAmount, dividend.grossAmount) &amp;&amp;</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        Objects.equals(this.currency, dividend.currency) &amp;&amp;</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">        Objects.equals(this.paymentDate, dividend.paymentDate) &amp;&amp;</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">        Objects.equals(this.withholdingTax, dividend.withholdingTax) &amp;&amp;</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">        Objects.equals(this.reclaimableAmount, dividend.reclaimableAmount);</span>
+  }
+
+  @Override
+  public int hashCode() {
+<span class="nc" id="L218">    return Objects.hash(id, securityName, isin, grossAmount, currency, paymentDate, withholdingTax, reclaimableAmount);</span>
+  }
+
+  @Override
+  public String toString() {
+<span class="nc" id="L223">    StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L224">    sb.append(&quot;class Dividend {\n&quot;);</span>
+<span class="nc" id="L225">    sb.append(&quot;    id: &quot;).append(toIndentedString(id)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L226">    sb.append(&quot;    securityName: &quot;).append(toIndentedString(securityName)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L227">    sb.append(&quot;    isin: &quot;).append(toIndentedString(isin)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L228">    sb.append(&quot;    grossAmount: &quot;).append(toIndentedString(grossAmount)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L229">    sb.append(&quot;    currency: &quot;).append(toIndentedString(currency)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L230">    sb.append(&quot;    paymentDate: &quot;).append(toIndentedString(paymentDate)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L231">    sb.append(&quot;    withholdingTax: &quot;).append(toIndentedString(withholdingTax)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L232">    sb.append(&quot;    reclaimableAmount: &quot;).append(toIndentedString(reclaimableAmount)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L233">    sb.append(&quot;}&quot;);</span>
+<span class="nc" id="L234">    return sb.toString();</span>
+  }
+
+  /**
+   * Convert the given object to string with each line indented by 4 spaces
+   * (except the first line).
+   */
+  private String toIndentedString(Object o) {
+<span class="nc bnc" id="L242" title="All 2 branches missed.">    if (o == null) {</span>
+<span class="nc" id="L243">      return &quot;null&quot;;</span>
+    }
+<span class="nc" id="L245">    return o.toString().replace(&quot;\n&quot;, &quot;\n    &quot;);</span>
+  }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

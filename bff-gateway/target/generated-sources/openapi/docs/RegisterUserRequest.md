@@ -7,9 +7,10 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
-|**email** | **String** |  |  [optional] |
-|**password** | **String** |  |  [optional] |
-|**fullName** | **String** |  |  [optional] |
+|**email** | **String** |  |  |
+|**password** | **String** |  |  |
+|**fullName** | **String** |  |  |
+|**country** | **String** |  |  [optional] |
 
 
 

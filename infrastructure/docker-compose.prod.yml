@@ -1,0 +1,216 @@
+version: '3.8'
+
+# ============================================================================
+# PRODUCTION ENVIRONMENT TEMPLATE - Tax Dividend AI
+# ============================================================================
+# ⚠️  WARNING: This is a TEMPLATE for reference only!
+# ============================================================================
+# For production, you should use:
+# - Managed database services (AWS RDS, Google Cloud SQL, Azure Database)
+# - Managed object storage (AWS S3, Google Cloud Storage, Azure Blob)
+# - Managed Redis (AWS ElastiCache, Google Memorystore, Azure Cache)
+# - Kubernetes for orchestration (not docker-compose)
+# - Proper secrets management (Vault, AWS Secrets Manager, etc.)
+# - SSL/TLS certificates
+# - Load balancers
+# - Monitoring and alerting
+# - Automated backups
+# - Disaster recovery plan
+# ============================================================================
+# If you must use this: docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# ============================================================================
+
+services:
+  # PostgreSQL Database - Production
+  # ⚠️  RECOMMENDATION: Use managed services instead (RDS, Cloud SQL, etc.)
+  postgres-prod:
+    image: postgres:16-alpine
+    container_name: tax-dividend-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-taxdividend}
+      POSTGRES_USER: ${POSTGRES_USER}  # Must be set in .env.prod
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Must be set in .env.prod (use secrets!)
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C --data-checksums"
+      # Production-tuned settings (adjust based on hardware)
+      POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-512MB}
+      POSTGRES_EFFECTIVE_CACHE_SIZE: ${POSTGRES_EFFECTIVE_CACHE_SIZE:-2GB}
+      POSTGRES_MAX_CONNECTIONS: ${POSTGRES_MAX_CONNECTIONS:-200}
+      POSTGRES_WORK_MEM: ${POSTGRES_WORK_MEM:-8MB}
+      POSTGRES_MAINTENANCE_WORK_MEM: ${POSTGRES_MAINTENANCE_WORK_MEM:-128MB}
+      POSTGRES_WAL_BUFFERS: ${POSTGRES_WAL_BUFFERS:-16MB}
+      POSTGRES_CHECKPOINT_COMPLETION_TARGET: ${POSTGRES_CHECKPOINT_COMPLETION_TARGET:-0.9}
+      POSTGRES_RANDOM_PAGE_COST: ${POSTGRES_RANDOM_PAGE_COST:-1.1}
+      POSTGRES_EFFECTIVE_IO_CONCURRENCY: ${POSTGRES_EFFECTIVE_IO_CONCURRENCY:-200}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"  # Bind to localhost only!
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+      - ./backups/prod:/backups
+      - /etc/ssl/certs:/etc/ssl/certs:ro  # For SSL verification
+    networks:
+      - tax-dividend-prod-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      com.taxdividend.env: "production"
+      com.taxdividend.service: "database"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+        compress: "true"
+    # Security: Run as non-root user
+    user: postgres
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+
+  # MinIO - Production
+  # ⚠️  RECOMMENDATION: Use AWS S3, Google Cloud Storage, or Azure Blob instead
+  minio-prod:
+    image: minio/minio:latest
+    container_name: tax-dividend-minio-prod
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}  # Must be set in .env.prod
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}  # Must be set in .env.prod (use secrets!)
+      MINIO_BROWSER: ${MINIO_BROWSER:-off}  # Disable browser UI in production
+      MINIO_PROMETHEUS_AUTH_TYPE: public
+    ports:
+      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"  # Bind to localhost only!
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"  # Admin console (disable if not needed)
+    volumes:
+      - minio_prod_data:/data
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    networks:
+      - tax-dividend-prod-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    labels:
+      com.taxdividend.env: "production"
+      com.taxdividend.service: "storage"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+        compress: "true"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # MinIO Client - Bucket initialization
+  minio-client-prod:
+    image: minio/mc:latest
+    container_name: tax-dividend-minio-client-prod
+    depends_on:
+      minio-prod:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set prod http://minio-prod:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      mc mb prod/tax-dividend-forms --ignore-existing;
+      mc mb prod/tax-dividend-exports --ignore-existing;
+      mc mb prod/tax-dividend-archives --ignore-existing;
+      mc mb prod/tax-dividend-backups --ignore-existing;
+      mc versioning enable prod/tax-dividend-forms;
+      mc versioning enable prod/tax-dividend-archives;
+      mc versioning enable prod/tax-dividend-backups;
+      mc ilm add prod/tax-dividend-exports --expiry-days 30;
+      mc ilm add prod/tax-dividend-archives --transition-days 90 --transition-tier GLACIER;
+      echo 'Production buckets configured with versioning and lifecycle policies';
+      exit 0;
+      "
+    networks:
+      - tax-dividend-prod-network
+    labels:
+      com.taxdividend.env: "production"
+
+  # Redis - Production
+  # ⚠️  RECOMMENDATION: Use managed Redis (ElastiCache, Memorystore, etc.)
+  redis-prod:
+    image: redis:7-alpine
+    container_name: tax-dividend-redis-prod
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD}
+      --tcp-backlog 511
+      --timeout 300
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"  # Bind to localhost only!
+    volumes:
+      - redis_prod_data:/data
+    networks:
+      - tax-dividend-prod-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      com.taxdividend.env: "production"
+      com.taxdividend.service: "cache"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+        compress: "true"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ⚠️  NO PGADMIN IN PRODUCTION - Use secure bastion host + psql/DBeaver locally
+  # If absolutely needed for maintenance, use SSH tunnel instead
+
+volumes:
+  postgres_prod_data:
+    driver: local
+    labels:
+      com.taxdividend.env: "production"
+    # Consider using named volumes with backup strategies
+  minio_prod_data:
+    driver: local
+    labels:
+      com.taxdividend.env: "production"
+  redis_prod_data:
+    driver: local
+    labels:
+      com.taxdividend.env: "production"
+
+networks:
+  tax-dividend-prod-network:
+    driver: bridge
+    labels:
+      com.taxdividend.env: "production"
+    # Consider using overlay network for multi-host deployment

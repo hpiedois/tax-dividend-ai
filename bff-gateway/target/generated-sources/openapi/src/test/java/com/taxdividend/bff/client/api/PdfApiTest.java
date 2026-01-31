@@ -1,6 +1,6 @@
 /*
  * Tax Dividend AI Backend Internal API
- * Internal API for Backend Services (PDF, Storage, Auth)
+ * Internal API for Backend Services
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -13,12 +13,11 @@
 
 package com.taxdividend.bff.client.api;
 
-import java.io.File;
 import com.taxdividend.bff.client.model.FormGenerationRequest;
-import com.taxdividend.bff.client.model.ParseMakePdf200Response;
-import com.taxdividend.bff.client.model.PdfGenerationResponse;
-import org.junit.Test;
-import org.junit.Ignore;
+import com.taxdividend.bff.client.model.GenerateFormResultDTO;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +28,7 @@ import java.util.stream.Collectors;
 /**
  * API tests for PdfApi
  */
-@Ignore
+@Disabled
 public class PdfApiTest {
 
     private final PdfApi api = new PdfApi();
@@ -42,21 +41,9 @@ public class PdfApiTest {
      */
     @Test
     public void generatePdfTest()  {
-        FormGenerationRequest formGenerationRequest = null;
-        PdfGenerationResponse response = api.generatePdf(formGenerationRequest).block();
-
-        // TODO: test validations
-    }
-    
-    /**
-     * Parse Dividend PDF
-     *
-     * 
-     */
-    @Test
-    public void parseMakePdfTest()  {
-        File _file = null;
-        ParseMakePdf200Response response = api.parseMakePdf(_file).block();
+        // uncomment below to test the function
+        //FormGenerationRequest formGenerationRequest = null;
+        //GenerateFormResultDTO response = api.generatePdf(formGenerationRequest).block();
 
         // TODO: test validations
     }
