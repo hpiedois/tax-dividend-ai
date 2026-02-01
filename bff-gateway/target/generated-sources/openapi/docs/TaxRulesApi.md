@@ -5,7 +5,7 @@ All URIs are relative to *http://localhost:8081/internal*
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
 | [**findApplicableRule**](TaxRulesApi.md#findApplicableRule) | **GET** /tax-rules/applicable | Find applicable tax rule |
-| [**getAllTaxRules**](TaxRulesApi.md#getAllTaxRules) | **GET** /tax-rules | List all tax rules |
+| [**getAllTaxRules**](TaxRulesApi.md#getAllTaxRules) | **GET** /tax-rules | List tax rules with optional filters |
 | [**getTaxRule**](TaxRulesApi.md#getTaxRule) | **GET** /tax-rules/{id} | Get tax rule by ID |
 | [**getTreatyRate**](TaxRulesApi.md#getTreatyRate) | **GET** /tax-rules/treaty-rate | Get treaty rate |
 
@@ -84,9 +84,11 @@ No authorization required
 
 ## getAllTaxRules
 
-> List&lt;TaxRule&gt; getAllTaxRules()
+> List&lt;TaxRule&gt; getAllTaxRules(sourceCountry, residenceCountry, active, reliefAtSource, refundProcedure)
 
-List all tax rules
+List tax rules with optional filters
+
+Retrieve tax rules with optional filtering by countries, active status, and procedure availability
 
 ### Example
 
@@ -104,8 +106,13 @@ public class Example {
         defaultClient.setBasePath("http://localhost:8081/internal");
 
         TaxRulesApi apiInstance = new TaxRulesApi(defaultClient);
+        String sourceCountry = "FR"; // String | Filter by source country (ISO 3166-1 alpha-2 code)
+        String residenceCountry = "CH"; // String | Filter by residence country (ISO 3166-1 alpha-2 code)
+        Boolean active = true; // Boolean | Filter by active status (rules effective as of today)
+        Boolean reliefAtSource = true; // Boolean | Filter by relief at source availability
+        Boolean refundProcedure = true; // Boolean | Filter by refund procedure availability
         try {
-            List<TaxRule> result = apiInstance.getAllTaxRules();
+            List<TaxRule> result = apiInstance.getAllTaxRules(sourceCountry, residenceCountry, active, reliefAtSource, refundProcedure);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling TaxRulesApi#getAllTaxRules");
@@ -120,7 +127,14 @@ public class Example {
 
 ### Parameters
 
-This endpoint does not need any parameter.
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **sourceCountry** | **String**| Filter by source country (ISO 3166-1 alpha-2 code) | [optional] |
+| **residenceCountry** | **String**| Filter by residence country (ISO 3166-1 alpha-2 code) | [optional] |
+| **active** | **Boolean**| Filter by active status (rules effective as of today) | [optional] |
+| **reliefAtSource** | **Boolean**| Filter by relief at source availability | [optional] |
+| **refundProcedure** | **Boolean**| Filter by refund procedure availability | [optional] |
 
 ### Return type
 

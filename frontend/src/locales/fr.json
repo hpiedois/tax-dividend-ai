@@ -46,6 +46,8 @@
         "email_placeholder": "votre@email.com",
         "password_placeholder": "Mot de passe",
         "login_button": "Se connecter",
+        "login_sso": "Se connecter",
+        "register_sso": "Créer un compte",
         "logging_in": "Connexion...",
         "logout": "Déconnexion",
         "login_success": "Connexion réussie",
@@ -53,6 +55,7 @@
         "error_generic": "Échec de la connexion",
         "create_account": "Créer un compte",
         "already_have_account": "Vous avez déjà un compte ?",
+        "register_link": "Créer un compte",
         "creating_account": "Création du compte..."
     },
     "dashboard": {
@@ -66,6 +69,9 @@
     "history": {
         "export_csv": "Export CSV",
         "status": {
+            "open": "Ouvert",
+            "sent": "Envoyé",
+            "paid": "Payé",
             "pending": "En attente",
             "submitted": "Transmis",
             "refunded": "Remboursé"
@@ -84,6 +90,18 @@
             "reclaimed": "Récupéré",
             "status": "Statut",
             "actions": "Actions"
+        },
+        "actions": {
+            "mark_sent": "Marquer comme Envoyé",
+            "mark_paid": "Marquer comme Payé",
+            "mark_open": "Marquer comme Ouvert",
+            "download_pdf": "Télécharger PDF"
+        },
+        "confirmation": {
+            "title": "Mise à jour du statut",
+            "message": "Vous êtes sur le point de passer {{count}} dividende(s) au statut {{status}}.",
+            "confirm": "Confirmer",
+            "cancel": "Annuler"
         }
     },
     "settings": {

@@ -49,8 +49,14 @@ public class StorageServiceImpl implements StorageService {
     @Override
     public FileUploadResultDTO uploadFile(MultipartFile file, String folder) {
         try {
+            if (file.isEmpty()) {
+                throw new StorageException("File is empty");
+            }
             String s3Key = generateS3Key(folder, file.getOriginalFilename());
             return uploadFileWithKey(file, s3Key);
+        } catch (StorageException e) {
+            // Re-throw validation exceptions
+            throw e;
         } catch (Exception e) {
             log.error("Failed to upload file: {}", file.getOriginalFilename(), e);
             return FileUploadResultDTO.builder()
@@ -63,7 +69,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public FileUploadResultDTO uploadFile(InputStream inputStream, String fileName,
-                                          String contentType, String folder) {
+            String contentType, String folder) {
         try {
             String s3Key = generateS3Key(folder, fileName);
 
@@ -74,7 +80,7 @@ public class StorageServiceImpl implements StorageService {
                     .bucket(bucketName)
                     .object(s3Key)
                     .stream(new java.io.ByteArrayInputStream(bytes), bytes.length, -1)
-                    .contentType(contentType)
+                    .contentType(contentType != null ? contentType : "application/octet-stream")
                     .build();
 
             ObjectWriteResponse response = minioClient.putObject(args);
@@ -86,7 +92,7 @@ public class StorageServiceImpl implements StorageService {
                     .bucketName(bucketName)
                     .fileName(fileName)
                     .fileSize((long) bytes.length)
-                    .contentType(contentType)
+                    .contentType(contentType != null ? contentType : "application/octet-stream")
                     .etag(response.etag())
                     .uploadedAt(LocalDateTime.now())
                     .success(true)
@@ -111,7 +117,7 @@ public class StorageServiceImpl implements StorageService {
                     .bucket(bucketName)
                     .object(s3Key)
                     .stream(file.getInputStream(), file.getSize(), -1)
-                    .contentType(file.getContentType())
+                    .contentType(file.getContentType() != null ? file.getContentType() : "application/octet-stream")
                     .build();
 
             ObjectWriteResponse response = minioClient.putObject(args);
@@ -123,7 +129,7 @@ public class StorageServiceImpl implements StorageService {
                     .bucketName(bucketName)
                     .fileName(file.getOriginalFilename())
                     .fileSize(file.getSize())
-                    .contentType(file.getContentType())
+                    .contentType(file.getContentType() != null ? file.getContentType() : "application/octet-stream")
                     .etag(response.etag())
                     .uploadedAt(LocalDateTime.now())
                     .success(true)
@@ -235,20 +241,24 @@ public class StorageServiceImpl implements StorageService {
 
             Iterable<Result<DeleteError>> results = minioClient.removeObjects(args);
 
-            int deletedCount = 0;
             int errorCount = 0;
 
             for (Result<DeleteError> result : results) {
                 try {
                     DeleteError error = result.get();
-                    log.error("Failed to delete object: {} - {}", error.objectName(), error.message());
-                    errorCount++;
+                    if (error != null) {
+                        log.error("Failed to delete object: {} - {}", error.objectName(), error.message());
+                        errorCount++;
+                    }
                 } catch (Exception e) {
-                    // No error means success
-                    deletedCount++;
+                    log.error("Error retrieving delete result", e);
+                    // If we can't retrieve the result, assume it's an error in the process ?
+                    // Or ignore? Safer to count as error.
+                    errorCount++;
                 }
             }
 
+            int deletedCount = s3Keys.size() - errorCount;
             log.info("Batch delete completed: {} deleted, {} errors", deletedCount, errorCount);
             return deletedCount;
 
@@ -349,7 +359,7 @@ public class StorageServiceImpl implements StorageService {
         generatedFormRepository.deleteAll(expiredForms);
 
         log.info("Cleanup completed: {} files and {} database records deleted",
-                 deletedCount, expiredForms.size());
+                deletedCount, expiredForms.size());
 
         return deletedCount;
     }
@@ -363,11 +373,11 @@ public class StorageServiceImpl implements StorageService {
         String sanitizedFileName = fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
 
         return String.format("%s/%d/%02d/%s_%s",
-                             folder,
-                             now.getYear(),
-                             now.getMonthValue(),
-                             uuid,
-                             sanitizedFileName);
+                folder,
+                now.getYear(),
+                now.getMonthValue(),
+                uuid,
+                sanitizedFileName);
     }
 
     // ========================================
@@ -380,14 +390,12 @@ public class StorageServiceImpl implements StorageService {
     private void ensureBucketExists() {
         try {
             boolean exists = minioClient.bucketExists(
-                    BucketExistsArgs.builder().bucket(bucketName).build()
-            );
+                    BucketExistsArgs.builder().bucket(bucketName).build());
 
             if (!exists) {
                 log.info("Bucket {} does not exist, creating it", bucketName);
                 minioClient.makeBucket(
-                        MakeBucketArgs.builder().bucket(bucketName).build()
-                );
+                        MakeBucketArgs.builder().bucket(bucketName).build());
                 log.info("Bucket {} created successfully", bucketName);
             }
 

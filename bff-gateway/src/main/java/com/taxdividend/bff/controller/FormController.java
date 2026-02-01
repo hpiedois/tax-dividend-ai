@@ -2,6 +2,7 @@ package com.taxdividend.bff.controller;
 
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -22,47 +23,74 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FormController implements com.taxdividend.bff.api.FormsApi {
 
-    private final FormsApi formsApi;
-    private final PdfApi pdfApi;
+        private final com.taxdividend.bff.service.FormService formService;
 
-    @Override
-    public Mono<ResponseEntity<GenerateTaxFormsResponse>> generateTaxForms(
-            Mono<GenerateTaxFormsRequest> generateTaxFormsRequest,
-            ServerWebExchange exchange) {
+        @Override
+        public Mono<ResponseEntity<GenerateTaxFormsResponse>> generateTaxForms(
+                        Mono<GenerateTaxFormsRequest> generateTaxFormsRequest,
+                        ServerWebExchange exchange) {
 
-        return ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> ctx.getAuthentication().getName()) // Extract 'sub' (userId)
-                .flatMap(userId -> generateTaxFormsRequest.flatMap(request -> {
-                    FormGenerationRequest backendRequest = new FormGenerationRequest();
+                return ReactiveSecurityContextHolder.getContext()
+                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
+                                .flatMap(userId -> generateTaxFormsRequest
+                                                .flatMap(request -> formService.generateForms(userId, request)
+                                                                .map(ResponseEntity::ok)));
+        }
 
-                    // Map fields
-                    if (request.getFormType() != null) {
-                        backendRequest.setFormType(FormGenerationRequest.FormTypeEnum
-                                .fromValue(request.getFormType().getValue()));
-                    }
+        @Override
+        public Mono<ResponseEntity<reactor.core.publisher.Flux<com.taxdividend.bff.model.GeneratedForm>>> listForms(
+                        Integer taxYear,
+                        String formType,
+                        ServerWebExchange exchange) {
 
-                    try {
-                        backendRequest.setUserId(UUID.fromString(userId));
-                    } catch (IllegalArgumentException e) {
-                        return Mono.error(new IllegalArgumentException("Invalid user ID format in token: " + userId));
-                    }
+                return ReactiveSecurityContextHolder.getContext()
+                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
+                                .map(userId -> ResponseEntity.ok(formService.listForms(userId, taxYear, formType)));
+        }
 
-                    backendRequest.setTaxYear(request.getTaxYear());
-                    if (request.getDividendIds() != null) {
-                        backendRequest.setDividendIds(request.getDividendIds().stream()
-                                .map(UUID::fromString)
-                                .collect(Collectors.toList()));
-                    }
-                    backendRequest.setIncludeAttestation(request.getIncludeAttestation());
-                    backendRequest.setIncludeDividends(request.getIncludeDividends());
+        @Override
+        public Mono<ResponseEntity<com.taxdividend.bff.model.GeneratedForm>> getForm(
+                        UUID id,
+                        ServerWebExchange exchange) {
 
-                    // Delegate to backend
-                    return formsApi.generateForms(UUID.fromString(userId), backendRequest)
-                            .map(backendResponse -> {
-                                GenerateTaxFormsResponse response = new GenerateTaxFormsResponse();
-                                response.setFormUrl(backendResponse.getDownloadUrl());
-                                return ResponseEntity.ok(response);
-                            });
-                }));
-    }
+                return ReactiveSecurityContextHolder.getContext()
+                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
+                                .flatMap(userId -> formService.getForm(id, userId))
+                                .map(ResponseEntity::ok)
+                                .defaultIfEmpty(ResponseEntity.notFound().build());
+        }
+
+        @Override
+        public Mono<ResponseEntity<org.springframework.core.io.Resource>> downloadForm(
+                        UUID id,
+                        ServerWebExchange exchange) {
+
+                return ReactiveSecurityContextHolder.getContext()
+                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
+                                .flatMap(userId -> formService.downloadForm(id, userId));
+        }
+
+        @Override
+        public Mono<ResponseEntity<com.taxdividend.bff.model.FormDownloadUrlResponse>> getFormDownloadUrl(
+                        UUID id,
+                        Integer expiresIn,
+                        ServerWebExchange exchange) {
+
+                return ReactiveSecurityContextHolder.getContext()
+                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
+                                .flatMap(userId -> formService.getDownloadUrl(id, userId, expiresIn))
+                                .map(ResponseEntity::ok)
+                                .defaultIfEmpty(ResponseEntity.notFound().build());
+        }
+
+        @Override
+        public Mono<ResponseEntity<Void>> deleteForm(
+                        UUID id,
+                        ServerWebExchange exchange) {
+
+                return ReactiveSecurityContextHolder.getContext()
+                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
+                                .flatMap(userId -> formService.deleteForm(id, userId))
+                                .then(Mono.just(ResponseEntity.noContent().build()));
+        }
 }

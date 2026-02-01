@@ -11,18 +11,182 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    GeneratedForm:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        formType:
+          type: string
+        taxYear:
+          type: integer
+        fileName:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+    FormDownloadUrlResponse:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        expiresAt:
+          type: string
+          format: date-time
+
 security:
   - bearerAuth: []
 paths:
-  /dividends/parse:
-    $ref: './paths/dividends-parse.yaml'
+  /dividends/parse-statement:
+    $ref: './paths/statements-parse.yaml'
   /dividends/history:
     $ref: './paths/dividends-history.yaml'
+  /dividends/status:
+    patch:
+      tags:
+        - Dividends
+      summary: Update status for multiple dividends
+      operationId: updateDividendStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                status:
+                  type: string
+                  enum: [OPEN, SENT, PAID]
+      responses:
+        '204':
+          description: Status updated
+
   /dividends/stats:
     $ref: './paths/dividends-stats.yaml'
   /forms/generate:
     $ref: './paths/forms-generate.yaml'
-  
+  /forms:
+    get:
+      tags:
+        - Forms
+      summary: List user's forms
+      operationId: listForms
+      parameters:
+        - name: taxYear
+          in: query
+          schema:
+            type: integer
+        - name: formType
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of forms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GeneratedForm'
+  /forms/{id}:
+    get:
+      tags:
+        - Forms
+      summary: Get form metadata
+      operationId: getForm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Form metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratedForm'
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - Forms
+      summary: Delete form
+      operationId: deleteForm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+  /forms/{id}/download:
+    get:
+      tags:
+        - Forms
+      summary: Download form
+      operationId: downloadForm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Form file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/zip:
+              schema:
+                type: string
+                format: binary
+  /forms/{id}/download-url:
+    get:
+      tags:
+        - Forms
+      summary: Get pre-signed download URL for form
+      operationId: getFormDownloadUrl
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: expiresIn
+          in: query
+          schema:
+            type: integer
+            default: 3600
+      responses:
+        '200':
+          description: Pre-signed download URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormDownloadUrlResponse'
+        '404':
+          description: Form not found
+
   /auth/register:
     post:
       tags:

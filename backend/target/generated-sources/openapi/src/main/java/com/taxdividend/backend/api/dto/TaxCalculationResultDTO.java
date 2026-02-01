@@ -23,7 +23,7 @@ import jakarta.annotation.Generated;
  * TaxCalculationResultDTO
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T11:27:14.708089+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-01T10:04:28.893062+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class TaxCalculationResultDTO {
 
   private @Nullable UUID dividendId;

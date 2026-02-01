@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DividendService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">bff-gateway</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.bff.service</a> &gt; <span class="el_source">DividendService.java</span></div><h1>DividendService.java</h1><pre class="source lang-java linenums">package com.taxdividend.bff.service;
+
+import com.taxdividend.bff.client.api.DividendsApi;
+import com.taxdividend.bff.client.model.BulkImportDividendItem;
+import com.taxdividend.bff.client.model.BulkImportDividendsRequest;
+import com.taxdividend.bff.client.model.Dividend;
+import com.taxdividend.bff.mapper.DividendMapper;
+import com.taxdividend.bff.model.DividendCase;
+import com.taxdividend.bff.model.DividendData;
+import com.taxdividend.bff.model.DividendHistoryResponse;
+import com.taxdividend.bff.model.DividendStats;
+import com.taxdividend.bff.model.ParseStatementResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.Part;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+import java.io.File;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+<span class="fc" id="L31">@Slf4j</span>
+public class DividendService {
+
+    private final DividendsApi dividendsApi;
+    private final com.taxdividend.bff.client.api.DividendStatementsApi dividendStatementsApi;
+    private final DividendMapper dividendMapper;
+    private final com.taxdividend.bff.agent.client.api.ParsingApi parsingApi;
+
+    // ==================== Public API ====================
+
+    public Mono&lt;DividendStats&gt; getDividendStats(UUID userId, Integer taxYear) {
+<span class="fc" id="L42">        log.debug(&quot;Fetching dividend stats for user {}&quot;, userId);</span>
+<span class="fc" id="L43">        return dividendsApi.getDividendStats(userId, taxYear)</span>
+<span class="fc" id="L44">                .map(statsDTO -&gt; {</span>
+<span class="fc" id="L45">                    DividendStats stats = new DividendStats();</span>
+<span class="fc" id="L46">                    stats.setTotalReclaimed(statsDTO.getTotalReclaimed());</span>
+<span class="fc" id="L47">                    stats.setPendingAmount(statsDTO.getPendingAmount());</span>
+<span class="fc" id="L48">                    stats.setCasesCount(statsDTO.getCasesCount());</span>
+<span class="fc" id="L49">                    return stats;</span>
+                });
+    }
+
+    public Mono&lt;DividendHistoryResponse&gt; getDividendHistory(UUID userId, Integer page, Integer pageSize) {
+<span class="fc" id="L54">        return dividendsApi.listDividends(userId, page, pageSize, null, null, null)</span>
+<span class="fc" id="L55">                .map(response -&gt; {</span>
+<span class="fc" id="L56">                    List&lt;DividendCase&gt; cases = response.getContent().stream()</span>
+<span class="fc" id="L57">                            .map(dividendMapper::toDividendCase)</span>
+<span class="fc" id="L58">                            .collect(Collectors.toList());</span>
+
+<span class="fc" id="L60">                    DividendHistoryResponse history = new DividendHistoryResponse();</span>
+<span class="fc" id="L61">                    history.setData(cases);</span>
+<span class="fc" id="L62">                    history.setPage(page);</span>
+<span class="fc" id="L63">                    history.setPageSize(pageSize);</span>
+<span class="fc" id="L64">                    history.setTotal(cases.size());</span>
+<span class="fc" id="L65">                    return history;</span>
+                });
+    }
+
+    public Mono&lt;ParseStatementResponse&gt; parseDividendStatement(Part file) {
+<span class="fc" id="L70">        log.info(&quot;Parsing dividend statement via Agent&quot;);</span>
+
+<span class="fc" id="L72">        return validateFile(file)</span>
+<span class="fc" id="L73">                .flatMap(this::createTempFile)</span>
+<span class="fc" id="L74">                .flatMap(tempFile -&gt; processStatement(tempFile, (FilePart) file)</span>
+<span class="fc" id="L75">                        .doFinally(signal -&gt; cleanupTempFile(tempFile))</span>
+                );
+    }
+
+    // ==================== Validation ====================
+
+    private Mono&lt;FilePart&gt; validateFile(Part file) {
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (!(file instanceof FilePart)) {</span>
+<span class="fc" id="L83">            return Mono.error(new IllegalArgumentException(&quot;Uploaded part is not a file&quot;));</span>
+        }
+<span class="fc" id="L85">        FilePart filePart = (FilePart) file;</span>
+
+<span class="fc bfc" id="L87" title="All 4 branches covered.">        if (filePart.filename() == null || filePart.filename().isEmpty()) {</span>
+<span class="fc" id="L88">            return Mono.error(new IllegalArgumentException(&quot;Filename is required&quot;));</span>
+        }
+
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (!filePart.filename().toLowerCase().endsWith(&quot;.pdf&quot;)) {</span>
+<span class="fc" id="L92">            return Mono.error(new IllegalArgumentException(&quot;Only PDF files are supported&quot;));</span>
+        }
+
+<span class="fc" id="L95">        return Mono.just(filePart);</span>
+    }
+
+    // ==================== File Handling ====================
+
+    private Mono&lt;File&gt; createTempFile(FilePart filePart) {
+<span class="fc" id="L101">        return Mono.fromCallable(() -&gt;</span>
+<span class="fc" id="L102">                File.createTempFile(&quot;upload_&quot;, &quot;_&quot; + filePart.filename())</span>
+<span class="fc" id="L103">        ).onErrorResume(e -&gt; {</span>
+<span class="nc" id="L104">            log.error(&quot;Failed to create temp file&quot;, e);</span>
+<span class="nc" id="L105">            return Mono.error(new RuntimeException(&quot;Failed to create temp file&quot;, e));</span>
+        });
+    }
+
+    private void cleanupTempFile(File tempFile) {
+<span class="pc bpc" id="L110" title="2 of 4 branches missed.">        if (tempFile != null &amp;&amp; tempFile.exists()) {</span>
+<span class="fc" id="L111">            boolean deleted = tempFile.delete();</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            if (!deleted) {</span>
+<span class="nc" id="L113">                log.warn(&quot;Failed to delete temp file: {}&quot;, tempFile.getAbsolutePath());</span>
+            }
+        }
+<span class="fc" id="L116">    }</span>
+
+    // ==================== Main Processing Pipeline ====================
+
+    private Mono&lt;ParseStatementResponse&gt; processStatement(File tempFile, FilePart filePart) {
+<span class="fc" id="L121">        return filePart.transferTo(tempFile.toPath())</span>
+<span class="fc" id="L122">                .then(parseWithAgent(tempFile))</span>
+<span class="fc" id="L123">                .flatMap(agentResponse -&gt; createStatementInBackend(tempFile, agentResponse))</span>
+<span class="fc" id="L124">                .flatMap(this::importDividendsToBackend)</span>
+<span class="fc" id="L125">                .map(this::buildResponse)</span>
+<span class="fc" id="L126">                .onErrorResume(this::handleError);</span>
+    }
+
+    // ==================== Agent Parsing ====================
+
+    private Mono&lt;com.taxdividend.bff.agent.client.model.ParseResponse&gt; parseWithAgent(File tempFile) {
+<span class="fc" id="L132">        return parsingApi.parseDocument(tempFile, null)</span>
+<span class="fc" id="L133">                .doOnSuccess(response -&gt; {</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">                    int count = response.getData() != null ? response.getData().size() : 0;</span>
+<span class="fc" id="L135">                    log.debug(&quot;Agent parsed {} dividends from {}&quot;, count, tempFile.getName());</span>
+<span class="fc" id="L136">                })</span>
+<span class="fc" id="L137">                .onErrorResume(e -&gt; {</span>
+<span class="fc" id="L138">                    log.error(&quot;Agent parsing failed for file {}&quot;, tempFile.getName(), e);</span>
+<span class="fc" id="L139">                    return Mono.error(new RuntimeException(&quot;Failed to parse PDF with Agent&quot;, e));</span>
+                });
+    }
+
+    // ==================== Backend Statement Creation ====================
+
+    private Mono&lt;StatementWithDividends&gt; createStatementInBackend(
+            File tempFile,
+            com.taxdividend.bff.agent.client.model.ParseResponse agentResponse) {
+
+<span class="fc" id="L149">        return getUserId().flatMap(userId -&gt; {</span>
+            // Extract metadata from agent response
+<span class="fc" id="L151">            LocalDate periodStart = extractPeriodStart(agentResponse);</span>
+<span class="fc" id="L152">            LocalDate periodEnd = extractPeriodEnd(agentResponse);</span>
+<span class="fc" id="L153">            String broker = extractBroker(agentResponse);</span>
+
+<span class="fc" id="L155">            log.debug(&quot;Creating statement in backend: broker={}, period={} to {}&quot;, </span>
+                    broker, periodStart, periodEnd);
+
+<span class="fc" id="L158">            return dividendStatementsApi.uploadDividendStatement(</span>
+                    userId, broker, periodStart, periodEnd, tempFile
+<span class="fc" id="L160">            ).map(statement -&gt; new StatementWithDividends(statement, agentResponse, userId));</span>
+<span class="fc" id="L161">        }).onErrorResume(e -&gt; {</span>
+<span class="fc" id="L162">            log.error(&quot;Failed to create statement in backend&quot;, e);</span>
+<span class="fc" id="L163">            return Mono.error(new RuntimeException(&quot;Failed to store dividend statement&quot;, e));</span>
+        });
+    }
+
+    // ==================== Backend Dividend Import ====================
+
+    private Mono&lt;ImportResult&gt; importDividendsToBackend(StatementWithDividends data) {
+<span class="pc bpc" id="L170" title="1 of 4 branches missed.">        if (data.agentResponse.getData() == null || data.agentResponse.getData().isEmpty()) {</span>
+<span class="fc" id="L171">            log.warn(&quot;No dividends to import for statement {}&quot;, data.statement.getId());</span>
+<span class="fc" id="L172">            return Mono.just(new ImportResult(data, null));</span>
+        }
+
+<span class="fc" id="L175">        BulkImportDividendsRequest bulkRequest = buildBulkImportRequest(data);</span>
+
+<span class="fc" id="L177">        log.debug(&quot;Importing {} dividends for statement {}&quot;, </span>
+<span class="fc" id="L178">                bulkRequest.getDividends().size(), data.statement.getId());</span>
+
+<span class="fc" id="L180">        return dividendsApi.bulkImportDividends(data.userId, bulkRequest)</span>
+<span class="fc" id="L181">                .map(importResponse -&gt; new ImportResult(data, importResponse))</span>
+<span class="fc" id="L182">                .onErrorResume(e -&gt; {</span>
+<span class="fc" id="L183">                    log.error(&quot;Failed to import dividends for statement {}&quot;, data.statement.getId(), e);</span>
+<span class="fc" id="L184">                    return Mono.error(new RuntimeException(&quot;Failed to import dividends&quot;, e));</span>
+                });
+    }
+
+    // ==================== Response Building ====================
+
+    private ParseStatementResponse buildResponse(ImportResult result) {
+<span class="fc" id="L191">        ParseStatementResponse response = new ParseStatementResponse();</span>
+
+<span class="pc bpc" id="L193" title="1 of 4 branches missed.">        if (result.agentResponse().getData() != null &amp;&amp; !result.agentResponse().getData().isEmpty()) {</span>
+<span class="fc" id="L194">            List&lt;DividendData&gt; dividends = result.agentResponse().getData().stream()</span>
+<span class="fc" id="L195">                    .map(this::mapToDividendData)</span>
+<span class="fc" id="L196">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L197">            response.setDividends(dividends);</span>
+        }
+
+<span class="fc" id="L200">        log.info(&quot;Statement processing completed: {} dividends returned&quot;, </span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">                response.getDividends() != null ? response.getDividends().size() : 0);</span>
+
+<span class="fc" id="L203">        return response;</span>
+    }
+
+    // ==================== Error Handling ====================
+
+    private Mono&lt;ParseStatementResponse&gt; handleError(Throwable e) {
+        // Don't wrap already meaningful RuntimeExceptions
+<span class="pc bpc" id="L210" title="2 of 4 branches missed.">        if (e instanceof RuntimeException &amp;&amp; e.getMessage() != null &amp;&amp; </span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">            (e.getMessage().contains(&quot;Failed to parse PDF&quot;) ||</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">             e.getMessage().contains(&quot;Failed to store dividend statement&quot;) ||</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">             e.getMessage().contains(&quot;Failed to import dividends&quot;))) {</span>
+<span class="fc" id="L214">            return Mono.error(e);</span>
+        }
+        
+<span class="nc" id="L217">        log.error(&quot;Unexpected error during statement processing&quot;, e);</span>
+<span class="nc" id="L218">        return Mono.error(new RuntimeException(&quot;Failed to process dividend statement&quot;, e));</span>
+    }
+
+    // ==================== Helper Methods ====================
+
+    private Mono&lt;UUID&gt; getUserId() {
+<span class="fc" id="L224">        return org.springframework.security.core.context.ReactiveSecurityContextHolder.getContext()</span>
+<span class="fc" id="L225">                .map(ctx -&gt; UUID.fromString(ctx.getAuthentication().getName()))</span>
+<span class="fc" id="L226">                .switchIfEmpty(Mono.error(new SecurityException(&quot;User not authenticated&quot;)));</span>
+    }
+
+    private LocalDate extractPeriodStart(com.taxdividend.bff.agent.client.model.ParseResponse response) {
+<span class="pc bpc" id="L230" title="1 of 4 branches missed.">        if (response.getData() == null || response.getData().isEmpty()) {</span>
+<span class="fc" id="L231">            return null;</span>
+        }
+<span class="fc" id="L233">        return response.getData().stream()</span>
+<span class="fc" id="L234">                .map(d -&gt; d.getPaymentDate())</span>
+<span class="fc" id="L235">                .filter(Objects::nonNull)</span>
+<span class="fc" id="L236">                .min(Comparator.naturalOrder())</span>
+<span class="fc" id="L237">                .orElse(null);</span>
+    }
+
+    private LocalDate extractPeriodEnd(com.taxdividend.bff.agent.client.model.ParseResponse response) {
+<span class="pc bpc" id="L241" title="1 of 4 branches missed.">        if (response.getData() == null || response.getData().isEmpty()) {</span>
+<span class="fc" id="L242">            return null;</span>
+        }
+<span class="fc" id="L244">        return response.getData().stream()</span>
+<span class="fc" id="L245">                .map(d -&gt; d.getPaymentDate())</span>
+<span class="fc" id="L246">                .filter(Objects::nonNull)</span>
+<span class="fc" id="L247">                .max(Comparator.naturalOrder())</span>
+<span class="fc" id="L248">                .orElse(null);</span>
+    }
+
+    private String extractBroker(com.taxdividend.bff.agent.client.model.ParseResponse response) {
+        // TODO: Agent should provide broker in future version
+        // For now, use default value
+<span class="fc" id="L254">        return &quot;Unknown&quot;;</span>
+    }
+
+    // ==================== Mapping ====================
+
+    private BulkImportDividendsRequest buildBulkImportRequest(StatementWithDividends data) {
+<span class="fc" id="L260">        BulkImportDividendsRequest request = new BulkImportDividendsRequest();</span>
+<span class="fc" id="L261">        request.setStatementId(data.statement.getId());</span>
+
+<span class="fc" id="L263">        List&lt;BulkImportDividendItem&gt; items = data.agentResponse.getData().stream()</span>
+<span class="fc" id="L264">                .map(this::mapToBulkImportItem)</span>
+<span class="fc" id="L265">                .collect(Collectors.toList());</span>
+
+<span class="fc" id="L267">        request.setDividends(items);</span>
+<span class="fc" id="L268">        return request;</span>
+    }
+
+    private BulkImportDividendItem mapToBulkImportItem(com.taxdividend.bff.agent.client.model.DividendData d) {
+<span class="fc" id="L272">        BulkImportDividendItem item = new BulkImportDividendItem();</span>
+<span class="fc" id="L273">        item.setSecurityName(d.getSecurityName());</span>
+<span class="fc" id="L274">        item.setIsin(d.getIsin());</span>
+<span class="fc" id="L275">        item.setGrossAmount(d.getGrossAmount());</span>
+<span class="fc" id="L276">        item.setCurrency(d.getCurrency());</span>
+<span class="fc" id="L277">        item.setPaymentDate(d.getPaymentDate());</span>
+<span class="fc" id="L278">        item.setWithholdingTax(d.getWithholdingTax());</span>
+        
+        // TODO: Update Agent spec to include withholdingRate
+        // For now, calculate it from withholdingTax / grossAmount
+<span class="pc bpc" id="L282" title="2 of 4 branches missed.">        if (d.getWithholdingTax() != null &amp;&amp; d.getGrossAmount() != null </span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">                &amp;&amp; d.getGrossAmount().compareTo(BigDecimal.ZERO) &gt; 0) {</span>
+<span class="fc" id="L284">            BigDecimal rate = d.getWithholdingTax()</span>
+<span class="fc" id="L285">                    .divide(d.getGrossAmount(), 4, java.math.RoundingMode.HALF_UP)</span>
+<span class="fc" id="L286">                    .multiply(new BigDecimal(100));</span>
+<span class="fc" id="L287">            item.setWithholdingRate(rate);</span>
+        }
+        
+<span class="fc" id="L290">        item.setSourceCountry(d.getCountry());</span>
+<span class="fc" id="L291">        return item;</span>
+    }
+
+    private DividendData mapToDividendData(com.taxdividend.bff.agent.client.model.DividendData d) {
+<span class="fc" id="L295">        DividendData dd = new DividendData();</span>
+<span class="fc" id="L296">        dd.setSecurityName(d.getSecurityName());</span>
+<span class="fc" id="L297">        dd.setIsin(d.getIsin());</span>
+<span class="fc" id="L298">        dd.setGrossAmount(d.getGrossAmount());</span>
+<span class="fc" id="L299">        dd.setCurrency(d.getCurrency());</span>
+<span class="fc" id="L300">        dd.setPaymentDate(d.getPaymentDate());</span>
+<span class="fc" id="L301">        dd.setWithholdingTax(d.getWithholdingTax());</span>
+<span class="fc" id="L302">        dd.setSourceCountry(d.getCountry());</span>
+        
+        // ReclaimableAmount calculated by backend and returned after import
+        // Could be retrieved from backend response if needed
+        
+<span class="fc" id="L307">        return dd;</span>
+    }
+
+    // ==================== Internal Records ====================
+
+    /**
+     * Internal record to carry statement with agent response through the pipeline
+     */
+<span class="fc" id="L315">    private record StatementWithDividends(</span>
+            com.taxdividend.bff.client.model.DividendStatement statement,
+            com.taxdividend.bff.agent.client.model.ParseResponse agentResponse,
+            UUID userId
+    ) {}
+
+    /**
+     * Internal record to carry import result through the pipeline
+     */
+<span class="fc" id="L324">    private record ImportResult(</span>
+            StatementWithDividends data,
+            com.taxdividend.bff.client.model.BulkImportDividendsResponse importResponse
+    ) {
+        public com.taxdividend.bff.agent.client.model.ParseResponse agentResponse() {
+<span class="fc" id="L329">            return data.agentResponse;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

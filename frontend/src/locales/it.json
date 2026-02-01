@@ -61,6 +61,9 @@
     "history": {
         "export_csv": "Esporta CSV",
         "status": {
+            "open": "Aperto",
+            "sent": "Inviato",
+            "paid": "Pagato",
             "pending": "In attesa",
             "submitted": "Inviato",
             "refunded": "Rimborsato"
@@ -79,6 +82,18 @@
             "reclaimed": "Recuperato",
             "status": "Stato",
             "actions": "Azioni"
+        },
+        "actions": {
+            "mark_sent": "Segna come Inviato",
+            "mark_paid": "Segna come Pagato",
+            "mark_open": "Segna come Aperto",
+            "download_pdf": "Scarica PDF"
+        },
+        "confirmation": {
+            "title": "Aggiornamento stato",
+            "message": "Stai per cambiare lo stato di {{count}} dividendo(i) in {{status}}.",
+            "confirm": "Conferma",
+            "cancel": "Annulla"
         }
     },
     "settings": {

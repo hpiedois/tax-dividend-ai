@@ -40,7 +40,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   GenerateFormResultDTO.JSON_PROPERTY_DIVIDEND_COUNT,
   GenerateFormResultDTO.JSON_PROPERTY_ERRORS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-31T12:02:59.936362+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-02-01T09:58:25.591675+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class GenerateFormResultDTO {
   public static final String JSON_PROPERTY_SUCCESS = "success";
   @jakarta.annotation.Nullable

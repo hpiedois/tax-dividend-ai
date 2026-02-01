@@ -12,14 +12,12 @@ import com.taxdividend.backend.repository.GeneratedFormRepository;
 import com.taxdividend.backend.repository.UserRepository;
 import com.taxdividend.backend.service.PdfGenerationService;
 import com.taxdividend.backend.service.StorageService;
+import com.taxdividend.backend.service.pdf.PdfFormFiller;
+import com.taxdividend.backend.service.pdf.Form5000FieldMapper;
+import com.taxdividend.backend.service.pdf.Form5001FieldMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,20 +25,20 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Implementation of PDF generation service using Apache PDFBox.
+ * Implementation of PDF generation service using official French tax form templates.
  *
- * NOTE: This is a simplified implementation that generates basic PDFs.
- * In production, you would use official PDF templates for Forms 5000/5001.
+ * Uses Apache PDFBox to fill official Form 5000 and 5001 templates located in
+ * src/main/resources/templates/forms/.
  */
 @Slf4j
 @Service
@@ -51,10 +49,15 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
     private final DividendRepository dividendRepository;
     private final GeneratedFormRepository generatedFormRepository;
     private final StorageService storageService;
+    private final PdfFormFiller pdfFormFiller;
+    private final Form5000FieldMapper form5000Mapper;
+    private final Form5001FieldMapper form5001Mapper;
 
     @Value("${app.forms.expiry-days:30}")
     private int formExpiryDays;
 
+    private static final String FORM_5000_TEMPLATE = "templates/forms/form_5000_template.pdf";
+    private static final String FORM_5001_TEMPLATE = "templates/forms/form_5001_template.pdf";
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Override
@@ -63,7 +66,7 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         long startTime = System.currentTimeMillis();
 
         log.info("Generating forms for user {} - type: {}, year: {}",
-                 request.getUserId(), request.getFormType(), request.getTaxYear());
+                request.getUserId(), request.getFormType(), request.getTaxYear());
 
         try {
             User user = userRepository.findById(request.getUserId())
@@ -101,6 +104,9 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
 
             return result;
 
+        } catch (PdfGenerationException e) {
+            // Re-throw validation exceptions so tests can catch them
+            throw e;
         } catch (Exception e) {
             log.error("Failed to generate forms", e);
             return GenerateFormResultDTO.builder()
@@ -116,14 +122,20 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
     public GenerateFormResultDTO generateForm5000(User user, Integer taxYear) {
         log.info("Generating Form 5000 for user {}, year {}", user.getId(), taxYear);
 
+        // Validate user data
+        if (user.getFullName() == null || user.getAddress() == null || user.getCountry() == null) {
+            throw new PdfGenerationException("User data incomplete: missing required fields (fullName, address, country)");
+        }
+
         try {
             byte[] pdfBytes = createForm5000Pdf(user, taxYear);
 
             String fileName = String.format("Form_5000_%s_%d.pdf", user.getEmail(), taxYear);
             FileUploadResultDTO uploadResult = uploadFormPdf(pdfBytes, fileName, "forms");
 
-            if (!uploadResult.getSuccess()) {
-                throw new PdfGenerationException("Failed to upload Form 5000: " + uploadResult.getErrorMessage());
+            if (uploadResult == null || !uploadResult.getSuccess()) {
+                String errorMsg = uploadResult != null ? uploadResult.getErrorMessage() : "Upload returned null";
+                throw new PdfGenerationException("Failed to upload Form 5000: " + errorMsg);
             }
 
             // Save to database
@@ -157,7 +169,12 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
     @Transactional
     public GenerateFormResultDTO generateForm5001(User user, List<Dividend> dividends, Integer taxYear) {
         log.info("Generating Form 5001 for user {}, year {}, {} dividends",
-                 user.getId(), taxYear, dividends.size());
+                user.getId(), taxYear, dividends.size());
+
+        // Validate dividend list
+        if (dividends == null || dividends.isEmpty()) {
+            throw new PdfGenerationException("Cannot generate Form 5001: dividend list is empty");
+        }
 
         try {
             byte[] pdfBytes = createForm5001Pdf(user, dividends, taxYear);
@@ -165,8 +182,9 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
             String fileName = String.format("Form_5001_%s_%d.pdf", user.getEmail(), taxYear);
             FileUploadResultDTO uploadResult = uploadFormPdf(pdfBytes, fileName, "forms");
 
-            if (!uploadResult.getSuccess()) {
-                throw new PdfGenerationException("Failed to upload Form 5001: " + uploadResult.getErrorMessage());
+            if (uploadResult == null || !uploadResult.getSuccess()) {
+                String errorMsg = uploadResult != null ? uploadResult.getErrorMessage() : "Upload returned null";
+                throw new PdfGenerationException("Failed to upload Form 5001: " + errorMsg);
             }
 
             // Save to database
@@ -218,8 +236,9 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
             String fileName = String.format("Bundle_%s_%d.zip", user.getEmail(), taxYear);
             FileUploadResultDTO uploadResult = uploadFormPdf(zipBytes, fileName, "bundles");
 
-            if (!uploadResult.getSuccess()) {
-                throw new PdfGenerationException("Failed to upload BUNDLE: " + uploadResult.getErrorMessage());
+            if (uploadResult == null || !uploadResult.getSuccess()) {
+                String errorMsg = uploadResult != null ? uploadResult.getErrorMessage() : "Upload returned null";
+                throw new PdfGenerationException("Failed to upload BUNDLE: " + errorMsg);
             }
 
             // Save to database
@@ -268,11 +287,20 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         log.info("Regenerating form {} (type: {}) for user {}", formId, formType, user.getId());
 
         if ("5000".equals(formType)) {
+            if (existingForm.getS3Key() != null) {
+                storageService.deleteFile(existingForm.getS3Key());
+            }
             return generateForm5000(user, taxYear);
         } else if ("5001".equals(formType)) {
+            if (existingForm.getS3Key() != null) {
+                storageService.deleteFile(existingForm.getS3Key());
+            }
             List<Dividend> dividends = dividendRepository.findByFormId(formId);
             return generateForm5001(user, dividends, taxYear);
         } else if ("BUNDLE".equals(formType)) {
+            if (existingForm.getS3Key() != null) {
+                storageService.deleteFile(existingForm.getS3Key());
+            }
             List<Dividend> dividends = dividendRepository.findByFormId(formId);
             return generateBundle(user, dividends, taxYear);
         } else {
@@ -293,7 +321,7 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         }
 
         log.info("Generating {} for user {} with {} unsubmitted dividends",
-                 bundleType, userId, unsubmittedDividends.size());
+                bundleType, userId, unsubmittedDividends.size());
 
         switch (bundleType.toUpperCase()) {
             case "5000":
@@ -312,143 +340,41 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
     // ========================================
 
     /**
-     * Create Form 5000 PDF (Attestation de résidence fiscale).
+     * Create Form 5000 PDF (Attestation de résidence fiscale) using official template.
      */
     private byte[] createForm5000Pdf(User user, Integer taxYear) throws IOException {
-        try (PDDocument document = new PDDocument();
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+        log.debug("Creating Form 5000 PDF from template for user {}, year {}", user.getId(), taxYear);
 
-            PDPage page = new PDPage(PDRectangle.A4);
-            document.addPage(page);
+        try {
+            // Map user data to form fields
+            Map<String, String> fieldValues = form5000Mapper.mapToFormFields(user, taxYear);
 
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                float margin = 50;
-                float yPosition = page.getMediaBox().getHeight() - margin;
-                float fontSize = 12;
+            // Fill template and flatten (make non-editable)
+            return pdfFormFiller.fillPdfForm(FORM_5000_TEMPLATE, fieldValues, true);
 
-                PDType1Font fontBold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
-                PDType1Font fontRegular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-
-                // Title
-                contentStream.setFont(fontBold, 16);
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("FORMULAIRE 5000");
-                contentStream.endText();
-                yPosition -= 20;
-
-                contentStream.setFont(fontBold, 14);
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Attestation de résidence fiscale en Suisse");
-                contentStream.endText();
-                yPosition -= 40;
-
-                // User details
-                contentStream.setFont(fontRegular, fontSize);
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "Année fiscale : " + taxYear);
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "Nom complet : " + (user.getFullName() != null ? user.getFullName() : "N/A"));
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "Email : " + user.getEmail());
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "Adresse : " + (user.getAddress() != null ? user.getAddress() : "N/A"));
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "Canton : " + (user.getCanton() != null ? user.getCanton() : "N/A"));
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "NIF : " + (user.getTaxId() != null ? user.getTaxId() : "N/A"));
-                yPosition -= 20;
-
-                // Attestation text
-                contentStream.setFont(fontRegular, fontSize);
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "Je soussigné(e), certifie que je suis résident(e) fiscal(e) en Suisse");
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "pour l'année " + taxYear + ".");
-                yPosition -= 40;
-
-                // Signature
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "Date : " + LocalDateTime.now().format(DATE_FORMATTER));
-                yPosition -= 20;
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "Signature : _______________________");
-            }
-
-            document.save(baos);
-            return baos.toByteArray();
+        } catch (IOException e) {
+            log.error("Failed to create Form 5000 PDF", e);
+            throw new IOException("Failed to create Form 5000: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Create Form 5001 PDF (Liquidation de dividendes).
+     * Create Form 5001 PDF (Liquidation de dividendes) using official template.
      */
     private byte[] createForm5001Pdf(User user, List<Dividend> dividends, Integer taxYear) throws IOException {
-        try (PDDocument document = new PDDocument();
-             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+        log.debug("Creating Form 5001 PDF from template for user {}, year {}, {} dividends",
+                user.getId(), taxYear, dividends.size());
 
-            PDPage page = new PDPage(PDRectangle.A4);
-            document.addPage(page);
+        try {
+            // Map user and dividend data to form fields
+            Map<String, String> fieldValues = form5001Mapper.mapToFormFields(user, dividends, taxYear);
 
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                float margin = 50;
-                float yPosition = page.getMediaBox().getHeight() - margin;
-                float fontSize = 10;
+            // Fill template and flatten (make non-editable)
+            return pdfFormFiller.fillPdfForm(FORM_5001_TEMPLATE, fieldValues, true);
 
-                PDType1Font fontBold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
-                PDType1Font fontRegular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-
-                // Title
-                contentStream.setFont(fontBold, 16);
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("FORMULAIRE 5001");
-                contentStream.endText();
-                yPosition -= 20;
-
-                contentStream.setFont(fontBold, 14);
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Liquidation de dividendes");
-                contentStream.endText();
-                yPosition -= 30;
-
-                // User info
-                contentStream.setFont(fontRegular, fontSize);
-                yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                        "Année : " + taxYear + " | Nom : " + user.getFullName());
-                yPosition -= 20;
-
-                // Dividends table
-                BigDecimal totalGross = BigDecimal.ZERO;
-                BigDecimal totalWithholding = BigDecimal.ZERO;
-                BigDecimal totalReclaimable = BigDecimal.ZERO;
-
-                for (Dividend dividend : dividends) {
-                    yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin, yPosition,
-                            String.format("- %s (%s)", dividend.getSecurityName(), dividend.getIsin()));
-                    yPosition = writeTextLine(contentStream, fontRegular, fontSize, margin + 10, yPosition,
-                            String.format("  Brut: %.2f %s | Retenue: %.2f %s | Récupérable: %.2f %s",
-                                    dividend.getGrossAmount(), dividend.getCurrency(),
-                                    dividend.getWithholdingTax(), dividend.getCurrency(),
-                                    dividend.getReclaimableAmount(), dividend.getCurrency()));
-                    yPosition -= 5;
-
-                    totalGross = totalGross.add(dividend.getGrossAmount());
-                    totalWithholding = totalWithholding.add(dividend.getWithholdingTax());
-                    totalReclaimable = totalReclaimable.add(dividend.getReclaimableAmount());
-                }
-
-                yPosition -= 15;
-                contentStream.setFont(fontBold, fontSize);
-                yPosition = writeTextLine(contentStream, fontBold, fontSize, margin, yPosition,
-                        String.format("TOTAL - Brut: %.2f | Retenue: %.2f | RÉCUPÉRABLE: %.2f",
-                                totalGross, totalWithholding, totalReclaimable));
-            }
-
-            document.save(baos);
-            return baos.toByteArray();
+        } catch (IOException e) {
+            log.error("Failed to create Form 5001 PDF", e);
+            throw new IOException("Failed to create Form 5001: " + e.getMessage(), e);
         }
     }
 
@@ -459,7 +385,7 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
             throws IOException {
 
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ZipOutputStream zos = new ZipOutputStream(baos)) {
+                ZipOutputStream zos = new ZipOutputStream(baos)) {
 
             // Add Form 5000
             ZipEntry entry5000 = new ZipEntry(String.format("Form_5000_%s_%d.pdf", userEmail, taxYear));
@@ -497,7 +423,7 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
      * Save generated form to database.
      */
     private GeneratedForm saveGeneratedForm(User user, FileUploadResultDTO uploadResult,
-                                            String formType, Integer taxYear, int dividendCount) {
+            String formType, Integer taxYear, int dividendCount) {
         GeneratedForm form = GeneratedForm.builder()
                 .user(user)
                 .s3Key(uploadResult.getS3Key())
@@ -511,16 +437,4 @@ public class PdfGenerationServiceImpl implements PdfGenerationService {
         return generatedFormRepository.save(form);
     }
 
-    /**
-     * Helper to write a text line in PDF.
-     */
-    private float writeTextLine(PDPageContentStream contentStream, PDType1Font font, float fontSize,
-                                 float x, float y, String text) throws IOException {
-        contentStream.setFont(font, fontSize);
-        contentStream.beginText();
-        contentStream.newLineAtOffset(x, y);
-        contentStream.showText(text);
-        contentStream.endText();
-        return y - (fontSize + 5);
-    }
 }

@@ -3,6 +3,12 @@ get:
     - Dividends
   summary: Get dividend statistics
   operationId: getDividendStats
+  parameters:
+    - name: taxYear
+      in: query
+      schema:
+        type: integer
+      description: Optional tax year filter
   responses:
     '200':
       description: Stats retrieved

@@ -224,6 +224,23 @@ public class TaxCalculationServiceImpl implements TaxCalculationService {
 
             } catch (Exception e) {
                 log.error("Failed to calculate tax for dividend {}", dividend.getId(), e);
+
+                // Add failure result to maintain result list size
+                TaxCalculationResultDTO failureResult = TaxCalculationResultDTO.builder()
+                        .dividendId(dividend.getId())
+                        .securityName(dividend.getSecurityName())
+                        .isin(dividend.getIsin())
+                        .grossAmount(dividend.getGrossAmount())
+                        .currency(dividend.getCurrency())
+                        .withholdingTax(dividend.getWithholdingTax())
+                        .sourceCountry(dividend.getSourceCountry())
+                        .residenceCountry(residenceCountry)
+                        .reclaimableAmount(BigDecimal.ZERO)
+                        .treatyApplied(false)
+                        .notes("CALCULATION FAILED: " + e.getMessage())
+                        .build();
+                results.add(failureResult);
+
                 builder.errors(addToList(builder.build().getErrors(),
                         "Failed for dividend " + dividend.getId() + ": " + e.getMessage()));
                 failureCount++;

@@ -29,7 +29,7 @@ export interface DividendEntry {
   withholdingTax: number;
   treatyAmount: number;
   reclaimableAmount: number;
-  frenchRate: number;
+  appliedRate: number;
 }
 
 export interface FormGenerationResponse {

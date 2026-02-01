@@ -8,7 +8,8 @@ package com.taxdividend.bff.api;
 import com.taxdividend.bff.model.DividendHistoryResponse;
 import com.taxdividend.bff.model.DividendStats;
 import org.springframework.lang.Nullable;
-import com.taxdividend.bff.model.ParsePDFResponse;
+import com.taxdividend.bff.model.ParseStatementResponse;
+import com.taxdividend.bff.model.UpdateDividendStatusRequest;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,7 +40,7 @@ import java.util.Map;
 import java.util.Optional;
 import jakarta.annotation.Generated;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T12:02:59.126017+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-01T09:58:25.268465+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 @Validated
 @Tag(name = "Dividends", description = "the Dividends API")
 public interface DividendsApi {
@@ -79,7 +80,7 @@ public interface DividendsApi {
         exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
         for (MediaType mediaType : exchange.getRequest().getHeaders().getAccept()) {
             if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                String exampleString = "{ \"total\" : 1, \"data\" : [ { \"date\" : \"2000-01-23\", \"security\" : \"security\", \"reclaimedAmount\" : 6.027456183070403, \"id\" : \"id\", \"grossAmount\" : 0.8008281904610115, \"status\" : \"pending\" }, { \"date\" : \"2000-01-23\", \"security\" : \"security\", \"reclaimedAmount\" : 6.027456183070403, \"id\" : \"id\", \"grossAmount\" : 0.8008281904610115, \"status\" : \"pending\" } ], \"pageSize\" : 5, \"page\" : 5 }";
+                String exampleString = "{ \"total\" : 1, \"data\" : [ { \"date\" : \"2000-01-23\", \"security\" : \"security\", \"reclaimedAmount\" : 6.027456183070403, \"id\" : \"id\", \"grossAmount\" : 0.8008281904610115, \"status\" : \"OPEN\" }, { \"date\" : \"2000-01-23\", \"security\" : \"security\", \"reclaimedAmount\" : 6.027456183070403, \"id\" : \"id\", \"grossAmount\" : 0.8008281904610115, \"status\" : \"OPEN\" } ], \"pageSize\" : 5, \"page\" : 5 }";
                 result = ApiUtil.getExampleResponse(exchange, MediaType.valueOf("application/json"), exampleString);
                 break;
             }
@@ -93,6 +94,7 @@ public interface DividendsApi {
     /**
      * GET /dividends/stats : Get dividend statistics
      *
+     * @param taxYear Optional tax year filter (optional)
      * @return Stats retrieved (status code 200)
      */
     @Operation(
@@ -114,6 +116,7 @@ public interface DividendsApi {
         produces = { "application/json" }
     )
     default Mono<ResponseEntity<DividendStats>> getDividendStats(
+        @Parameter(name = "taxYear", description = "Optional tax year filter", in = ParameterIn.QUERY) @Valid @RequestParam(value = "taxYear", required = false) @Nullable Integer taxYear,
         @Parameter(hidden = true) final ServerWebExchange exchange
     ) {
         Mono<Void> result = Mono.empty();
@@ -130,20 +133,20 @@ public interface DividendsApi {
     }
 
 
-    String PATH_PARSE_DIVIDEND_PDF = "/dividends/parse";
+    String PATH_PARSE_DIVIDEND_STATEMENT = "/dividends/parse-statement";
     /**
-     * POST /dividends/parse : Parse a PDF dividend statement
+     * POST /dividends/parse-statement : Parse a dividend statement (PDF/Image)
      *
      * @param file  (optional)
      * @return Successful parsing (status code 200)
      */
     @Operation(
-        operationId = "parseDividendPDF",
-        summary = "Parse a PDF dividend statement",
+        operationId = "parseDividendStatement",
+        summary = "Parse a dividend statement (PDF/Image)",
         tags = { "Dividends" },
         responses = {
             @ApiResponse(responseCode = "200", description = "Successful parsing", content = {
-                @Content(mediaType = "application/json", schema = @Schema(implementation = ParsePDFResponse.class))
+                @Content(mediaType = "application/json", schema = @Schema(implementation = ParseStatementResponse.class))
             })
         },
         security = {
@@ -152,11 +155,11 @@ public interface DividendsApi {
     )
     @RequestMapping(
         method = RequestMethod.POST,
-        value = DividendsApi.PATH_PARSE_DIVIDEND_PDF,
+        value = DividendsApi.PATH_PARSE_DIVIDEND_STATEMENT,
         produces = { "application/json" },
         consumes = { "multipart/form-data" }
     )
-    default Mono<ResponseEntity<ParsePDFResponse>> parseDividendPDF(
+    default Mono<ResponseEntity<ParseStatementResponse>> parseDividendStatement(
         @Parameter(name = "file", description = "") @RequestPart(value = "file", required = false) Part file,
         @Parameter(hidden = true) final ServerWebExchange exchange
     ) {
@@ -164,12 +167,46 @@ public interface DividendsApi {
         exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
         for (MediaType mediaType : exchange.getRequest().getHeaders().getAccept()) {
             if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                String exampleString = "{ \"data\" : { \"securityName\" : \"securityName\", \"reclaimableAmount\" : 1.4658129805029452, \"withholdingTax\" : 6.027456183070403, \"currency\" : \"currency\", \"frenchRate\" : 5.962133916683182, \"grossAmount\" : 0.8008281904610115, \"paymentDate\" : \"2000-01-23\", \"isin\" : \"isin\" } }";
+                String exampleString = "{ \"metadata\" : { \"year\" : 5, \"broker\" : \"broker\" }, \"dividends\" : [ { \"sourceCountry\" : \"sourceCountry\", \"securityName\" : \"securityName\", \"reclaimableAmount\" : 1.4658129805029452, \"withholdingTax\" : 6.027456183070403, \"currency\" : \"currency\", \"grossAmount\" : 0.8008281904610115, \"paymentDate\" : \"2000-01-23\", \"isin\" : \"isin\", \"appliedRateType\" : \"appliedRateType\" }, { \"sourceCountry\" : \"sourceCountry\", \"securityName\" : \"securityName\", \"reclaimableAmount\" : 1.4658129805029452, \"withholdingTax\" : 6.027456183070403, \"currency\" : \"currency\", \"grossAmount\" : 0.8008281904610115, \"paymentDate\" : \"2000-01-23\", \"isin\" : \"isin\", \"appliedRateType\" : \"appliedRateType\" } ] }";
                 result = ApiUtil.getExampleResponse(exchange, MediaType.valueOf("application/json"), exampleString);
                 break;
             }
         }
         return result.then(Mono.empty());
+
+    }
+
+
+    String PATH_UPDATE_DIVIDEND_STATUS = "/dividends/status";
+    /**
+     * PATCH /dividends/status : Update status for multiple dividends
+     *
+     * @param updateDividendStatusRequest  (required)
+     * @return Status updated (status code 204)
+     */
+    @Operation(
+        operationId = "updateDividendStatus",
+        summary = "Update status for multiple dividends",
+        tags = { "Dividends" },
+        responses = {
+            @ApiResponse(responseCode = "204", description = "Status updated")
+        },
+        security = {
+            @SecurityRequirement(name = "bearerAuth")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.PATCH,
+        value = DividendsApi.PATH_UPDATE_DIVIDEND_STATUS,
+        consumes = { "application/json" }
+    )
+    default Mono<ResponseEntity<Void>> updateDividendStatus(
+        @Parameter(name = "UpdateDividendStatusRequest", description = "", required = true) @Valid @RequestBody Mono<UpdateDividendStatusRequest> updateDividendStatusRequest,
+        @Parameter(hidden = true) final ServerWebExchange exchange
+    ) {
+        Mono<Void> result = Mono.empty();
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        return result.then(updateDividendStatusRequest).then(Mono.empty());
 
     }
 

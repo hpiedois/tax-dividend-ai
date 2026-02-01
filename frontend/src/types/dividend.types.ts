@@ -6,5 +6,8 @@ export interface DividendData {
   paymentDate: string;
   withholdingTax: number;
   reclaimableAmount: number;
-  frenchRate: number; // Tracks which rate was applied (PFU or progressive)
+  appliedRateType?: string; // Tracks which rate was applied (PFU or progressive)
+  status: 'OPEN' | 'SENT' | 'PAID';
+  id?: string;
+  appliedRate?: number;
 }

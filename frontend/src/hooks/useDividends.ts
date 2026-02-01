@@ -8,8 +8,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { showSuccess, showError } from '../lib/toast-helpers';
-import { parseDividendPDF } from '../lib/mock-parser';
-import { MOCK_HISTORY, MOCK_STATS } from '../lib/mock-db';
+import { parseDividendPDF } from '../mocks/parser';
+import { MOCK_HISTORY, MOCK_STATS } from '../mocks/db';
 
 /**
  * Hook to parse PDF files

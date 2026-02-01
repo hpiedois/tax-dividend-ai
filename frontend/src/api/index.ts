@@ -24,8 +24,18 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Redirect to login or clear auth state
-            // window.location.href = '/login'; // simplified
+            // Use userManager to signout which clears storage and redirects
+            userManager.signoutRedirect();
         }
         return Promise.reject(error);
     }
 );
+
+// --- Apply Mock Adapter if Enabled ---
+export const setupApi = async () => {
+    if (import.meta.env.VITE_USE_MOCK === 'true') {
+        const { applyMockAdapter } = await import('./mock-adapter');
+        applyMockAdapter(api);
+        console.log('[API] Mock adapter initialized');
+    }
+};

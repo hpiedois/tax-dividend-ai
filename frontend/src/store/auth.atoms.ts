@@ -21,31 +21,11 @@ export const loginAtom = atom(
   async (_get, set, { email, password }: { email: string; password: string }) => {
     set(isLoadingAuthAtom, true);
 
-    // Support Mock Mode for frontend-only testing
-    const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-
     try {
-      if (USE_MOCK) {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Use central API instance (mock adapter will intercept if enabled)
+      const { api } = await import('../api/index');
 
-        // Mock user
-        const mockUser: User = {
-          id: '1',
-          email,
-          fullName: 'John Doe',
-          taxId: '1234567890123',
-        };
-
-        set(userAtom, mockUser);
-        return { success: true };
-      }
-
-      // Real API call
-      // Import dynamically to avoid cycle if necessary, or just use the global one
-      const { apiClient } = await import('../lib/api/client');
-
-      const response = await apiClient.post<User>('/auth/login', { username: email, password });
+      const response = await api.post<User>('/auth/login', { username: email, password });
 
       set(userAtom, response.data);
       return { success: true };
@@ -60,8 +40,8 @@ export const loginAtom = atom(
 
 export const logoutAtom = atom(null, async (_get, set) => {
   try {
-    const { apiClient } = await import('../lib/api/client');
-    await apiClient.post('/auth/logout');
+    const { api } = await import('../api/index');
+    await api.post('/auth/logout');
   } catch (e) {
     console.error('Logout failed', e);
   } finally {

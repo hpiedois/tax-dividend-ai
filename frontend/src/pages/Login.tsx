@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LogoFinFinal } from '../components/ui/AppLogos';
 import { ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {
     const { t } = useTranslation();
-    const { login } = useAuth();
+    const { login, isAuthenticated, user } = useAuth();
+    const navigate = useNavigate();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            console.log('Login: Authenticated and User present. Redirecting to Dashboard.');
+            navigate('/dashboard', { replace: true });
+        } else if (isAuthenticated && !user) {
+            console.warn('Login: Authenticated but User is null. Waiting...');
+        }
+    }, [isAuthenticated, user, navigate]);
 
     return (
         <div className="w-full max-w-[500px] mx-auto">
@@ -58,7 +68,7 @@ export const Login: React.FC = () => {
                                 </span>
                             ) : (
                                 <>
-                                    <span>{t('auth.login_sso', 'Sign In with SSO')}</span>
+                                    <span>{t('auth.login_sso')}</span>
                                     <ArrowRight size={18} strokeWidth={2.5} className="opacity-70 group-hover:translate-x-0.5 transition-transform" />
                                 </>
                             )}

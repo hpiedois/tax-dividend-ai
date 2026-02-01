@@ -1,0 +1,43 @@
+# ============================================================================
+# Tax Dividend AI - Production Environment Configuration
+# ============================================================================
+# This profile is activated with: -Dspring.profiles.active=prod
+# IMPORTANT: All sensitive values MUST be provided via environment variables
+
+spring:
+  jpa:
+    show-sql: false  # Never log SQL in production
+    properties:
+      hibernate:
+        format_sql: false
+
+server:
+  error:
+    include-stacktrace: never  # Never expose stack traces in production
+
+management:
+  endpoint:
+    health:
+      show-details: when-authorized  # Restrict health details in production
+  tracing:
+    sampling:
+      probability: ${OTEL_TRACES_SAMPLER_PROBABILITY:0.1}  # 10% sampling in prod (lower overhead)
+
+# Logging configuration for production
+logging:
+  level:
+    root: INFO
+    com.taxdividend: INFO  # INFO level only in production
+    org.springframework.web: WARN
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
+    com.zaxxer.hikari: INFO
+    org.flywaydb: INFO
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+
+# Production-specific settings
+app:
+  forms:
+    watermark-enabled: false  # No watermarks on production PDFs

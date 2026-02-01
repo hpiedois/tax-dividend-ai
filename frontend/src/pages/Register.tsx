@@ -1,14 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LogoFinFinal } from '../components/ui/AppLogos';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+
 export const Register: React.FC = () => {
-    const { register } = useAuth();
+    const { t } = useTranslation();
+    const { register, isAuthenticated, user } = useAuth();
+    const navigate = useNavigate();
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [isAuthenticated, user, navigate]);
 
     if (success) {
         return (
@@ -81,7 +91,7 @@ export const Register: React.FC = () => {
                                 </span>
                             ) : (
                                 <>
-                                    <span>Create Account with SSO</span>
+                                    <span>{t('auth.register_sso', 'Create Account')}</span>
                                     <ArrowRight size={18} strokeWidth={2.5} className="opacity-70 group-hover:translate-x-0.5 transition-transform" />
                                 </>
                             )}

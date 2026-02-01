@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.taxdividend.backend.controller.DividendControllerTest
 -------------------------------------------------------------------------------
-Tests run: 10, Failures: 0, Errors: 0, Skipped: 3, Time elapsed: 1.037 s -- in com.taxdividend.backend.controller.DividendControllerTest
+Tests run: 10, Failures: 0, Errors: 0, Skipped: 3, Time elapsed: 0.381 s -- in com.taxdividend.backend.controller.DividendControllerTest

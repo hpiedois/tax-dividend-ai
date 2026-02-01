@@ -67,21 +67,78 @@ Should return `{"status":"UP","database":"connected","storage":"connected"}`.
 
 ## Configuration
 
-Configuration is in `src/main/resources/application.yml`.
+Configuration is split across multiple files:
+- `src/main/resources/application.yml` - Base configuration with environment variable placeholders
+- `src/main/resources/application-dev.yml` - Development profile (verbose logging, full stack traces)
+- `src/main/resources/application-prod.yml` - Production profile (minimal logging, security hardened)
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DB_HOST` | `localhost` | PostgreSQL host |
-| `DB_PORT` | `5432` | PostgreSQL port |
-| `DB_NAME` | `taxdividend` | Database name |
-| `DB_USERNAME` | `taxdividend` | Database user |
-| `DB_PASSWORD` | `dev_password_change_in_prod` | Database password |
-| `S3_ENDPOINT` | `http://localhost:9000` | MinIO/S3 endpoint |
-| `S3_ACCESS_KEY` | `minioadmin` | S3 access key |
-| `S3_SECRET_KEY` | `minioadmin123` | S3 secret key |
-| `S3_BUCKET` | `tax-dividend-forms` | S3 bucket name |
+**All sensitive credentials MUST be provided via environment variables.** Never commit credentials to the repository.
+
+#### Creating your .env file
+
+Copy the example file and customize it:
+
+```bash
+cp .env.example .env
+# Edit .env with your actual credentials
+```
+
+**⚠️ IMPORTANT:** The `.env` file is in `.gitignore` and should NEVER be committed.
+
+#### Complete Environment Variables Reference
+
+| Variable | Default (dev) | Required | Description |
+|----------|---------------|----------|-------------|
+| **Database** | | | |
+| `DB_HOST` | `localhost` | Yes | PostgreSQL hostname |
+| `DB_PORT` | `5432` | Yes | PostgreSQL port |
+| `DB_NAME` | `taxdividend_dev` | Yes | Database name |
+| `DB_USERNAME` | `taxdividend_user` | Yes | Database user |
+| `DB_PASSWORD` | `changeme` | Yes | Database password ⚠️ CHANGE IN PRODUCTION |
+| **Storage (MinIO/S3)** | | | |
+| `MINIO_ENDPOINT` | `http://localhost:9000` | Yes | MinIO/S3 endpoint URL |
+| `MINIO_ACCESS_KEY` | `changeme` | Yes | S3 access key ⚠️ CHANGE IN PRODUCTION |
+| `MINIO_SECRET_KEY` | `changeme` | Yes | S3 secret key ⚠️ CHANGE IN PRODUCTION |
+| `MINIO_BUCKET` | `tax-dividend-forms` | Yes | S3 bucket name |
+| **Security** | | | |
+| `INTERNAL_API_KEY` | `changeme-internal-api-key-min-32-chars` | Yes | Internal API authentication key (min 32 chars) ⚠️ CHANGE IN PRODUCTION |
+| `JWT_SECRET_KEY` | *(must be 256+ bits)* | Yes | JWT signing key (HMAC-SHA256) ⚠️ CHANGE IN PRODUCTION |
+| **Email (SMTP)** | | | |
+| `SMTP_HOST` | `localhost` | Yes | SMTP server hostname |
+| `SMTP_PORT` | `1025` | Yes | SMTP server port (587 for TLS, 465 for SSL) |
+| `SMTP_USERNAME` | *(empty)* | No | SMTP authentication username |
+| `SMTP_PASSWORD` | *(empty)* | No | SMTP authentication password |
+| `SMTP_FROM` | `noreply@taxdividend.com` | Yes | Email sender address |
+| `SMTP_AUTH` | `false` | No | Enable SMTP authentication (true/false) |
+| `SMTP_STARTTLS` | `false` | No | Enable STARTTLS (true/false) |
+| **Actuator Security** | | | |
+| `ACTUATOR_USERNAME` | `admin` | Yes | Actuator endpoints username ⚠️ CHANGE IN PRODUCTION |
+| `ACTUATOR_PASSWORD` | `changeme-strong-password` | Yes | Actuator endpoints password ⚠️ CHANGE IN PRODUCTION |
+| **Redis (optional)** | | | |
+| `REDIS_HOST` | `localhost` | No | Redis hostname |
+| `REDIS_PORT` | `6379` | No | Redis port |
+| `REDIS_PASSWORD` | *(empty)* | No | Redis password |
+| **Observability** | | | |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4317` | No | OpenTelemetry OTLP endpoint |
+| `OTEL_TRACES_SAMPLER_PROBABILITY` | `1.0` (dev), `0.1` (prod) | No | Trace sampling rate (0.0 to 1.0) |
+| **Application** | | | |
+| `APP_FRONTEND_URL` | `http://localhost:5173` | Yes | Frontend URL for CORS |
+
+### Spring Profiles
+
+Activate profiles using `-Dspring.profiles.active`:
+
+```bash
+# Development (verbose logging, full stack traces)
+java -jar backend.jar -Dspring.profiles.active=dev
+
+# Production (minimal logging, security hardened)
+java -jar backend.jar -Dspring.profiles.active=prod
+```
+
+**Default profile**: If no profile is specified, base `application.yml` configuration is used (not recommended for production).
 
 ## API Endpoints
 

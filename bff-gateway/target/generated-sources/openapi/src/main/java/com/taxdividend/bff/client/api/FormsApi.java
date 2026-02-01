@@ -3,6 +3,7 @@ package com.taxdividend.bff.client.api;
 import com.taxdividend.bff.client.ApiClient;
 
 import java.io.File;
+import com.taxdividend.bff.client.model.FormDownloadUrlResponse;
 import com.taxdividend.bff.client.model.FormGenerationRequest;
 import com.taxdividend.bff.client.model.GenerateFormResultDTO;
 import com.taxdividend.bff.client.model.GeneratedForm;
@@ -30,7 +31,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-31T12:02:59.936362+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-02-01T09:58:25.591675+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class FormsApi {
     private ApiClient apiClient;
 
@@ -390,6 +391,105 @@ public class FormsApi {
     }
 
     /**
+     * Get pre-signed download URL for form
+     * Returns a temporary pre-signed URL to download the form from storage (MinIO/S3). URL expires after specified duration.
+     * <p><b>200</b> - Pre-signed download URL
+     * <p><b>404</b> - Form not found
+     * <p><b>403</b> - Forbidden - user does not own this form
+     * @param id Form ID
+     * @param xUserId The xUserId parameter
+     * @param expiresIn URL expiration time in seconds
+     * @return FormDownloadUrlResponse
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    private ResponseSpec getFormDownloadUrlRequestCreation(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer expiresIn) throws WebClientResponseException {
+        Object postBody = null;
+        // verify the required parameter 'id' is set
+        if (id == null) {
+            throw new WebClientResponseException("Missing the required parameter 'id' when calling getFormDownloadUrl", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // verify the required parameter 'xUserId' is set
+        if (xUserId == null) {
+            throw new WebClientResponseException("Missing the required parameter 'xUserId' when calling getFormDownloadUrl", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // create path and map variables
+        final Map<String, Object> pathParams = new HashMap<String, Object>();
+
+        pathParams.put("id", id);
+
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders headerParams = new HttpHeaders();
+        final MultiValueMap<String, String> cookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> formParams = new LinkedMultiValueMap<String, Object>();
+
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "expiresIn", expiresIn));
+
+        if (xUserId != null)
+        headerParams.add("X-User-Id", apiClient.parameterToString(xUserId));
+        final String[] localVarAccepts = { 
+            "application/json"
+        };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = { };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<FormDownloadUrlResponse> localVarReturnType = new ParameterizedTypeReference<FormDownloadUrlResponse>() {};
+        return apiClient.invokeAPI("/forms/{id}/download-url", HttpMethod.GET, pathParams, queryParams, postBody, headerParams, cookieParams, formParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
+    }
+
+    /**
+     * Get pre-signed download URL for form
+     * Returns a temporary pre-signed URL to download the form from storage (MinIO/S3). URL expires after specified duration.
+     * <p><b>200</b> - Pre-signed download URL
+     * <p><b>404</b> - Form not found
+     * <p><b>403</b> - Forbidden - user does not own this form
+     * @param id Form ID
+     * @param xUserId The xUserId parameter
+     * @param expiresIn URL expiration time in seconds
+     * @return FormDownloadUrlResponse
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<FormDownloadUrlResponse> getFormDownloadUrl(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer expiresIn) throws WebClientResponseException {
+        ParameterizedTypeReference<FormDownloadUrlResponse> localVarReturnType = new ParameterizedTypeReference<FormDownloadUrlResponse>() {};
+        return getFormDownloadUrlRequestCreation(id, xUserId, expiresIn).bodyToMono(localVarReturnType);
+    }
+
+    /**
+     * Get pre-signed download URL for form
+     * Returns a temporary pre-signed URL to download the form from storage (MinIO/S3). URL expires after specified duration.
+     * <p><b>200</b> - Pre-signed download URL
+     * <p><b>404</b> - Form not found
+     * <p><b>403</b> - Forbidden - user does not own this form
+     * @param id Form ID
+     * @param xUserId The xUserId parameter
+     * @param expiresIn URL expiration time in seconds
+     * @return ResponseEntity&lt;FormDownloadUrlResponse&gt;
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<ResponseEntity<FormDownloadUrlResponse>> getFormDownloadUrlWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer expiresIn) throws WebClientResponseException {
+        ParameterizedTypeReference<FormDownloadUrlResponse> localVarReturnType = new ParameterizedTypeReference<FormDownloadUrlResponse>() {};
+        return getFormDownloadUrlRequestCreation(id, xUserId, expiresIn).toEntity(localVarReturnType);
+    }
+
+    /**
+     * Get pre-signed download URL for form
+     * Returns a temporary pre-signed URL to download the form from storage (MinIO/S3). URL expires after specified duration.
+     * <p><b>200</b> - Pre-signed download URL
+     * <p><b>404</b> - Form not found
+     * <p><b>403</b> - Forbidden - user does not own this form
+     * @param id Form ID
+     * @param xUserId The xUserId parameter
+     * @param expiresIn URL expiration time in seconds
+     * @return ResponseSpec
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public ResponseSpec getFormDownloadUrlWithResponseSpec(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer expiresIn) throws WebClientResponseException {
+        return getFormDownloadUrlRequestCreation(id, xUserId, expiresIn);
+    }
+
+    /**
      * List user&#39;s forms
      * 
      * <p><b>200</b> - List of forms
@@ -473,5 +573,102 @@ public class FormsApi {
      */
     public ResponseSpec listFormsWithResponseSpec(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer taxYear, @jakarta.annotation.Nullable String formType) throws WebClientResponseException {
         return listFormsRequestCreation(xUserId, taxYear, formType);
+    }
+
+    /**
+     * Regenerate expired form
+     * Regenerates a form that has expired (after 30 days). The new form will have updated data and a new expiration date.
+     * <p><b>200</b> - Form regenerated successfully
+     * <p><b>404</b> - Form not found
+     * <p><b>403</b> - Forbidden - user does not own this form
+     * <p><b>400</b> - Bad request - form is not expired yet
+     * @param id Form ID to regenerate
+     * @param xUserId The xUserId parameter
+     * @return GeneratedForm
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    private ResponseSpec regenerateFormRequestCreation(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UUID xUserId) throws WebClientResponseException {
+        Object postBody = null;
+        // verify the required parameter 'id' is set
+        if (id == null) {
+            throw new WebClientResponseException("Missing the required parameter 'id' when calling regenerateForm", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // verify the required parameter 'xUserId' is set
+        if (xUserId == null) {
+            throw new WebClientResponseException("Missing the required parameter 'xUserId' when calling regenerateForm", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // create path and map variables
+        final Map<String, Object> pathParams = new HashMap<String, Object>();
+
+        pathParams.put("id", id);
+
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders headerParams = new HttpHeaders();
+        final MultiValueMap<String, String> cookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> formParams = new LinkedMultiValueMap<String, Object>();
+
+        if (xUserId != null)
+        headerParams.add("X-User-Id", apiClient.parameterToString(xUserId));
+        final String[] localVarAccepts = { 
+            "application/json"
+        };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = { };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<GeneratedForm> localVarReturnType = new ParameterizedTypeReference<GeneratedForm>() {};
+        return apiClient.invokeAPI("/forms/{id}/regenerate", HttpMethod.POST, pathParams, queryParams, postBody, headerParams, cookieParams, formParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
+    }
+
+    /**
+     * Regenerate expired form
+     * Regenerates a form that has expired (after 30 days). The new form will have updated data and a new expiration date.
+     * <p><b>200</b> - Form regenerated successfully
+     * <p><b>404</b> - Form not found
+     * <p><b>403</b> - Forbidden - user does not own this form
+     * <p><b>400</b> - Bad request - form is not expired yet
+     * @param id Form ID to regenerate
+     * @param xUserId The xUserId parameter
+     * @return GeneratedForm
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<GeneratedForm> regenerateForm(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UUID xUserId) throws WebClientResponseException {
+        ParameterizedTypeReference<GeneratedForm> localVarReturnType = new ParameterizedTypeReference<GeneratedForm>() {};
+        return regenerateFormRequestCreation(id, xUserId).bodyToMono(localVarReturnType);
+    }
+
+    /**
+     * Regenerate expired form
+     * Regenerates a form that has expired (after 30 days). The new form will have updated data and a new expiration date.
+     * <p><b>200</b> - Form regenerated successfully
+     * <p><b>404</b> - Form not found
+     * <p><b>403</b> - Forbidden - user does not own this form
+     * <p><b>400</b> - Bad request - form is not expired yet
+     * @param id Form ID to regenerate
+     * @param xUserId The xUserId parameter
+     * @return ResponseEntity&lt;GeneratedForm&gt;
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<ResponseEntity<GeneratedForm>> regenerateFormWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UUID xUserId) throws WebClientResponseException {
+        ParameterizedTypeReference<GeneratedForm> localVarReturnType = new ParameterizedTypeReference<GeneratedForm>() {};
+        return regenerateFormRequestCreation(id, xUserId).toEntity(localVarReturnType);
+    }
+
+    /**
+     * Regenerate expired form
+     * Regenerates a form that has expired (after 30 days). The new form will have updated data and a new expiration date.
+     * <p><b>200</b> - Form regenerated successfully
+     * <p><b>404</b> - Form not found
+     * <p><b>403</b> - Forbidden - user does not own this form
+     * <p><b>400</b> - Bad request - form is not expired yet
+     * @param id Form ID to regenerate
+     * @param xUserId The xUserId parameter
+     * @return ResponseSpec
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public ResponseSpec regenerateFormWithResponseSpec(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UUID xUserId) throws WebClientResponseException {
+        return regenerateFormRequestCreation(id, xUserId);
     }
 }

@@ -25,8 +25,47 @@ public class TaxRuleServiceImpl implements TaxRuleService {
     private final TaxRuleMapper taxRuleMapper;
 
     @Override
-    public List<TaxRule> getAllTaxRules() {
-        return taxRuleMapper.toApiDtoList(taxRuleRepository.findAll());
+    public List<TaxRule> getAllTaxRules(String sourceCountry, String residenceCountry, Boolean active, Boolean reliefAtSource, Boolean refundProcedure) {
+        // Start with all rules
+        List<com.taxdividend.backend.model.TaxRule> rules;
+
+        // Apply filters in order of specificity
+        if (sourceCountry != null && residenceCountry != null) {
+            // Most specific: both countries
+            rules = taxRuleRepository.findBySourceCountryAndResidenceCountry(
+                    sourceCountry.toUpperCase(),
+                    residenceCountry.toUpperCase());
+        } else if (sourceCountry != null) {
+            // Filter by source country only
+            rules = taxRuleRepository.findBySourceCountry(sourceCountry.toUpperCase());
+        } else if (residenceCountry != null) {
+            // Filter by residence country only
+            rules = taxRuleRepository.findByResidenceCountry(residenceCountry.toUpperCase());
+        } else if (Boolean.TRUE.equals(active)) {
+            // Active rules filter
+            rules = taxRuleRepository.findActiveRules(LocalDate.now());
+        } else if (Boolean.FALSE.equals(active)) {
+            // Expired rules filter
+            rules = taxRuleRepository.findExpiredRules(LocalDate.now());
+        } else {
+            // No country or active filter, get all
+            rules = taxRuleRepository.findAll();
+        }
+
+        // Apply additional boolean filters
+        if (Boolean.TRUE.equals(reliefAtSource)) {
+            rules = rules.stream()
+                    .filter(rule -> Boolean.TRUE.equals(rule.getReliefAtSourceAvailable()))
+                    .toList();
+        }
+
+        if (Boolean.TRUE.equals(refundProcedure)) {
+            rules = rules.stream()
+                    .filter(rule -> Boolean.TRUE.equals(rule.getRefundProcedureAvailable()))
+                    .toList();
+        }
+
+        return taxRuleMapper.toApiDtoList(rules);
     }
 
     @Override

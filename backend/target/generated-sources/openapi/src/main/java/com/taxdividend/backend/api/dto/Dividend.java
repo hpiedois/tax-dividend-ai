@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -22,7 +23,7 @@ import jakarta.annotation.Generated;
  * Dividend
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T11:27:14.708089+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-01T10:04:28.893062+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class Dividend {
 
   private @Nullable UUID id;
@@ -41,6 +42,45 @@ public class Dividend {
   private @Nullable BigDecimal withholdingTax;
 
   private @Nullable BigDecimal reclaimableAmount;
+
+  /**
+   * Gets or Sets status
+   */
+  public enum StatusEnum {
+    OPEN("OPEN"),
+    
+    SENT("SENT"),
+    
+    PAID("PAID");
+
+    private final String value;
+
+    StatusEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static StatusEnum fromValue(String value) {
+      for (StatusEnum b : StatusEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  private @Nullable StatusEnum status;
 
   public Dividend id(@Nullable UUID id) {
     this.id = id;
@@ -194,6 +234,25 @@ public class Dividend {
     this.reclaimableAmount = reclaimableAmount;
   }
 
+  public Dividend status(@Nullable StatusEnum status) {
+    this.status = status;
+    return this;
+  }
+
+  /**
+   * Get status
+   * @return status
+   */
+  
+  @JsonProperty("status")
+  public @Nullable StatusEnum getStatus() {
+    return status;
+  }
+
+  public void setStatus(@Nullable StatusEnum status) {
+    this.status = status;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -210,12 +269,13 @@ public class Dividend {
         Objects.equals(this.currency, dividend.currency) &&
         Objects.equals(this.paymentDate, dividend.paymentDate) &&
         Objects.equals(this.withholdingTax, dividend.withholdingTax) &&
-        Objects.equals(this.reclaimableAmount, dividend.reclaimableAmount);
+        Objects.equals(this.reclaimableAmount, dividend.reclaimableAmount) &&
+        Objects.equals(this.status, dividend.status);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, securityName, isin, grossAmount, currency, paymentDate, withholdingTax, reclaimableAmount);
+    return Objects.hash(id, securityName, isin, grossAmount, currency, paymentDate, withholdingTax, reclaimableAmount, status);
   }
 
   @Override
@@ -230,6 +290,7 @@ public class Dividend {
     sb.append("    paymentDate: ").append(toIndentedString(paymentDate)).append("\n");
     sb.append("    withholdingTax: ").append(toIndentedString(withholdingTax)).append("\n");
     sb.append("    reclaimableAmount: ").append(toIndentedString(reclaimableAmount)).append("\n");
+    sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("}");
     return sb.toString();
   }

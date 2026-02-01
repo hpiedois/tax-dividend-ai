@@ -1,19 +1,32 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { ArrowUpRight, Clock, CheckCircle, ArrowRight } from 'lucide-react';
-import { MockSelector } from '../debug/MockSelector';
-import { SCENARIOS } from '../../lib/mock-scenarios';
+import { ArrowUpRight, Clock, CheckCircle, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { useDashboardStats } from '../../hooks/useDashboardStats';
 
 export function DashboardView() {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const [currentScenarioId, setCurrentScenarioId] = useState('few');
+    const [expandedActivityId, setExpandedActivityId] = useState<string | null>(null);
 
-    const data = SCENARIOS[currentScenarioId] || SCENARIOS.few;
+    // Use the hook instead of hardcoded scenarios
+    const { data: dashboardData, isLoading } = useDashboardStats();
+
+    const toggleActivity = (id: string) => {
+        setExpandedActivityId(expandedActivityId === id ? null : id);
+    };
+
+    // Fallback while loading or if error (could optionally show error state)
+    // Note: In a real app we'd have a Skeleton loader here
+    if (isLoading) {
+        return <div className="p-8 text-center">Loading dashboard...</div>;
+    }
+
+    const data = dashboardData;
+
 
     const container = {
         hidden: { opacity: 0 },
@@ -65,7 +78,7 @@ export function DashboardView() {
                                 </div>
                             </div>
                             <p className="text-brand-100 font-medium mb-1">{t('dashboard.total_reclaimed')}</p>
-                            <h3 className="text-3xl font-bold font-heading">{data.stats.totalReclaimed.toFixed(2)} €</h3>
+                            <h3 className="text-3xl font-bold font-heading">{data?.stats?.totalReclaimed?.toFixed(2) ?? '0.00'} €</h3>
                         </Card>
                     </motion.div>
 
@@ -77,7 +90,7 @@ export function DashboardView() {
                                 </div>
                             </div>
                             <p className="text-slate-500 font-medium mb-1">{t('dashboard.pending')}</p>
-                            <h3 className="text-3xl font-bold font-heading text-foreground">{data.stats.pendingAmount.toFixed(2)} €</h3>
+                            <h3 className="text-3xl font-bold font-heading text-foreground">{data?.stats?.pendingAmount?.toFixed(2) ?? '0.00'} €</h3>
                         </Card>
                     </motion.div>
 
@@ -89,7 +102,7 @@ export function DashboardView() {
                                 </div>
                             </div>
                             <p className="text-slate-500 font-medium mb-1">{t('dashboard.cases_processed')}</p>
-                            <h3 className="text-3xl font-bold font-heading text-foreground">{data.stats.casesCount}</h3>
+                            <h3 className="text-3xl font-bold font-heading text-foreground">{data?.stats?.casesCount ?? 0}</h3>
                         </Card>
                     </motion.div>
                 </div>
@@ -97,22 +110,61 @@ export function DashboardView() {
                 <motion.div variants={item}>
                     <h3 className="text-xl font-heading font-bold text-foreground mb-4">{t('dashboard.recent_activity')}</h3>
                     <Card className="p-0 overflow-hidden">
-                        {data.recentActivity.length > 0 ? (
-                            data.recentActivity.map((activity) => (
-                                <div key={activity.id} className="p-4 border-b border-border flex items-center justify-between hover:bg-muted/50 transition-colors last:border-0">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${activity.type === 'scan' ? 'bg-brand-50 text-brand-600' :
-                                                activity.type === 'refund' ? 'bg-emerald-50 text-emerald-600' :
-                                                    'bg-slate-50 text-slate-600'
-                                            }`}>
-                                            {activity.initials}
+                        {data?.recentActivity && data.recentActivity.length > 0 ? (
+                            data.recentActivity.map((activity: any) => (
+                                <div key={activity.id} className="border-b border-border last:border-0">
+                                    <div
+                                        className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer"
+                                        onClick={() => toggleActivity(activity.id)}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold bg-slate-50 text-slate-600`}>
+                                                {/* Fallback initials if security name is missing */}
+                                                {(activity.securityName || '??').substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-foreground">{activity.securityName}</p>
+                                                <p className="text-sm text-slate-500">
+                                                    {activity.grossAmount ? `${activity.grossAmount} ${activity.currency || 'EUR'}` : 'N/A'}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-foreground">{activity.name}</p>
-                                            <p className="text-sm text-slate-500">{activity.description}</p>
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-sm text-slate-400">{activity.date}</span>
+                                            {expandedActivityId === activity.id ?
+                                                <ChevronUp className="w-4 h-4 text-slate-400" /> :
+                                                <ChevronDown className="w-4 h-4 text-slate-400" />
+                                            }
                                         </div>
                                     </div>
-                                    <span className="text-sm text-slate-400">{activity.time}</span>
+                                    <AnimatePresence>
+                                        {expandedActivityId === activity.id && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="overflow-hidden bg-muted/30"
+                                            >
+                                                <div className="p-4 pt-0 pl-[4.5rem] grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                                    <div>
+                                                        <p className="text-slate-500 mb-1">{t('result.gross_amount')}</p>
+                                                        <p className="font-medium text-foreground">
+                                                            {activity.grossAmount?.toFixed(2)} {activity.currency}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-slate-500 mb-1">{t('result.reclaimable')}</p>
+                                                        <p className="font-medium text-emerald-600">+{activity.reclaimedAmount?.toFixed(2)} {activity.currency}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-slate-500 mb-1">Status</p>
+                                                        <p className="font-medium text-foreground">{activity.status}</p>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             ))
                         ) : (
@@ -124,10 +176,8 @@ export function DashboardView() {
                 </motion.div>
             </motion.div>
 
-            <MockSelector
-                currentScenario={currentScenarioId}
-                onSelect={setCurrentScenarioId}
-            />
+
+
         </>
     );
 }

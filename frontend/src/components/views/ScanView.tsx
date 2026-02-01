@@ -16,8 +16,10 @@ import { ScanningOverlay } from '../upload/ScanningOverlay';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { validateFiles } from '../../lib/validation';
+import { dividendsApi } from '../../api/clients';
 import { showError, showSuccess } from '../../lib/toast-helpers';
-import { parseDividendPDF } from '../../lib/mock-parser';
+
+// ...
 
 export function ScanView() {
   const { t } = useTranslation();
@@ -50,12 +52,19 @@ export function ScanView() {
     setScanStep('scanning');
     setProcessingCount({ current: 0, total: valid.length });
 
-    const results = [];
+    const results: any[] = [];
     for (let i = 0; i < valid.length; i++) {
       setProcessingCount((prev) => ({ ...prev, current: i + 1 }));
       try {
-        const data = await parseDividendPDF(valid[i]);
-        results.push(data);
+        const response = await dividendsApi.parseDividendStatement(valid[i]);
+        if (response.data.dividends) {
+          // Map API data to local type (add status)
+          const mappedDividends = response.data.dividends.map(d => ({
+            ...d,
+            status: 'OPEN' as const
+          }));
+          results.push(...mappedDividends);
+        }
       } catch (error) {
         console.error('Error parsing', error);
         showError(t('validation.error.generic'));

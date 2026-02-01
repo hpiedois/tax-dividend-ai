@@ -54,14 +54,19 @@ public class TaxRulesApiTest {
     }
     
     /**
-     * List all tax rules
+     * List tax rules with optional filters
      *
-     * 
+     * Retrieve tax rules with optional filtering by countries, active status, and procedure availability
      */
     @Test
     public void getAllTaxRulesTest()  {
         // uncomment below to test the function
-        //List<TaxRule> response = api.getAllTaxRules().collectList().block();
+        //String sourceCountry = null;
+        //String residenceCountry = null;
+        //Boolean active = null;
+        //Boolean reliefAtSource = null;
+        //Boolean refundProcedure = null;
+        //List<TaxRule> response = api.getAllTaxRules(sourceCountry, residenceCountry, active, reliefAtSource, refundProcedure).collectList().block();
 
         // TODO: test validations
     }

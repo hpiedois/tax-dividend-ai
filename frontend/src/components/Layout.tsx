@@ -10,6 +10,7 @@ import { LogoFinFinal } from './ui/AppLogos';
 
 export const Layout: React.FC = () => {
     const { user, logout } = useAuth();
+    console.log('Layout Render:', { user });
     const navigate = useNavigate();
     const toastShownRef = React.useRef(false);
     const location = useLocation();

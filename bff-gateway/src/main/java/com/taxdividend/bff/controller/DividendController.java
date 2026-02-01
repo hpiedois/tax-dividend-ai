@@ -14,7 +14,7 @@ import org.springframework.web.server.ServerWebExchange;
 import com.taxdividend.bff.api.DividendsApi;
 import com.taxdividend.bff.model.DividendHistoryResponse;
 import com.taxdividend.bff.model.DividendStats;
-import com.taxdividend.bff.model.ParsePDFResponse;
+import com.taxdividend.bff.model.ParseStatementResponse;
 import com.taxdividend.bff.service.DividendService;
 
 import reactor.core.publisher.Mono;
@@ -30,8 +30,10 @@ public class DividendController implements DividendsApi {
     private final DividendService dividendService;
 
     @Override
-    public Mono<ResponseEntity<DividendStats>> getDividendStats(ServerWebExchange exchange) {
-        return dividendService.getDividendStats()
+    public Mono<ResponseEntity<DividendStats>> getDividendStats(Integer taxYear, ServerWebExchange exchange) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
+                .flatMap(userId -> dividendService.getDividendStats(userId, taxYear))
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.ok(new DividendStats()));
     }
@@ -39,13 +41,15 @@ public class DividendController implements DividendsApi {
     @Override
     public Mono<ResponseEntity<DividendHistoryResponse>> getDividendHistory(Integer page, Integer pageSize,
             ServerWebExchange exchange) {
-        return dividendService.getDividendHistory(page, pageSize)
+        return ReactiveSecurityContextHolder.getContext()
+                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
+                .flatMap(userId -> dividendService.getDividendHistory(userId, page, pageSize))
                 .map(ResponseEntity::ok);
     }
 
     @Override
-    public Mono<ResponseEntity<ParsePDFResponse>> parseDividendPDF(Part file, ServerWebExchange exchange) {
-        return dividendService.parseDividendPDF(file)
+    public Mono<ResponseEntity<ParseStatementResponse>> parseDividendStatement(Part file, ServerWebExchange exchange) {
+        return dividendService.parseDividendStatement(file)
                 .map(ResponseEntity::ok);
     }
 }

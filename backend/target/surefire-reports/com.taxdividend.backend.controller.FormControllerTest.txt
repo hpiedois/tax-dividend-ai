@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.taxdividend.backend.controller.FormControllerTest
 -------------------------------------------------------------------------------
-Tests run: 16, Failures: 0, Errors: 0, Skipped: 6, Time elapsed: 0.500 s -- in com.taxdividend.backend.controller.FormControllerTest
+Tests run: 16, Failures: 0, Errors: 0, Skipped: 6, Time elapsed: 0.327 s -- in com.taxdividend.backend.controller.FormControllerTest

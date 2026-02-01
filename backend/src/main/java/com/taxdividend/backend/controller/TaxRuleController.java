@@ -33,13 +33,26 @@ public class TaxRuleController implements TaxRulesApi {
     private final TaxRuleService taxRuleService;
 
     /**
-     * Get all tax rules.
+     * Get all tax rules with optional filters.
      */
     @Override
-    public ResponseEntity<List<com.taxdividend.backend.api.dto.TaxRule>> getAllTaxRules() {
-        List<com.taxdividend.backend.api.dto.TaxRule> rules = taxRuleService.getAllTaxRules();
+    public ResponseEntity<List<com.taxdividend.backend.api.dto.TaxRule>> getAllTaxRules(
+            String sourceCountry,
+            String residenceCountry,
+            Boolean active,
+            Boolean reliefAtSource,
+            Boolean refundProcedure) {
 
-        log.info("Retrieved {} tax rules", rules.size());
+        List<com.taxdividend.backend.api.dto.TaxRule> rules = taxRuleService.getAllTaxRules(
+                sourceCountry,
+                residenceCountry,
+                active,
+                reliefAtSource,
+                refundProcedure
+        );
+
+        log.info("Retrieved {} tax rules (filters: sourceCountry={}, residenceCountry={}, active={}, reliefAtSource={}, refundProcedure={})",
+                rules.size(), sourceCountry, residenceCountry, active, reliefAtSource, refundProcedure);
 
         return ResponseEntity.ok(rules);
     }

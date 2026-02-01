@@ -5,9 +5,12 @@
  */
 package com.taxdividend.bff.api;
 
+import com.taxdividend.bff.model.FormDownloadUrlResponse;
 import com.taxdividend.bff.model.GenerateTaxFormsRequest;
 import com.taxdividend.bff.model.GenerateTaxFormsResponse;
+import com.taxdividend.bff.model.GeneratedForm;
 import org.springframework.lang.Nullable;
+import java.util.UUID;
 import io.swagger.v3.oas.annotations.ExternalDocumentation;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -38,10 +41,80 @@ import java.util.Map;
 import java.util.Optional;
 import jakarta.annotation.Generated;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T12:02:59.126017+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-01T09:58:25.268465+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 @Validated
 @Tag(name = "Forms", description = "the Forms API")
 public interface FormsApi {
+
+    String PATH_DELETE_FORM = "/forms/{id}";
+    /**
+     * DELETE /forms/{id} : Delete form
+     *
+     * @param id  (required)
+     * @return Deleted (status code 204)
+     */
+    @Operation(
+        operationId = "deleteForm",
+        summary = "Delete form",
+        tags = { "Forms" },
+        responses = {
+            @ApiResponse(responseCode = "204", description = "Deleted")
+        },
+        security = {
+            @SecurityRequirement(name = "bearerAuth")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.DELETE,
+        value = FormsApi.PATH_DELETE_FORM
+    )
+    default Mono<ResponseEntity<Void>> deleteForm(
+        @NotNull @Parameter(name = "id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("id") UUID id,
+        @Parameter(hidden = true) final ServerWebExchange exchange
+    ) {
+        Mono<Void> result = Mono.empty();
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        return result.then(Mono.empty());
+
+    }
+
+
+    String PATH_DOWNLOAD_FORM = "/forms/{id}/download";
+    /**
+     * GET /forms/{id}/download : Download form
+     *
+     * @param id  (required)
+     * @return Form file (status code 200)
+     */
+    @Operation(
+        operationId = "downloadForm",
+        summary = "Download form",
+        tags = { "Forms" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Form file", content = {
+                @Content(mediaType = "application/pdf", schema = @Schema(implementation = org.springframework.core.io.Resource.class)),
+                @Content(mediaType = "application/zip", schema = @Schema(implementation = org.springframework.core.io.Resource.class))
+            })
+        },
+        security = {
+            @SecurityRequirement(name = "bearerAuth")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.GET,
+        value = FormsApi.PATH_DOWNLOAD_FORM,
+        produces = { "application/pdf", "application/zip" }
+    )
+    default Mono<ResponseEntity<org.springframework.core.io.Resource>> downloadForm(
+        @NotNull @Parameter(name = "id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("id") UUID id,
+        @Parameter(hidden = true) final ServerWebExchange exchange
+    ) {
+        Mono<Void> result = Mono.empty();
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        return result.then(Mono.empty());
+
+    }
+
 
     String PATH_GENERATE_TAX_FORMS = "/forms/generate";
     /**
@@ -83,6 +156,143 @@ public interface FormsApi {
             }
         }
         return result.then(generateTaxFormsRequest).then(Mono.empty());
+
+    }
+
+
+    String PATH_GET_FORM = "/forms/{id}";
+    /**
+     * GET /forms/{id} : Get form metadata
+     *
+     * @param id  (required)
+     * @return Form metadata (status code 200)
+     *         or Not found (status code 404)
+     */
+    @Operation(
+        operationId = "getForm",
+        summary = "Get form metadata",
+        tags = { "Forms" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Form metadata", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = GeneratedForm.class))
+            }),
+            @ApiResponse(responseCode = "404", description = "Not found")
+        },
+        security = {
+            @SecurityRequirement(name = "bearerAuth")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.GET,
+        value = FormsApi.PATH_GET_FORM,
+        produces = { "application/json" }
+    )
+    default Mono<ResponseEntity<GeneratedForm>> getForm(
+        @NotNull @Parameter(name = "id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("id") UUID id,
+        @Parameter(hidden = true) final ServerWebExchange exchange
+    ) {
+        Mono<Void> result = Mono.empty();
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        for (MediaType mediaType : exchange.getRequest().getHeaders().getAccept()) {
+            if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                String exampleString = "{ \"formType\" : \"formType\", \"fileName\" : \"fileName\", \"taxYear\" : 0, \"generatedAt\" : \"2000-01-23T04:56:07.000+00:00\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }";
+                result = ApiUtil.getExampleResponse(exchange, MediaType.valueOf("application/json"), exampleString);
+                break;
+            }
+        }
+        return result.then(Mono.empty());
+
+    }
+
+
+    String PATH_GET_FORM_DOWNLOAD_URL = "/forms/{id}/download-url";
+    /**
+     * GET /forms/{id}/download-url : Get pre-signed download URL for form
+     *
+     * @param id  (required)
+     * @param expiresIn  (optional, default to 3600)
+     * @return Pre-signed download URL (status code 200)
+     *         or Form not found (status code 404)
+     */
+    @Operation(
+        operationId = "getFormDownloadUrl",
+        summary = "Get pre-signed download URL for form",
+        tags = { "Forms" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Pre-signed download URL", content = {
+                @Content(mediaType = "application/json", schema = @Schema(implementation = FormDownloadUrlResponse.class))
+            }),
+            @ApiResponse(responseCode = "404", description = "Form not found")
+        },
+        security = {
+            @SecurityRequirement(name = "bearerAuth")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.GET,
+        value = FormsApi.PATH_GET_FORM_DOWNLOAD_URL,
+        produces = { "application/json" }
+    )
+    default Mono<ResponseEntity<FormDownloadUrlResponse>> getFormDownloadUrl(
+        @NotNull @Parameter(name = "id", description = "", required = true, in = ParameterIn.PATH) @PathVariable("id") UUID id,
+        @Parameter(name = "expiresIn", description = "", in = ParameterIn.QUERY) @Valid @RequestParam(value = "expiresIn", required = false, defaultValue = "3600") Integer expiresIn,
+        @Parameter(hidden = true) final ServerWebExchange exchange
+    ) {
+        Mono<Void> result = Mono.empty();
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        for (MediaType mediaType : exchange.getRequest().getHeaders().getAccept()) {
+            if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                String exampleString = "{ \"url\" : \"https://openapi-generator.tech\", \"expiresAt\" : \"2000-01-23T04:56:07.000+00:00\" }";
+                result = ApiUtil.getExampleResponse(exchange, MediaType.valueOf("application/json"), exampleString);
+                break;
+            }
+        }
+        return result.then(Mono.empty());
+
+    }
+
+
+    String PATH_LIST_FORMS = "/forms";
+    /**
+     * GET /forms : List user&#39;s forms
+     *
+     * @param taxYear  (optional)
+     * @param formType  (optional)
+     * @return List of forms (status code 200)
+     */
+    @Operation(
+        operationId = "listForms",
+        summary = "List user's forms",
+        tags = { "Forms" },
+        responses = {
+            @ApiResponse(responseCode = "200", description = "List of forms", content = {
+                @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = GeneratedForm.class)))
+            })
+        },
+        security = {
+            @SecurityRequirement(name = "bearerAuth")
+        }
+    )
+    @RequestMapping(
+        method = RequestMethod.GET,
+        value = FormsApi.PATH_LIST_FORMS,
+        produces = { "application/json" }
+    )
+    default Mono<ResponseEntity<Flux<GeneratedForm>>> listForms(
+        @Parameter(name = "taxYear", description = "", in = ParameterIn.QUERY) @Valid @RequestParam(value = "taxYear", required = false) @Nullable Integer taxYear,
+        @Parameter(name = "formType", description = "", in = ParameterIn.QUERY) @Valid @RequestParam(value = "formType", required = false) @Nullable String formType,
+        @Parameter(hidden = true) final ServerWebExchange exchange
+    ) {
+        Mono<Void> result = Mono.empty();
+        exchange.getResponse().setStatusCode(HttpStatus.NOT_IMPLEMENTED);
+        for (MediaType mediaType : exchange.getRequest().getHeaders().getAccept()) {
+            if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                String exampleString = "[ { \"formType\" : \"formType\", \"fileName\" : \"fileName\", \"taxYear\" : 0, \"generatedAt\" : \"2000-01-23T04:56:07.000+00:00\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" }, { \"formType\" : \"formType\", \"fileName\" : \"fileName\", \"taxYear\" : 0, \"generatedAt\" : \"2000-01-23T04:56:07.000+00:00\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" } ]";
+                result = ApiUtil.getExampleResponse(exchange, MediaType.valueOf("application/json"), exampleString);
+                break;
+            }
+        }
+        return result.then(Mono.empty());
 
     }
 

@@ -1,0 +1,21 @@
+post:
+  tags:
+    - Dividends
+  summary: Parse a dividend statement (PDF/Image)
+  operationId: parseDividendStatement
+  requestBody:
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          properties:
+            file:
+              type: string
+              format: binary
+  responses:
+    '200':
+      description: Successful parsing
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/ParseStatementResponse.yaml'

@@ -103,4 +103,12 @@ class DividendTest {
         // TODO: test reclaimableAmount
     }
 
+    /**
+     * Test the property 'status'
+     */
+    @Test
+    void statusTest() {
+        // TODO: test status
+    }
+
 }

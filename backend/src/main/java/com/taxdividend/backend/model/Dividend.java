@@ -10,16 +10,17 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Dividend entity representing dividend data extracted from bank statements or manually entered.
+ * Dividend entity representing dividend data extracted from bank statements or
+ * manually entered.
  * Corresponds to the 'dividends' table in the database.
  */
 @Entity
 @Table(name = "dividends", indexes = {
-    @Index(name = "idx_dividends_form_id", columnList = "form_id"),
-    @Index(name = "idx_dividends_user_id", columnList = "user_id"),
-    @Index(name = "idx_dividends_isin", columnList = "isin"),
-    @Index(name = "idx_dividends_payment_date", columnList = "paymentDate"),
-    @Index(name = "idx_dividends_source_country", columnList = "sourceCountry")
+        @Index(name = "idx_dividends_form_id", columnList = "form_id"),
+        @Index(name = "idx_dividends_user_id", columnList = "user_id"),
+        @Index(name = "idx_dividends_isin", columnList = "isin"),
+        @Index(name = "idx_dividends_payment_date", columnList = "paymentDate"),
+        @Index(name = "idx_dividends_source_country", columnList = "sourceCountry")
 })
 @Data
 @NoArgsConstructor
@@ -34,6 +35,10 @@ public class Dividend {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "form_id")
     private GeneratedForm form;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "statement_id")
+    private DividendStatement statement;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -83,6 +88,11 @@ public class Dividend {
      */
     @Column(name = "source_country", nullable = false, length = 2)
     private String sourceCountry;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    @Builder.Default
+    private DividendStatus status = DividendStatus.OPEN;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

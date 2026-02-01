@@ -5,12 +5,18 @@
  */
 package com.taxdividend.backend.api;
 
+import com.taxdividend.backend.api.dto.BulkImportDividendsRequest;
+import com.taxdividend.backend.api.dto.BulkImportDividendsResponse;
+import org.springframework.format.annotation.DateTimeFormat;
 import com.taxdividend.backend.api.dto.Dividend;
+import com.taxdividend.backend.api.dto.DividendStatsDTO;
 import com.taxdividend.backend.api.dto.ListDividends200Response;
+import java.time.LocalDate;
 import org.springframework.lang.Nullable;
 import com.taxdividend.backend.api.dto.TaxCalculationBatchResultDTO;
 import com.taxdividend.backend.api.dto.TaxCalculationResultDTO;
 import java.util.UUID;
+import com.taxdividend.backend.api.dto.UpdateDividendStatusRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +32,82 @@ import java.util.Map;
 import java.util.Optional;
 import jakarta.annotation.Generated;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T11:27:14.708089+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-01T10:04:28.893062+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 @Validated
 public interface DividendsApi {
 
     default Optional<NativeWebRequest> getRequest() {
         return Optional.empty();
     }
+
+    String PATH_BULK_IMPORT_DIVIDENDS = "/dividends/bulk";
+    /**
+     * POST /dividends/bulk : Bulk import dividends from parsed statement
+     * Import multiple dividends at once from a parsed broker statement. Called by AI Agent after parsing a statement. Automatically calculates tax and updates statement metadata. 
+     *
+     * @param xUserId  (required)
+     * @param bulkImportDividendsRequest  (required)
+     * @return Dividends imported successfully (status code 200)
+     *         or Invalid request or statement not found (status code 400)
+     *         or User does not own the statement (status code 403)
+     */
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = DividendsApi.PATH_BULK_IMPORT_DIVIDENDS,
+        produces = { "application/json" },
+        consumes = { "application/json" }
+    )
+    default ResponseEntity<BulkImportDividendsResponse> bulkImportDividends(
+        @NotNull  @RequestHeader(value = "X-User-Id", required = true) UUID xUserId,
+         @Valid @RequestBody BulkImportDividendsRequest bulkImportDividendsRequest
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "{ \"failedCount\" : 6, \"totalReclaimable\" : 5.962133916683182, \"dividendIds\" : [ \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\" ], \"totalGrossAmount\" : 1.4658129805029452, \"importedCount\" : 0, \"errors\" : [ \"errors\", \"errors\" ] }";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    String PATH_CALCULATE_ALL_USER_DIVIDENDS = "/dividends/{userId}/calculate-all";
+    /**
+     * POST /dividends/{userId}/calculate-all : Recalculate tax for all user dividends
+     * Triggers tax recalculation for all dividends of a user. Useful after tax rule updates.
+     *
+     * @param userId User ID whose dividends should be recalculated (required)
+     * @param xUserId  (required)
+     * @return Tax recalculated for all dividends (status code 200)
+     *         or Forbidden - user can only calculate their own dividends (status code 403)
+     *         or User not found (status code 404)
+     */
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = DividendsApi.PATH_CALCULATE_ALL_USER_DIVIDENDS,
+        produces = { "application/json" }
+    )
+    default ResponseEntity<TaxCalculationBatchResultDTO> calculateAllUserDividends(
+        @NotNull  @PathVariable("userId") UUID userId,
+        @NotNull  @RequestHeader(value = "X-User-Id", required = true) UUID xUserId
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "{ \"totalReclaimableAmount\" : 1.4658129805029452, \"successCount\" : 0, \"results\" : [ { \"standardRate\" : 6.027456183070403, \"withheldAmount\" : 5.962133916683182, \"reclaimableAmount\" : 0.8008281904610115, \"success\" : true, \"dividendId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"treatyRate\" : 1.4658129805029452, \"errors\" : [ \"errors\", \"errors\" ] }, { \"standardRate\" : 6.027456183070403, \"withheldAmount\" : 5.962133916683182, \"reclaimableAmount\" : 0.8008281904610115, \"success\" : true, \"dividendId\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"treatyRate\" : 1.4658129805029452, \"errors\" : [ \"errors\", \"errors\" ] } ], \"failureCount\" : 6 }";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
 
     String PATH_CALCULATE_BATCH = "/dividends/calculate-batch";
     /**
@@ -142,7 +217,38 @@ public interface DividendsApi {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"securityName\" : \"securityName\", \"reclaimableAmount\" : 1.4658129805029452, \"withholdingTax\" : 6.027456183070403, \"currency\" : \"currency\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"grossAmount\" : 0.8008281904610115, \"paymentDate\" : \"2000-01-23\", \"isin\" : \"isin\" }";
+                    String exampleString = "{ \"securityName\" : \"securityName\", \"reclaimableAmount\" : 1.4658129805029452, \"withholdingTax\" : 6.027456183070403, \"currency\" : \"currency\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"grossAmount\" : 0.8008281904610115, \"paymentDate\" : \"2000-01-23\", \"isin\" : \"isin\", \"status\" : \"OPEN\" }";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    String PATH_GET_DIVIDEND_STATS = "/dividends/stats";
+    /**
+     * GET /dividends/stats : Get dividend statistics
+     *
+     * @param xUserId  (required)
+     * @param taxYear Optional tax year filter. If not provided, returns all-time stats. (optional)
+     * @return Statistics (status code 200)
+     */
+    @RequestMapping(
+        method = RequestMethod.GET,
+        value = DividendsApi.PATH_GET_DIVIDEND_STATS,
+        produces = { "application/json" }
+    )
+    default ResponseEntity<DividendStatsDTO> getDividendStats(
+        @NotNull  @RequestHeader(value = "X-User-Id", required = true) UUID xUserId,
+         @Valid @RequestParam(value = "taxYear", required = false) @Nullable Integer taxYear
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "{ \"totalReclaimed\" : 0.8008281904610115, \"pendingAmount\" : 6.027456183070403, \"casesCount\" : 1 }";
                     ApiUtil.setExampleResponse(request, "application/json", exampleString);
                     break;
                 }
@@ -155,11 +261,14 @@ public interface DividendsApi {
 
     String PATH_LIST_DIVIDENDS = "/dividends";
     /**
-     * GET /dividends : List user&#39;s dividends
+     * GET /dividends : List user&#39;s dividends with optional filters
      *
      * @param xUserId  (required)
      * @param page  (optional, default to 0)
      * @param size  (optional, default to 20)
+     * @param startDate Filter dividends from this date (inclusive) (optional)
+     * @param endDate Filter dividends until this date (inclusive) (optional)
+     * @param status Filter by submission status (optional)
      * @return List of dividends (status code 200)
      */
     @RequestMapping(
@@ -170,17 +279,42 @@ public interface DividendsApi {
     default ResponseEntity<ListDividends200Response> listDividends(
         @NotNull  @RequestHeader(value = "X-User-Id", required = true) UUID xUserId,
          @Valid @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-         @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size
+         @Valid @RequestParam(value = "size", required = false, defaultValue = "20") Integer size,
+         @Valid @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @Nullable LocalDate startDate,
+         @Valid @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @Nullable LocalDate endDate,
+         @Valid @RequestParam(value = "status", required = false) @Nullable String status
     ) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
-                    String exampleString = "{ \"content\" : [ { \"securityName\" : \"securityName\", \"reclaimableAmount\" : 1.4658129805029452, \"withholdingTax\" : 6.027456183070403, \"currency\" : \"currency\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"grossAmount\" : 0.8008281904610115, \"paymentDate\" : \"2000-01-23\", \"isin\" : \"isin\" }, { \"securityName\" : \"securityName\", \"reclaimableAmount\" : 1.4658129805029452, \"withholdingTax\" : 6.027456183070403, \"currency\" : \"currency\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"grossAmount\" : 0.8008281904610115, \"paymentDate\" : \"2000-01-23\", \"isin\" : \"isin\" } ] }";
+                    String exampleString = "{ \"content\" : [ { \"securityName\" : \"securityName\", \"reclaimableAmount\" : 1.4658129805029452, \"withholdingTax\" : 6.027456183070403, \"currency\" : \"currency\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"grossAmount\" : 0.8008281904610115, \"paymentDate\" : \"2000-01-23\", \"isin\" : \"isin\", \"status\" : \"OPEN\" }, { \"securityName\" : \"securityName\", \"reclaimableAmount\" : 1.4658129805029452, \"withholdingTax\" : 6.027456183070403, \"currency\" : \"currency\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"grossAmount\" : 0.8008281904610115, \"paymentDate\" : \"2000-01-23\", \"isin\" : \"isin\", \"status\" : \"OPEN\" } ] }";
                     ApiUtil.setExampleResponse(request, "application/json", exampleString);
                     break;
                 }
             }
         });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    String PATH_UPDATE_DIVIDEND_STATUS = "/dividends/status";
+    /**
+     * PATCH /dividends/status : Update status for multiple dividends
+     *
+     * @param xUserId  (required)
+     * @param updateDividendStatusRequest  (required)
+     * @return Status updated (status code 204)
+     */
+    @RequestMapping(
+        method = RequestMethod.PATCH,
+        value = DividendsApi.PATH_UPDATE_DIVIDEND_STATUS,
+        consumes = { "application/json" }
+    )
+    default ResponseEntity<Void> updateDividendStatus(
+        @NotNull  @RequestHeader(value = "X-User-Id", required = true) UUID xUserId,
+         @Valid @RequestBody UpdateDividendStatusRequest updateDividendStatusRequest
+    ) {
         return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
 
     }

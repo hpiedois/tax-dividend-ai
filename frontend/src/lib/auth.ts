@@ -10,7 +10,7 @@ export const oidcConfig = {
     automaticSilentRenew: true,
 };
 
-import { MockUserManager } from './mock-auth';
+import { MockUserManager } from '../mocks/auth';
 
 // Check for mock mode
 const useMock = import.meta.env.VITE_USE_MOCK_AUTH === 'true';

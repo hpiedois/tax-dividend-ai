@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   TreatyRateResponse.JSON_PROPERTY_REFUND_PROCEDURE_AVAILABLE,
   TreatyRateResponse.JSON_PROPERTY_NOTES
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-31T12:02:59.936362+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-02-01T09:58:25.591675+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class TreatyRateResponse {
   public static final String JSON_PROPERTY_STANDARD_RATE = "standardRate";
   @jakarta.annotation.Nullable

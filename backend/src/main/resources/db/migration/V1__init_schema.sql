@@ -6,6 +6,13 @@
 -- ============================================================================
 
 -- ============================================================================
+-- EXTENSIONS
+-- ============================================================================
+
+-- Enable UUID generation functions (uuid_generate_v4)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================================
 -- FUNCTIONS
 -- ============================================================================
 
@@ -121,29 +128,76 @@ COMMENT ON COLUMN dividends.reclaimable_amount IS 'Amount that can be reclaimed 
 COMMENT ON COLUMN dividends.source_country IS 'Country where dividend was paid (ISO 2-letter code)';
 
 -- ----------------------------------------------------------------------------
--- Form Submissions Table
+-- Dividend Statements Table (Broker Statements)
 -- ----------------------------------------------------------------------------
-CREATE TABLE form_submissions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    form_id UUID NOT NULL REFERENCES generated_forms(id) ON DELETE CASCADE,
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    submission_method VARCHAR(50),
-    tracking_number VARCHAR(100),
-    status VARCHAR(50) DEFAULT 'PENDING',
-    status_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    notes TEXT,
-    metadata JSONB
+
+-- Status enum for dividend statement workflow
+CREATE TYPE dividend_statement_status AS ENUM (
+    'UPLOADED',    -- Fichier uploadé, en attente parsing
+    'PARSING',     -- En cours de parsing par Agent IA
+    'PARSED',      -- Parsing terminé, dividendes extraits
+    'VALIDATED',   -- Dividendes validés, formulaires générés et téléchargés
+    'SENT',        -- User a soumis les formulaires au fisc (marquage manuel)
+    'PAID'         -- Remboursement reçu (marquage manuel)
 );
 
-CREATE INDEX idx_form_submissions_form_id ON form_submissions(form_id);
-CREATE INDEX idx_form_submissions_status ON form_submissions(status);
-CREATE INDEX idx_form_submissions_submitted_at ON form_submissions(submitted_at);
+CREATE TABLE dividend_statements (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
-COMMENT ON TABLE form_submissions IS 'Tracking of form submissions to tax authorities';
-COMMENT ON COLUMN form_submissions.submission_method IS 'How the form was submitted: EMAIL, POSTAL, API';
-COMMENT ON COLUMN form_submissions.status IS 'Status: PENDING, RECEIVED, PROCESSING, APPROVED, REJECTED';
-COMMENT ON COLUMN form_submissions.tracking_number IS 'Official tracking number from tax authority';
-COMMENT ON COLUMN form_submissions.metadata IS 'Additional submission data (JSON): API response, email confirmation, etc.';
+    -- Fichier source (PDF/CSV du broker)
+    source_file_name VARCHAR(255) NOT NULL,
+    source_file_s3_key VARCHAR(500) NOT NULL,
+    broker VARCHAR(100),  -- InteractiveBrokers, Swissquote, PostFinance, etc.
+
+    -- Période couverte par le statement
+    period_start DATE,
+    period_end DATE,
+
+    -- Status workflow (replaces boolean flags for cleaner state management)
+    status dividend_statement_status DEFAULT 'UPLOADED' NOT NULL,
+
+    -- Tracking dates for each status transition
+    parsed_at TIMESTAMP,
+    validated_at TIMESTAMP,
+    sent_at TIMESTAMP,
+    sent_method VARCHAR(50),     -- 'EMAIL', 'POSTAL', 'ONLINE'
+    sent_notes TEXT,
+    paid_at TIMESTAMP,
+    paid_amount DECIMAL(12,2),
+
+    -- Métadonnées de traitement
+    parsed_by VARCHAR(50),       -- 'AI_AGENT' or user who triggered parsing
+    dividend_count INTEGER DEFAULT 0,
+    total_gross_amount DECIMAL(12,2),
+    total_reclaimable DECIMAL(12,2),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for performance
+CREATE INDEX idx_dividend_statements_user_id ON dividend_statements(user_id);
+CREATE INDEX idx_dividend_statements_status ON dividend_statements(status);
+CREATE INDEX idx_dividend_statements_period ON dividend_statements(period_start, period_end);
+CREATE INDEX idx_dividend_statements_broker ON dividend_statements(broker);
+
+CREATE TRIGGER update_dividend_statements_updated_at
+    BEFORE UPDATE ON dividend_statements
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TABLE dividend_statements IS 'Broker statements tracking from upload to payment - parent of dividends';
+COMMENT ON COLUMN dividend_statements.status IS 'Workflow: UPLOADED → PARSING → PARSED → VALIDATED → SENT → PAID';
+COMMENT ON COLUMN dividend_statements.broker IS 'Broker name: InteractiveBrokers, Swissquote, PostFinance, etc.';
+COMMENT ON COLUMN dividend_statements.period_start IS 'Start of period covered by statement';
+COMMENT ON COLUMN dividend_statements.period_end IS 'End of period covered by statement';
+
+-- Add statement_id foreign key to dividends table (links dividends to their source statement)
+ALTER TABLE dividends ADD COLUMN statement_id UUID REFERENCES dividend_statements(id) ON DELETE SET NULL;
+CREATE INDEX idx_dividends_statement_id ON dividends(statement_id);
+
+COMMENT ON COLUMN dividends.statement_id IS 'Link to source broker statement (if extracted from statement)';
 
 -- ----------------------------------------------------------------------------
 -- Audit Logs Table
@@ -279,7 +333,8 @@ INSERT INTO tax_rules (
 DO $$
 BEGIN
     RAISE NOTICE '✅ Tax Dividend AI database schema initialized successfully';
-    RAISE NOTICE '   - 6 tables created (users, generated_forms, dividends, form_submissions, audit_logs, tax_rules)';
+    RAISE NOTICE '   - 6 tables created (users, generated_forms, dividends, dividend_statements, audit_logs, tax_rules)';
+    RAISE NOTICE '   - 1 enum type created (dividend_statement_status)';
     RAISE NOTICE '   - 2 default tax rules inserted (FR→CH for EQUITY and BOND)';
     RAISE NOTICE '   - All indexes and triggers configured';
 END

@@ -1,6 +1,7 @@
 package com.taxdividend.backend.repository;
 
 import com.taxdividend.backend.model.Dividend;
+import com.taxdividend.backend.model.DividendStatus;
 import com.taxdividend.backend.model.GeneratedForm;
 import com.taxdividend.backend.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -87,4 +88,34 @@ public interface DividendRepository extends JpaRepository<Dividend, UUID> {
      */
     @Query("SELECT SUM(d.reclaimableAmount) FROM Dividend d WHERE d.form.id = :formId")
     BigDecimal calculateTotalReclaimableByForm(@Param("formId") UUID formId);
+
+    /**
+     * Count total dividends for a user
+     */
+    long countByUserId(UUID userId);
+
+    /**
+     * Count total dividends for a user in a specific tax year
+     */
+    @Query("SELECT COUNT(d) FROM Dividend d WHERE d.user.id = :userId AND YEAR(d.paymentDate) = :year")
+    long countByUserIdAndYear(@Param("userId") UUID userId, @Param("year") int year);
+
+    /**
+     * Calculate sum of reclaimable amount by user and status
+     */
+    @Query("SELECT SUM(d.reclaimableAmount) FROM Dividend d WHERE d.user.id = :userId AND d.status = :status")
+    BigDecimal sumReclaimableByStatus(@Param("userId") UUID userId, @Param("status") DividendStatus status);
+
+    /**
+     * Calculate sum of reclaimable amount by user, list of statuses and year
+     */
+    @Query("SELECT SUM(d.reclaimableAmount) FROM Dividend d WHERE d.user.id = :userId AND d.status IN :statuses AND YEAR(d.paymentDate) = :year")
+    BigDecimal sumReclaimableByStatusAndYear(@Param("userId") UUID userId,
+            @Param("statuses") List<DividendStatus> statuses, @Param("year") int year);
+
+    /**
+     * Calculate sum of reclaimable amount by user and list of statuses (All time)
+     */
+    @Query("SELECT SUM(d.reclaimableAmount) FROM Dividend d WHERE d.user.id = :userId AND d.status IN :statuses")
+    BigDecimal sumReclaimableByStatuses(@Param("userId") UUID userId, @Param("statuses") List<DividendStatus> statuses);
 }

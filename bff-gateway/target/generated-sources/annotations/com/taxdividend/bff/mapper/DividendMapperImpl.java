@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-01-31T12:03:05+0100",
+    date = "2026-02-01T09:58:27+0100",
     comments = "version: 1.6.3, compiler: javac, environment: Java 25.0.2 (Homebrew)"
 )
 @Component
@@ -29,7 +29,7 @@ public class DividendMapperImpl implements DividendMapper {
         }
         dividendCase.setGrossAmount( source.getGrossAmount() );
 
-        dividendCase.setStatus( DividendCase.StatusEnum.PENDING );
+        dividendCase.setStatus( source.getStatus() != null ? com.taxdividend.bff.model.DividendCase.StatusEnum.fromValue(source.getStatus().name()) : com.taxdividend.bff.model.DividendCase.StatusEnum.OPEN );
 
         return dividendCase;
     }

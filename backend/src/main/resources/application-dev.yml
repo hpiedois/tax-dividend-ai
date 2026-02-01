@@ -1,0 +1,42 @@
+# ============================================================================
+# Tax Dividend AI - Development Environment Configuration
+# ============================================================================
+# This profile is activated with: -Dspring.profiles.active=dev
+
+spring:
+  jpa:
+    show-sql: true  # Log SQL queries in dev
+    properties:
+      hibernate:
+        format_sql: true  # Pretty-print SQL
+
+server:
+  error:
+    include-stacktrace: always  # Show full stack traces in dev
+
+management:
+  endpoint:
+    health:
+      show-details: always  # Show detailed health info in dev
+  tracing:
+    sampling:
+      probability: 1.0  # 100% trace sampling in dev
+
+# Logging configuration for development
+logging:
+  level:
+    root: INFO
+    com.taxdividend: DEBUG  # Debug level for our application
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG  # Debug security issues
+    org.hibernate.SQL: DEBUG  # SQL queries
+    org.hibernate.orm.jdbc.bind: TRACE  # SQL parameter binding
+    com.zaxxer.hikari: DEBUG  # HikariCP connection pool
+    org.flywaydb: INFO
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+
+# Development-specific settings
+app:
+  forms:
+    watermark-enabled: true  # Add watermarks to generated PDFs in dev

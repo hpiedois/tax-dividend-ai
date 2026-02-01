@@ -2,11 +2,16 @@ package com.taxdividend.bff.client.api;
 
 import com.taxdividend.bff.client.ApiClient;
 
+import com.taxdividend.bff.client.model.BulkImportDividendsRequest;
+import com.taxdividend.bff.client.model.BulkImportDividendsResponse;
 import com.taxdividend.bff.client.model.Dividend;
+import com.taxdividend.bff.client.model.DividendStatsDTO;
 import com.taxdividend.bff.client.model.ListDividends200Response;
+import java.time.LocalDate;
 import com.taxdividend.bff.client.model.TaxCalculationBatchResultDTO;
 import com.taxdividend.bff.client.model.TaxCalculationResultDTO;
 import java.util.UUID;
+import com.taxdividend.bff.client.model.UpdateDividendStatusRequest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +35,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-31T12:02:59.936362+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-02-01T09:58:25.591675+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class DividendsApi {
     private ApiClient apiClient;
 
@@ -48,6 +53,192 @@ public class DividendsApi {
 
     public void setApiClient(ApiClient apiClient) {
         this.apiClient = apiClient;
+    }
+
+    /**
+     * Bulk import dividends from parsed statement
+     * Import multiple dividends at once from a parsed broker statement. Called by AI Agent after parsing a statement. Automatically calculates tax and updates statement metadata. 
+     * <p><b>200</b> - Dividends imported successfully
+     * <p><b>400</b> - Invalid request or statement not found
+     * <p><b>403</b> - User does not own the statement
+     * @param xUserId The xUserId parameter
+     * @param bulkImportDividendsRequest The bulkImportDividendsRequest parameter
+     * @return BulkImportDividendsResponse
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    private ResponseSpec bulkImportDividendsRequestCreation(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nonnull BulkImportDividendsRequest bulkImportDividendsRequest) throws WebClientResponseException {
+        Object postBody = bulkImportDividendsRequest;
+        // verify the required parameter 'xUserId' is set
+        if (xUserId == null) {
+            throw new WebClientResponseException("Missing the required parameter 'xUserId' when calling bulkImportDividends", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // verify the required parameter 'bulkImportDividendsRequest' is set
+        if (bulkImportDividendsRequest == null) {
+            throw new WebClientResponseException("Missing the required parameter 'bulkImportDividendsRequest' when calling bulkImportDividends", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // create path and map variables
+        final Map<String, Object> pathParams = new HashMap<String, Object>();
+
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders headerParams = new HttpHeaders();
+        final MultiValueMap<String, String> cookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> formParams = new LinkedMultiValueMap<String, Object>();
+
+        if (xUserId != null)
+        headerParams.add("X-User-Id", apiClient.parameterToString(xUserId));
+        final String[] localVarAccepts = { 
+            "application/json"
+        };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = { 
+            "application/json"
+        };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<BulkImportDividendsResponse> localVarReturnType = new ParameterizedTypeReference<BulkImportDividendsResponse>() {};
+        return apiClient.invokeAPI("/dividends/bulk", HttpMethod.POST, pathParams, queryParams, postBody, headerParams, cookieParams, formParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
+    }
+
+    /**
+     * Bulk import dividends from parsed statement
+     * Import multiple dividends at once from a parsed broker statement. Called by AI Agent after parsing a statement. Automatically calculates tax and updates statement metadata. 
+     * <p><b>200</b> - Dividends imported successfully
+     * <p><b>400</b> - Invalid request or statement not found
+     * <p><b>403</b> - User does not own the statement
+     * @param xUserId The xUserId parameter
+     * @param bulkImportDividendsRequest The bulkImportDividendsRequest parameter
+     * @return BulkImportDividendsResponse
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<BulkImportDividendsResponse> bulkImportDividends(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nonnull BulkImportDividendsRequest bulkImportDividendsRequest) throws WebClientResponseException {
+        ParameterizedTypeReference<BulkImportDividendsResponse> localVarReturnType = new ParameterizedTypeReference<BulkImportDividendsResponse>() {};
+        return bulkImportDividendsRequestCreation(xUserId, bulkImportDividendsRequest).bodyToMono(localVarReturnType);
+    }
+
+    /**
+     * Bulk import dividends from parsed statement
+     * Import multiple dividends at once from a parsed broker statement. Called by AI Agent after parsing a statement. Automatically calculates tax and updates statement metadata. 
+     * <p><b>200</b> - Dividends imported successfully
+     * <p><b>400</b> - Invalid request or statement not found
+     * <p><b>403</b> - User does not own the statement
+     * @param xUserId The xUserId parameter
+     * @param bulkImportDividendsRequest The bulkImportDividendsRequest parameter
+     * @return ResponseEntity&lt;BulkImportDividendsResponse&gt;
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<ResponseEntity<BulkImportDividendsResponse>> bulkImportDividendsWithHttpInfo(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nonnull BulkImportDividendsRequest bulkImportDividendsRequest) throws WebClientResponseException {
+        ParameterizedTypeReference<BulkImportDividendsResponse> localVarReturnType = new ParameterizedTypeReference<BulkImportDividendsResponse>() {};
+        return bulkImportDividendsRequestCreation(xUserId, bulkImportDividendsRequest).toEntity(localVarReturnType);
+    }
+
+    /**
+     * Bulk import dividends from parsed statement
+     * Import multiple dividends at once from a parsed broker statement. Called by AI Agent after parsing a statement. Automatically calculates tax and updates statement metadata. 
+     * <p><b>200</b> - Dividends imported successfully
+     * <p><b>400</b> - Invalid request or statement not found
+     * <p><b>403</b> - User does not own the statement
+     * @param xUserId The xUserId parameter
+     * @param bulkImportDividendsRequest The bulkImportDividendsRequest parameter
+     * @return ResponseSpec
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public ResponseSpec bulkImportDividendsWithResponseSpec(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nonnull BulkImportDividendsRequest bulkImportDividendsRequest) throws WebClientResponseException {
+        return bulkImportDividendsRequestCreation(xUserId, bulkImportDividendsRequest);
+    }
+
+    /**
+     * Recalculate tax for all user dividends
+     * Triggers tax recalculation for all dividends of a user. Useful after tax rule updates.
+     * <p><b>200</b> - Tax recalculated for all dividends
+     * <p><b>403</b> - Forbidden - user can only calculate their own dividends
+     * <p><b>404</b> - User not found
+     * @param userId User ID whose dividends should be recalculated
+     * @param xUserId The xUserId parameter
+     * @return TaxCalculationBatchResultDTO
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    private ResponseSpec calculateAllUserDividendsRequestCreation(@jakarta.annotation.Nonnull UUID userId, @jakarta.annotation.Nonnull UUID xUserId) throws WebClientResponseException {
+        Object postBody = null;
+        // verify the required parameter 'userId' is set
+        if (userId == null) {
+            throw new WebClientResponseException("Missing the required parameter 'userId' when calling calculateAllUserDividends", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // verify the required parameter 'xUserId' is set
+        if (xUserId == null) {
+            throw new WebClientResponseException("Missing the required parameter 'xUserId' when calling calculateAllUserDividends", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // create path and map variables
+        final Map<String, Object> pathParams = new HashMap<String, Object>();
+
+        pathParams.put("userId", userId);
+
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders headerParams = new HttpHeaders();
+        final MultiValueMap<String, String> cookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> formParams = new LinkedMultiValueMap<String, Object>();
+
+        if (xUserId != null)
+        headerParams.add("X-User-Id", apiClient.parameterToString(xUserId));
+        final String[] localVarAccepts = { 
+            "application/json"
+        };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = { };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<TaxCalculationBatchResultDTO> localVarReturnType = new ParameterizedTypeReference<TaxCalculationBatchResultDTO>() {};
+        return apiClient.invokeAPI("/dividends/{userId}/calculate-all", HttpMethod.POST, pathParams, queryParams, postBody, headerParams, cookieParams, formParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
+    }
+
+    /**
+     * Recalculate tax for all user dividends
+     * Triggers tax recalculation for all dividends of a user. Useful after tax rule updates.
+     * <p><b>200</b> - Tax recalculated for all dividends
+     * <p><b>403</b> - Forbidden - user can only calculate their own dividends
+     * <p><b>404</b> - User not found
+     * @param userId User ID whose dividends should be recalculated
+     * @param xUserId The xUserId parameter
+     * @return TaxCalculationBatchResultDTO
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<TaxCalculationBatchResultDTO> calculateAllUserDividends(@jakarta.annotation.Nonnull UUID userId, @jakarta.annotation.Nonnull UUID xUserId) throws WebClientResponseException {
+        ParameterizedTypeReference<TaxCalculationBatchResultDTO> localVarReturnType = new ParameterizedTypeReference<TaxCalculationBatchResultDTO>() {};
+        return calculateAllUserDividendsRequestCreation(userId, xUserId).bodyToMono(localVarReturnType);
+    }
+
+    /**
+     * Recalculate tax for all user dividends
+     * Triggers tax recalculation for all dividends of a user. Useful after tax rule updates.
+     * <p><b>200</b> - Tax recalculated for all dividends
+     * <p><b>403</b> - Forbidden - user can only calculate their own dividends
+     * <p><b>404</b> - User not found
+     * @param userId User ID whose dividends should be recalculated
+     * @param xUserId The xUserId parameter
+     * @return ResponseEntity&lt;TaxCalculationBatchResultDTO&gt;
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<ResponseEntity<TaxCalculationBatchResultDTO>> calculateAllUserDividendsWithHttpInfo(@jakarta.annotation.Nonnull UUID userId, @jakarta.annotation.Nonnull UUID xUserId) throws WebClientResponseException {
+        ParameterizedTypeReference<TaxCalculationBatchResultDTO> localVarReturnType = new ParameterizedTypeReference<TaxCalculationBatchResultDTO>() {};
+        return calculateAllUserDividendsRequestCreation(userId, xUserId).toEntity(localVarReturnType);
+    }
+
+    /**
+     * Recalculate tax for all user dividends
+     * Triggers tax recalculation for all dividends of a user. Useful after tax rule updates.
+     * <p><b>200</b> - Tax recalculated for all dividends
+     * <p><b>403</b> - Forbidden - user can only calculate their own dividends
+     * <p><b>404</b> - User not found
+     * @param userId User ID whose dividends should be recalculated
+     * @param xUserId The xUserId parameter
+     * @return ResponseSpec
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public ResponseSpec calculateAllUserDividendsWithResponseSpec(@jakarta.annotation.Nonnull UUID userId, @jakarta.annotation.Nonnull UUID xUserId) throws WebClientResponseException {
+        return calculateAllUserDividendsRequestCreation(userId, xUserId);
     }
 
     /**
@@ -400,16 +591,100 @@ public class DividendsApi {
     }
 
     /**
-     * List user&#39;s dividends
+     * Get dividend statistics
+     * 
+     * <p><b>200</b> - Statistics
+     * @param xUserId The xUserId parameter
+     * @param taxYear Optional tax year filter. If not provided, returns all-time stats.
+     * @return DividendStatsDTO
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    private ResponseSpec getDividendStatsRequestCreation(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer taxYear) throws WebClientResponseException {
+        Object postBody = null;
+        // verify the required parameter 'xUserId' is set
+        if (xUserId == null) {
+            throw new WebClientResponseException("Missing the required parameter 'xUserId' when calling getDividendStats", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // create path and map variables
+        final Map<String, Object> pathParams = new HashMap<String, Object>();
+
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders headerParams = new HttpHeaders();
+        final MultiValueMap<String, String> cookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> formParams = new LinkedMultiValueMap<String, Object>();
+
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "taxYear", taxYear));
+
+        if (xUserId != null)
+        headerParams.add("X-User-Id", apiClient.parameterToString(xUserId));
+        final String[] localVarAccepts = { 
+            "application/json"
+        };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = { };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<DividendStatsDTO> localVarReturnType = new ParameterizedTypeReference<DividendStatsDTO>() {};
+        return apiClient.invokeAPI("/dividends/stats", HttpMethod.GET, pathParams, queryParams, postBody, headerParams, cookieParams, formParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
+    }
+
+    /**
+     * Get dividend statistics
+     * 
+     * <p><b>200</b> - Statistics
+     * @param xUserId The xUserId parameter
+     * @param taxYear Optional tax year filter. If not provided, returns all-time stats.
+     * @return DividendStatsDTO
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<DividendStatsDTO> getDividendStats(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer taxYear) throws WebClientResponseException {
+        ParameterizedTypeReference<DividendStatsDTO> localVarReturnType = new ParameterizedTypeReference<DividendStatsDTO>() {};
+        return getDividendStatsRequestCreation(xUserId, taxYear).bodyToMono(localVarReturnType);
+    }
+
+    /**
+     * Get dividend statistics
+     * 
+     * <p><b>200</b> - Statistics
+     * @param xUserId The xUserId parameter
+     * @param taxYear Optional tax year filter. If not provided, returns all-time stats.
+     * @return ResponseEntity&lt;DividendStatsDTO&gt;
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<ResponseEntity<DividendStatsDTO>> getDividendStatsWithHttpInfo(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer taxYear) throws WebClientResponseException {
+        ParameterizedTypeReference<DividendStatsDTO> localVarReturnType = new ParameterizedTypeReference<DividendStatsDTO>() {};
+        return getDividendStatsRequestCreation(xUserId, taxYear).toEntity(localVarReturnType);
+    }
+
+    /**
+     * Get dividend statistics
+     * 
+     * <p><b>200</b> - Statistics
+     * @param xUserId The xUserId parameter
+     * @param taxYear Optional tax year filter. If not provided, returns all-time stats.
+     * @return ResponseSpec
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public ResponseSpec getDividendStatsWithResponseSpec(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer taxYear) throws WebClientResponseException {
+        return getDividendStatsRequestCreation(xUserId, taxYear);
+    }
+
+    /**
+     * List user&#39;s dividends with optional filters
      * 
      * <p><b>200</b> - List of dividends
      * @param xUserId The xUserId parameter
      * @param page The page parameter
      * @param size The size parameter
+     * @param startDate Filter dividends from this date (inclusive)
+     * @param endDate Filter dividends until this date (inclusive)
+     * @param status Filter by submission status
      * @return ListDividends200Response
      * @throws WebClientResponseException if an error occurs while attempting to invoke the API
      */
-    private ResponseSpec listDividendsRequestCreation(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer page, @jakarta.annotation.Nullable Integer size) throws WebClientResponseException {
+    private ResponseSpec listDividendsRequestCreation(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer page, @jakarta.annotation.Nullable Integer size, @jakarta.annotation.Nullable LocalDate startDate, @jakarta.annotation.Nullable LocalDate endDate, @jakarta.annotation.Nullable String status) throws WebClientResponseException {
         Object postBody = null;
         // verify the required parameter 'xUserId' is set
         if (xUserId == null) {
@@ -425,6 +700,9 @@ public class DividendsApi {
 
         queryParams.putAll(apiClient.parameterToMultiValueMap(null, "page", page));
         queryParams.putAll(apiClient.parameterToMultiValueMap(null, "size", size));
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "startDate", startDate));
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "endDate", endDate));
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "status", status));
 
         if (xUserId != null)
         headerParams.add("X-User-Id", apiClient.parameterToString(xUserId));
@@ -442,46 +720,135 @@ public class DividendsApi {
     }
 
     /**
-     * List user&#39;s dividends
+     * List user&#39;s dividends with optional filters
      * 
      * <p><b>200</b> - List of dividends
      * @param xUserId The xUserId parameter
      * @param page The page parameter
      * @param size The size parameter
+     * @param startDate Filter dividends from this date (inclusive)
+     * @param endDate Filter dividends until this date (inclusive)
+     * @param status Filter by submission status
      * @return ListDividends200Response
      * @throws WebClientResponseException if an error occurs while attempting to invoke the API
      */
-    public Mono<ListDividends200Response> listDividends(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer page, @jakarta.annotation.Nullable Integer size) throws WebClientResponseException {
+    public Mono<ListDividends200Response> listDividends(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer page, @jakarta.annotation.Nullable Integer size, @jakarta.annotation.Nullable LocalDate startDate, @jakarta.annotation.Nullable LocalDate endDate, @jakarta.annotation.Nullable String status) throws WebClientResponseException {
         ParameterizedTypeReference<ListDividends200Response> localVarReturnType = new ParameterizedTypeReference<ListDividends200Response>() {};
-        return listDividendsRequestCreation(xUserId, page, size).bodyToMono(localVarReturnType);
+        return listDividendsRequestCreation(xUserId, page, size, startDate, endDate, status).bodyToMono(localVarReturnType);
     }
 
     /**
-     * List user&#39;s dividends
+     * List user&#39;s dividends with optional filters
      * 
      * <p><b>200</b> - List of dividends
      * @param xUserId The xUserId parameter
      * @param page The page parameter
      * @param size The size parameter
+     * @param startDate Filter dividends from this date (inclusive)
+     * @param endDate Filter dividends until this date (inclusive)
+     * @param status Filter by submission status
      * @return ResponseEntity&lt;ListDividends200Response&gt;
      * @throws WebClientResponseException if an error occurs while attempting to invoke the API
      */
-    public Mono<ResponseEntity<ListDividends200Response>> listDividendsWithHttpInfo(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer page, @jakarta.annotation.Nullable Integer size) throws WebClientResponseException {
+    public Mono<ResponseEntity<ListDividends200Response>> listDividendsWithHttpInfo(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer page, @jakarta.annotation.Nullable Integer size, @jakarta.annotation.Nullable LocalDate startDate, @jakarta.annotation.Nullable LocalDate endDate, @jakarta.annotation.Nullable String status) throws WebClientResponseException {
         ParameterizedTypeReference<ListDividends200Response> localVarReturnType = new ParameterizedTypeReference<ListDividends200Response>() {};
-        return listDividendsRequestCreation(xUserId, page, size).toEntity(localVarReturnType);
+        return listDividendsRequestCreation(xUserId, page, size, startDate, endDate, status).toEntity(localVarReturnType);
     }
 
     /**
-     * List user&#39;s dividends
+     * List user&#39;s dividends with optional filters
      * 
      * <p><b>200</b> - List of dividends
      * @param xUserId The xUserId parameter
      * @param page The page parameter
      * @param size The size parameter
+     * @param startDate Filter dividends from this date (inclusive)
+     * @param endDate Filter dividends until this date (inclusive)
+     * @param status Filter by submission status
      * @return ResponseSpec
      * @throws WebClientResponseException if an error occurs while attempting to invoke the API
      */
-    public ResponseSpec listDividendsWithResponseSpec(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer page, @jakarta.annotation.Nullable Integer size) throws WebClientResponseException {
-        return listDividendsRequestCreation(xUserId, page, size);
+    public ResponseSpec listDividendsWithResponseSpec(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nullable Integer page, @jakarta.annotation.Nullable Integer size, @jakarta.annotation.Nullable LocalDate startDate, @jakarta.annotation.Nullable LocalDate endDate, @jakarta.annotation.Nullable String status) throws WebClientResponseException {
+        return listDividendsRequestCreation(xUserId, page, size, startDate, endDate, status);
+    }
+
+    /**
+     * Update status for multiple dividends
+     * 
+     * <p><b>204</b> - Status updated
+     * @param xUserId The xUserId parameter
+     * @param updateDividendStatusRequest The updateDividendStatusRequest parameter
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    private ResponseSpec updateDividendStatusRequestCreation(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nonnull UpdateDividendStatusRequest updateDividendStatusRequest) throws WebClientResponseException {
+        Object postBody = updateDividendStatusRequest;
+        // verify the required parameter 'xUserId' is set
+        if (xUserId == null) {
+            throw new WebClientResponseException("Missing the required parameter 'xUserId' when calling updateDividendStatus", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // verify the required parameter 'updateDividendStatusRequest' is set
+        if (updateDividendStatusRequest == null) {
+            throw new WebClientResponseException("Missing the required parameter 'updateDividendStatusRequest' when calling updateDividendStatus", HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), null, null, null);
+        }
+        // create path and map variables
+        final Map<String, Object> pathParams = new HashMap<String, Object>();
+
+        final MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<String, String>();
+        final HttpHeaders headerParams = new HttpHeaders();
+        final MultiValueMap<String, String> cookieParams = new LinkedMultiValueMap<String, String>();
+        final MultiValueMap<String, Object> formParams = new LinkedMultiValueMap<String, Object>();
+
+        if (xUserId != null)
+        headerParams.add("X-User-Id", apiClient.parameterToString(xUserId));
+        final String[] localVarAccepts = { };
+        final List<MediaType> localVarAccept = apiClient.selectHeaderAccept(localVarAccepts);
+        final String[] localVarContentTypes = { 
+            "application/json"
+        };
+        final MediaType localVarContentType = apiClient.selectHeaderContentType(localVarContentTypes);
+
+        String[] localVarAuthNames = new String[] {  };
+
+        ParameterizedTypeReference<Void> localVarReturnType = new ParameterizedTypeReference<Void>() {};
+        return apiClient.invokeAPI("/dividends/status", HttpMethod.PATCH, pathParams, queryParams, postBody, headerParams, cookieParams, formParams, localVarAccept, localVarContentType, localVarAuthNames, localVarReturnType);
+    }
+
+    /**
+     * Update status for multiple dividends
+     * 
+     * <p><b>204</b> - Status updated
+     * @param xUserId The xUserId parameter
+     * @param updateDividendStatusRequest The updateDividendStatusRequest parameter
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<Void> updateDividendStatus(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nonnull UpdateDividendStatusRequest updateDividendStatusRequest) throws WebClientResponseException {
+        ParameterizedTypeReference<Void> localVarReturnType = new ParameterizedTypeReference<Void>() {};
+        return updateDividendStatusRequestCreation(xUserId, updateDividendStatusRequest).bodyToMono(localVarReturnType);
+    }
+
+    /**
+     * Update status for multiple dividends
+     * 
+     * <p><b>204</b> - Status updated
+     * @param xUserId The xUserId parameter
+     * @param updateDividendStatusRequest The updateDividendStatusRequest parameter
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public Mono<ResponseEntity<Void>> updateDividendStatusWithHttpInfo(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nonnull UpdateDividendStatusRequest updateDividendStatusRequest) throws WebClientResponseException {
+        ParameterizedTypeReference<Void> localVarReturnType = new ParameterizedTypeReference<Void>() {};
+        return updateDividendStatusRequestCreation(xUserId, updateDividendStatusRequest).toEntity(localVarReturnType);
+    }
+
+    /**
+     * Update status for multiple dividends
+     * 
+     * <p><b>204</b> - Status updated
+     * @param xUserId The xUserId parameter
+     * @param updateDividendStatusRequest The updateDividendStatusRequest parameter
+     * @return ResponseSpec
+     * @throws WebClientResponseException if an error occurs while attempting to invoke the API
+     */
+    public ResponseSpec updateDividendStatusWithResponseSpec(@jakarta.annotation.Nonnull UUID xUserId, @jakarta.annotation.Nonnull UpdateDividendStatusRequest updateDividendStatusRequest) throws WebClientResponseException {
+        return updateDividendStatusRequestCreation(xUserId, updateDividendStatusRequest);
     }
 }

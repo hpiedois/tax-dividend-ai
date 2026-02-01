@@ -37,366 +37,363 @@ import static org.mockito.Mockito.*;
 @DisplayName("Tax Calculation Service Tests")
 class TaxCalculationServiceTest {
 
-    @Mock
-    private DividendRepository dividendRepository;
+        @Mock
+        private DividendRepository dividendRepository;
 
-    @Mock
-    private TaxRuleRepository taxRuleRepository;
+        @Mock
+        private TaxRuleRepository taxRuleRepository;
 
-    @Mock
-    private UserRepository userRepository;
+        @Mock
+        private UserRepository userRepository;
 
-    @InjectMocks
-    private TaxCalculationServiceImpl taxCalculationService;
+        @InjectMocks
+        private TaxCalculationServiceImpl taxCalculationService;
 
-    private User testUser;
-    private TaxRule testTaxRule;
-    private Dividend testDividend;
+        private User testUser;
+        private TaxRule testTaxRule;
+        private Dividend testDividend;
 
-    @BeforeEach
-    void setUp() {
-        // Create test user
-        testUser = User.builder()
-                .id(UUID.randomUUID())
-                .email("test@example.com")
-                .country("CH")
-                .build();
+        @BeforeEach
+        void setUp() {
+                // Create test user
+                testUser = User.builder()
+                                .id(UUID.randomUUID())
+                                .email("test@example.com")
+                                .country("CH")
+                                .build();
 
-        // Create test tax rule: France -> Switzerland, 15% treaty rate (standard 30%)
-        testTaxRule = TaxRule.builder()
-                .id(UUID.randomUUID())
-                .sourceCountry("FR")
-                .residenceCountry("CH")
-                .securityType("EQUITY")
-                .standardWithholdingRate(new BigDecimal("30.00"))
-                .treatyRate(new BigDecimal("15.00"))
-                .reliefAtSourceAvailable(true)
-                .refundProcedureAvailable(true)
-                .effectiveFrom(LocalDate.of(2020, 1, 1))
-                .build();
+                // Create test tax rule: France -> Switzerland, 15% treaty rate (standard 30%)
+                testTaxRule = TaxRule.builder()
+                                .id(UUID.randomUUID())
+                                .sourceCountry("FR")
+                                .residenceCountry("CH")
+                                .securityType("EQUITY")
+                                .standardWithholdingRate(new BigDecimal("30.00"))
+                                .treatyRate(new BigDecimal("15.00"))
+                                .reliefAtSourceAvailable(true)
+                                .refundProcedureAvailable(true)
+                                .effectiveFrom(LocalDate.of(2020, 1, 1))
+                                .build();
 
-        // Create test dividend: 100 EUR gross, 30 EUR withholding (30%)
-        testDividend = Dividend.builder()
-                .id(UUID.randomUUID())
-                .user(testUser)
-                .isin("FR0000120271") // Total Energies
-                .securityName("Total Energies")
-                .grossAmount(new BigDecimal("100.00"))
-                .withholdingTax(new BigDecimal("30.00"))
-                .currency("EUR")
-                .paymentDate(LocalDate.of(2024, 12, 15))
-                .sourceCountry("FR")
-                .build();
-    }
+                // Create test dividend: 100 EUR gross, 30 EUR withholding (30%)
+                testDividend = Dividend.builder()
+                                .id(UUID.randomUUID())
+                                .user(testUser)
+                                .isin("FR0000120271") // Total Energies
+                                .securityName("Total Energies")
+                                .grossAmount(new BigDecimal("100.00"))
+                                .withholdingTax(new BigDecimal("30.00"))
+                                .currency("EUR")
+                                .paymentDate(LocalDate.of(2024, 12, 15))
+                                .sourceCountry("FR")
+                                .build();
+        }
 
-    @Test
-    @DisplayName("Should calculate reclaimable amount correctly")
-    void shouldCalculateReclaimableAmountCorrectly() {
-        // Given
-        when(taxRuleRepository.findApplicableRule(
-                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.of(testTaxRule));
+        @Test
+        @DisplayName("Should calculate reclaimable amount correctly")
+        void shouldCalculateReclaimableAmountCorrectly() {
+                // Given
+                when(taxRuleRepository.findApplicableRule(
+                                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenReturn(Optional.of(testTaxRule));
 
-        // When
-        TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
-                testDividend, "CH");
+                // When
+                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                                testDividend, "CH");
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getTreatyApplied()).isTrue();
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getTreatyApplied()).isTrue();
 
-        // Expected calculation:
-        // Treaty withholding = 100 * 15% = 15.00
-        // Reclaimable = 30.00 - 15.00 = 15.00
-        assertThat(result.getTreatyWithholdingTax())
-                .isEqualByComparingTo(new BigDecimal("15.00"));
-        assertThat(result.getReclaimableAmount())
-                .isEqualByComparingTo(new BigDecimal("15.00"));
+                // Expected calculation:
+                // Treaty withholding = 100 * 15% = 15.00
+                // Reclaimable = 30.00 - 15.00 = 15.00
+                assertThat(result.getTreatyWithholdingTax())
+                                .isEqualByComparingTo(new BigDecimal("15.00"));
+                assertThat(result.getReclaimableAmount())
+                                .isEqualByComparingTo(new BigDecimal("15.00"));
 
-        verify(taxRuleRepository).findApplicableRule(
-                "FR", "CH", "EQUITY", testDividend.getPaymentDate());
-    }
+                verify(taxRuleRepository).findApplicableRule(
+                                "FR", "CH", "EQUITY", testDividend.getPaymentDate());
+        }
 
-    @Test
-    @DisplayName("Should handle no treaty found")
-    void shouldHandleNoTreatyFound() {
-        // Given
-        when(taxRuleRepository.findApplicableRule(
-                anyString(), anyString(), anyString(), any(LocalDate.class)))
-                .thenReturn(Optional.empty());
+        @Test
+        @DisplayName("Should handle no treaty found")
+        void shouldHandleNoTreatyFound() {
+                // Given
+                when(taxRuleRepository.findApplicableRule(
+                                anyString(), anyString(), anyString(), any(LocalDate.class)))
+                                .thenReturn(Optional.empty());
 
-        // When
-        TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
-                testDividend, "CH");
+                // When
+                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                                testDividend, "CH");
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getTreatyApplied()).isFalse();
-        assertThat(result.getReclaimableAmount()).isNull();
-    }
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getTreatyApplied()).isFalse();
+                assertThat(result.getReclaimableAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+        }
 
-    @Test
-    @DisplayName("Should calculate and update dividend")
-    void shouldCalculateAndUpdateDividend() {
-        // Given
-        UUID dividendId = testDividend.getId();
-        when(dividendRepository.findById(dividendId))
-                .thenReturn(Optional.of(testDividend));
-        when(taxRuleRepository.findApplicableRule(
-                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.of(testTaxRule));
-        when(dividendRepository.save(any(Dividend.class)))
-                .thenReturn(testDividend);
+        @Test
+        @DisplayName("Should calculate and update dividend")
+        void shouldCalculateAndUpdateDividend() {
+                // Given
+                UUID dividendId = testDividend.getId();
+                when(dividendRepository.findById(dividendId))
+                                .thenReturn(Optional.of(testDividend));
+                when(taxRuleRepository.findApplicableRule(
+                                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenReturn(Optional.of(testTaxRule));
+                when(dividendRepository.save(any(Dividend.class)))
+                                .thenReturn(testDividend);
 
-        // When
-        TaxCalculationResultDTO result = taxCalculationService.calculateAndUpdate(
-                dividendId, "CH");
+                // When
+                TaxCalculationResultDTO result = taxCalculationService.calculateAndUpdate(
+                                dividendId, "CH");
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getReclaimableAmount())
-                .isEqualByComparingTo(new BigDecimal("15.00"));
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getReclaimableAmount())
+                                .isEqualByComparingTo(new BigDecimal("15.00"));
 
-        // Verify dividend was updated
-        verify(dividendRepository).save(argThat(dividend ->
-                dividend.getReclaimableAmount().compareTo(new BigDecimal("15.00")) == 0
-        ));
-    }
+                // Verify dividend was updated
+                verify(dividendRepository).save(argThat(
+                                dividend -> dividend.getReclaimableAmount().compareTo(new BigDecimal("15.00")) == 0));
+        }
 
-    @Test
-    @DisplayName("Should throw exception when dividend not found")
-    void shouldThrowExceptionWhenDividendNotFound() {
-        // Given
-        UUID nonExistentId = UUID.randomUUID();
-        when(dividendRepository.findById(nonExistentId))
-                .thenReturn(Optional.empty());
+        @Test
+        @DisplayName("Should throw exception when dividend not found")
+        void shouldThrowExceptionWhenDividendNotFound() {
+                // Given
+                UUID nonExistentId = UUID.randomUUID();
+                when(dividendRepository.findById(nonExistentId))
+                                .thenReturn(Optional.empty());
 
-        // When/Then
-        assertThatThrownBy(() ->
-                taxCalculationService.calculateAndUpdate(nonExistentId, "CH"))
-                .isInstanceOf(TaxCalculationException.class)
-                .hasMessageContaining("Dividend not found");
-    }
+                // When/Then
+                assertThatThrownBy(() -> taxCalculationService.calculateAndUpdate(nonExistentId, "CH"))
+                                .isInstanceOf(TaxCalculationException.class)
+                                .hasMessageContaining("Dividend not found");
+        }
 
-    @Test
-    @DisplayName("Should calculate batch correctly")
-    void shouldCalculateBatchCorrectly() {
-        // Given
-        Dividend dividend2 = Dividend.builder()
-                .id(UUID.randomUUID())
-                .user(testUser)
-                .isin("FR0000120644") // Danone
-                .securityName("Danone")
-                .grossAmount(new BigDecimal("50.00"))
-                .withholdingTax(new BigDecimal("15.00"))
-                .currency("EUR")
-                .paymentDate(LocalDate.of(2024, 12, 20))
-                .sourceCountry("FR")
-                .build();
+        @Test
+        @DisplayName("Should calculate batch correctly")
+        void shouldCalculateBatchCorrectly() {
+                // Given
+                Dividend dividend2 = Dividend.builder()
+                                .id(UUID.randomUUID())
+                                .user(testUser)
+                                .isin("FR0000120644") // Danone
+                                .securityName("Danone")
+                                .grossAmount(new BigDecimal("50.00"))
+                                .withholdingTax(new BigDecimal("15.00"))
+                                .currency("EUR")
+                                .paymentDate(LocalDate.of(2024, 12, 20))
+                                .sourceCountry("FR")
+                                .build();
 
-        List<Dividend> dividends = Arrays.asList(testDividend, dividend2);
+                List<Dividend> dividends = Arrays.asList(testDividend, dividend2);
 
-        when(taxRuleRepository.findApplicableRule(
-                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.of(testTaxRule));
+                when(taxRuleRepository.findApplicableRule(
+                                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenReturn(Optional.of(testTaxRule));
 
-        // When
-        TaxCalculationBatchResultDTO result = taxCalculationService.calculateBatch(
-                dividends, "CH");
+                // When
+                TaxCalculationBatchResultDTO result = taxCalculationService.calculateBatch(
+                                dividends, "CH");
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getSuccessCount()).isEqualTo(2);
-        assertThat(result.getFailureCount()).isEqualTo(0);
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getSuccessCount()).isEqualTo(2);
+                assertThat(result.getFailureCount()).isEqualTo(0);
 
-        // Expected totals:
-        // Dividend 1: gross=100, withholding=30, reclaimable=15
-        // Dividend 2: gross=50, withholding=15, reclaimable=7.50
-        // Total: gross=150, withholding=45, reclaimable=22.50
-        assertThat(result.getTotalGrossAmount())
-                .isEqualByComparingTo(new BigDecimal("150.00"));
-        assertThat(result.getTotalWithholdingTax())
-                .isEqualByComparingTo(new BigDecimal("45.00"));
-        assertThat(result.getTotalReclaimableAmount())
-                .isEqualByComparingTo(new BigDecimal("22.50"));
+                // Expected totals:
+                // Dividend 1: gross=100, withholding=30, reclaimable=15
+                // Dividend 2: gross=50, withholding=15, reclaimable=7.50
+                // Total: gross=150, withholding=45, reclaimable=22.50
+                assertThat(result.getTotalGrossAmount())
+                                .isEqualByComparingTo(new BigDecimal("150.00"));
+                assertThat(result.getTotalWithholdingTax())
+                                .isEqualByComparingTo(new BigDecimal("45.00"));
+                assertThat(result.getTotalReclaimableAmount())
+                                .isEqualByComparingTo(new BigDecimal("22.50"));
 
-        assertThat(result.getResults()).hasSize(2);
-    }
+                assertThat(result.getResults()).hasSize(2);
+        }
 
-    @Test
-    @DisplayName("Should handle partial batch failures")
-    void shouldHandlePartialBatchFailures() {
-        // Given
-        Dividend dividend2 = Dividend.builder()
-                .id(UUID.randomUUID())
-                .user(testUser)
-                .isin("US0378331005") // Apple (US security, no treaty rule)
-                .securityName("Apple Inc")
-                .grossAmount(new BigDecimal("50.00"))
-                .withholdingTax(new BigDecimal("15.00"))
-                .currency("USD")
-                .paymentDate(LocalDate.of(2024, 12, 20))
-                .sourceCountry("US")
-                .build();
+        @Test
+        @DisplayName("Should handle partial batch failures")
+        void shouldHandlePartialBatchFailures() {
+                // Given
+                Dividend dividend2 = Dividend.builder()
+                                .id(UUID.randomUUID())
+                                .user(testUser)
+                                .isin("US0378331005") // Apple (US security, no treaty rule)
+                                .securityName("Apple Inc")
+                                .grossAmount(new BigDecimal("50.00"))
+                                .withholdingTax(new BigDecimal("15.00"))
+                                .currency("USD")
+                                .paymentDate(LocalDate.of(2024, 12, 20))
+                                .sourceCountry("US")
+                                .build();
 
-        List<Dividend> dividends = Arrays.asList(testDividend, dividend2);
+                List<Dividend> dividends = Arrays.asList(testDividend, dividend2);
 
-        // FR-CH treaty exists, but US-CH doesn't
-        when(taxRuleRepository.findApplicableRule(
-                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.of(testTaxRule));
-        when(taxRuleRepository.findApplicableRule(
-                eq("US"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.empty());
+                // FR-CH treaty exists, but US-CH doesn't
+                when(taxRuleRepository.findApplicableRule(
+                                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenReturn(Optional.of(testTaxRule));
+                when(taxRuleRepository.findApplicableRule(
+                                eq("US"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenThrow(new RuntimeException("DB Error"));
 
-        // When
-        TaxCalculationBatchResultDTO result = taxCalculationService.calculateBatch(
-                dividends, "CH");
+                // When
+                TaxCalculationBatchResultDTO result = taxCalculationService.calculateBatch(
+                                dividends, "CH");
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getSuccessCount()).isEqualTo(1);
-        assertThat(result.getFailureCount()).isEqualTo(1);
-        assertThat(result.getResults()).hasSize(2);
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getSuccessCount()).isEqualTo(1);
+                assertThat(result.getFailureCount()).isEqualTo(1);
+                assertThat(result.getResults()).hasSize(2);
 
-        // Only first dividend should contribute to totals
-        assertThat(result.getTotalReclaimableAmount())
-                .isEqualByComparingTo(new BigDecimal("15.00"));
-    }
+                // Only first dividend should contribute to totals
+                assertThat(result.getTotalReclaimableAmount())
+                                .isEqualByComparingTo(new BigDecimal("15.00"));
+        }
 
-    @Test
-    @DisplayName("Should calculate for user")
-    void shouldCalculateForUser() {
-        // Given
-        UUID userId = testUser.getId();
-        when(userRepository.findById(userId))
-                .thenReturn(Optional.of(testUser));
-        when(dividendRepository.findByUserId(userId))
-                .thenReturn(Arrays.asList(testDividend));
-        when(taxRuleRepository.findApplicableRule(
-                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.of(testTaxRule));
+        @Test
+        @DisplayName("Should calculate for user")
+        void shouldCalculateForUser() {
+                // Given
+                UUID userId = testUser.getId();
+                when(userRepository.findById(userId))
+                                .thenReturn(Optional.of(testUser));
+                when(dividendRepository.findByUserId(userId))
+                                .thenReturn(Arrays.asList(testDividend));
+                when(taxRuleRepository.findApplicableRule(
+                                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenReturn(Optional.of(testTaxRule));
 
-        // When
-        TaxCalculationBatchResultDTO result = taxCalculationService.calculateForUser(userId);
+                // When
+                TaxCalculationBatchResultDTO result = taxCalculationService.calculateForUser(userId);
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getSuccessCount()).isEqualTo(1);
-        assertThat(result.getTotalReclaimableAmount())
-                .isEqualByComparingTo(new BigDecimal("15.00"));
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getSuccessCount()).isEqualTo(1);
+                assertThat(result.getTotalReclaimableAmount())
+                                .isEqualByComparingTo(new BigDecimal("15.00"));
 
-        verify(userRepository).findById(userId);
-        verify(dividendRepository).findByUserId(userId);
-    }
+                verify(userRepository).findById(userId);
+                verify(dividendRepository).findByUserId(userId);
+        }
 
-    @Test
-    @DisplayName("Should throw exception when user not found")
-    void shouldThrowExceptionWhenUserNotFound() {
-        // Given
-        UUID nonExistentUserId = UUID.randomUUID();
-        when(userRepository.findById(nonExistentUserId))
-                .thenReturn(Optional.empty());
+        @Test
+        @DisplayName("Should throw exception when user not found")
+        void shouldThrowExceptionWhenUserNotFound() {
+                // Given
+                UUID nonExistentUserId = UUID.randomUUID();
+                when(userRepository.findById(nonExistentUserId))
+                                .thenReturn(Optional.empty());
 
-        // When/Then
-        assertThatThrownBy(() ->
-                taxCalculationService.calculateForUser(nonExistentUserId))
-                .isInstanceOf(TaxCalculationException.class)
-                .hasMessageContaining("User not found");
-    }
+                // When/Then
+                assertThatThrownBy(() -> taxCalculationService.calculateForUser(nonExistentUserId))
+                                .isInstanceOf(TaxCalculationException.class)
+                                .hasMessageContaining("User not found");
+        }
 
-    @Test
-    @DisplayName("Should handle empty dividend list")
-    void shouldHandleEmptyDividendList() {
-        // Given
-        List<Dividend> emptyList = Arrays.asList();
+        @Test
+        @DisplayName("Should handle empty dividend list")
+        void shouldHandleEmptyDividendList() {
+                // Given
+                List<Dividend> emptyList = Arrays.asList();
 
-        // When
-        TaxCalculationBatchResultDTO result = taxCalculationService.calculateBatch(
-                emptyList, "CH");
+                // When
+                TaxCalculationBatchResultDTO result = taxCalculationService.calculateBatch(
+                                emptyList, "CH");
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getSuccessCount()).isEqualTo(0);
-        assertThat(result.getFailureCount()).isEqualTo(0);
-        assertThat(result.getTotalGrossAmount())
-                .isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(result.getTotalReclaimableAmount())
-                .isEqualByComparingTo(BigDecimal.ZERO);
-    }
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getSuccessCount()).isEqualTo(0);
+                assertThat(result.getFailureCount()).isEqualTo(0);
+                assertThat(result.getTotalGrossAmount())
+                                .isEqualByComparingTo(BigDecimal.ZERO);
+                assertThat(result.getTotalReclaimableAmount())
+                                .isEqualByComparingTo(BigDecimal.ZERO);
+        }
 
-    @Test
-    @DisplayName("Should find applicable tax rule")
-    void shouldFindApplicableTaxRule() {
-        // Given
-        when(taxRuleRepository.findApplicableRule(
-                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.of(testTaxRule));
+        @Test
+        @DisplayName("Should find applicable tax rule")
+        void shouldFindApplicableTaxRule() {
+                // Given
+                when(taxRuleRepository.findApplicableRule(
+                                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenReturn(Optional.of(testTaxRule));
 
-        // When
-        UUID result = taxCalculationService.findApplicableTaxRule(
-                "FR", "CH", "EQUITY", LocalDate.now());
+                // When
+                UUID result = taxCalculationService.findApplicableTaxRule(
+                                "FR", "CH", "EQUITY", LocalDate.now());
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result).isEqualTo(testTaxRule.getId());
-    }
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result).isEqualTo(testTaxRule.getId());
+        }
 
-    @Test
-    @DisplayName("Should handle zero withholding tax")
-    void shouldHandleZeroWithholdingTax() {
-        // Given
-        testDividend.setWithholdingTax(BigDecimal.ZERO);
-        when(taxRuleRepository.findApplicableRule(
-                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.of(testTaxRule));
+        @Test
+        @DisplayName("Should handle zero withholding tax")
+        void shouldHandleZeroWithholdingTax() {
+                // Given
+                testDividend.setWithholdingTax(BigDecimal.ZERO);
+                when(taxRuleRepository.findApplicableRule(
+                                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenReturn(Optional.of(testTaxRule));
 
-        // When
-        TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
-                testDividend, "CH");
+                // When
+                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                                testDividend, "CH");
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getReclaimableAmount())
-                .isEqualByComparingTo(BigDecimal.ZERO);
-    }
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getReclaimableAmount())
+                                .isEqualByComparingTo(BigDecimal.ZERO);
+        }
 
-    @Test
-    @DisplayName("Should ensure reclaimable amount is never negative")
-    void shouldEnsureReclaimableAmountNeverNegative() {
-        // Given: treaty rate higher than actual withholding
-        testDividend.setWithholdingTax(new BigDecimal("10.00")); // Less than 15%
-        when(taxRuleRepository.findApplicableRule(
-                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.of(testTaxRule));
+        @Test
+        @DisplayName("Should ensure reclaimable amount is never negative")
+        void shouldEnsureReclaimableAmountNeverNegative() {
+                // Given: treaty rate higher than actual withholding
+                testDividend.setWithholdingTax(new BigDecimal("10.00")); // Less than 15%
+                when(taxRuleRepository.findApplicableRule(
+                                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenReturn(Optional.of(testTaxRule));
 
-        // When
-        TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
-                testDividend, "CH");
+                // When
+                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                                testDividend, "CH");
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getReclaimableAmount())
-                .isGreaterThanOrEqualTo(BigDecimal.ZERO);
-    }
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getReclaimableAmount())
+                                .isGreaterThanOrEqualTo(BigDecimal.ZERO);
+        }
 
-    @Test
-    @DisplayName("Should use correct precision (2 decimals)")
-    void shouldUseCorrectPrecision() {
-        // Given
-        testDividend.setGrossAmount(new BigDecimal("100.123")); // 3 decimals
-        testDividend.setWithholdingTax(new BigDecimal("30.456")); // 3 decimals
-        when(taxRuleRepository.findApplicableRule(
-                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
-                .thenReturn(Optional.of(testTaxRule));
+        @Test
+        @DisplayName("Should use correct precision (2 decimals)")
+        void shouldUseCorrectPrecision() {
+                // Given
+                testDividend.setGrossAmount(new BigDecimal("100.123")); // 3 decimals
+                testDividend.setWithholdingTax(new BigDecimal("30.456")); // 3 decimals
+                when(taxRuleRepository.findApplicableRule(
+                                eq("FR"), eq("CH"), eq("EQUITY"), any(LocalDate.class)))
+                                .thenReturn(Optional.of(testTaxRule));
 
-        // When
-        TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
-                testDividend, "CH");
+                // When
+                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                                testDividend, "CH");
 
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getTreatyWithholdingTax().scale()).isEqualTo(2);
-        assertThat(result.getReclaimableAmount().scale()).isEqualTo(2);
-    }
+                // Then
+                assertThat(result).isNotNull();
+                assertThat(result.getTreatyWithholdingTax().scale()).isEqualTo(2);
+                assertThat(result.getReclaimableAmount().scale()).isEqualTo(2);
+        }
 }

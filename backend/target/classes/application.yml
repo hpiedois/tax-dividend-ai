@@ -15,9 +15,9 @@ spring:
   # Database Configuration
   # ========================================
   datasource:
-    url: jdbc:postgresql://localhost:5432/taxdividend_dev?currentSchema=taxdividend
-    username: taxdividend_user
-    password: dev_password_123
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:taxdividend_dev}?currentSchema=taxdividend
+    username: ${DB_USERNAME:taxdividend_user}
+    password: ${DB_PASSWORD:dev_password_123}
     driver-class-name: org.postgresql.Driver
     # Connection pool (HikariCP)
     hikari:
@@ -65,17 +65,20 @@ spring:
     create-schemas: false
 
   # ========================================
-  # Email Configuration (MailHog for dev)
+  # Email Configuration
   # ========================================
   mail:
-    host: localhost
-    port: 1025
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: false
+          auth: ${SMTP_AUTH:false}
           starttls:
-            enable: false
+            enable: ${SMTP_STARTTLS:false}
+    from: ${SMTP_FROM:noreply@taxdividend.com}
 
   # ========================================
   # SQL Init (Disable - Let Flyway Handle)
@@ -95,10 +98,10 @@ spring:
 # ========================================
 storage:
   s3:
-    endpoint: http://localhost:9000
-    bucket: tax-dividend-forms-dev
-    access-key: minioadmin
-    secret-key: minioadmin123
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    bucket: ${MINIO_BUCKET:tax-dividend-forms-dev}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin123}
 
 # ========================================
 # Actuator & Monitoring
@@ -116,6 +119,11 @@ management:
         enabled: true  # Enable liveness/readiness probes (Kubernetes)
     prometheus:
       enabled: true
+  # Security for actuator endpoints (except health probes and prometheus)
+  security:
+    enabled: true
+    username: ${ACTUATOR_USERNAME:admin}
+    password: ${ACTUATOR_PASSWORD:changeme-strong-password}
   metrics:
     tags:
       application: ${spring.application.name}
@@ -187,6 +195,18 @@ logging:
 # Application-Specific Configuration
 # ========================================
 app:
+  # Security Configuration
+  security:
+    internal-api-key: ${INTERNAL_API_KEY:changeme-internal-api-key-min-32-chars}
+
+  # Keycloak Configuration
+  keycloak:
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8180}
+    realm: ${KEYCLOAK_REALM:tax-dividend}
+    admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:changeme}
+    client-id: ${KEYCLOAK_CLIENT_ID:backend-service}
+
   # PDF Processing
   pdf:
     max-file-size: 50MB

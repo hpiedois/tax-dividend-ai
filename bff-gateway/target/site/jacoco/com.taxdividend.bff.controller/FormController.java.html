@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">bff-gateway</a> &gt; <a href="index.source.html" class="el_package">com.taxdividend.bff.controller</a> &gt; <span class="el_source">FormController.java</span></div><h1>FormController.java</h1><pre class="source lang-java linenums">package com.taxdividend.bff.controller;
+
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
+
+import com.taxdividend.bff.client.api.FormsApi;
+import com.taxdividend.bff.client.api.PdfApi;
+import com.taxdividend.bff.client.model.FormGenerationRequest;
+import com.taxdividend.bff.model.GenerateTaxFormsRequest;
+import com.taxdividend.bff.model.GenerateTaxFormsResponse;
+
+import reactor.core.publisher.Mono;
+
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequiredArgsConstructor
+public class FormController implements com.taxdividend.bff.api.FormsApi {
+
+        private final com.taxdividend.bff.service.FormService formService;
+
+        @Override
+        public Mono&lt;ResponseEntity&lt;GenerateTaxFormsResponse&gt;&gt; generateTaxForms(
+                        Mono&lt;GenerateTaxFormsRequest&gt; generateTaxFormsRequest,
+                        ServerWebExchange exchange) {
+
+<span class="nc" id="L33">                return ReactiveSecurityContextHolder.getContext()</span>
+<span class="nc" id="L34">                                .map(ctx -&gt; UUID.fromString(ctx.getAuthentication().getName()))</span>
+<span class="nc" id="L35">                                .flatMap(userId -&gt; generateTaxFormsRequest</span>
+<span class="nc" id="L36">                                                .flatMap(request -&gt; formService.generateForms(userId, request)</span>
+<span class="nc" id="L37">                                                                .map(ResponseEntity::ok)));</span>
+        }
+
+        @Override
+        public Mono&lt;ResponseEntity&lt;reactor.core.publisher.Flux&lt;com.taxdividend.bff.model.GeneratedForm&gt;&gt;&gt; listForms(
+                        Integer taxYear,
+                        String formType,
+                        ServerWebExchange exchange) {
+
+<span class="nc" id="L46">                return ReactiveSecurityContextHolder.getContext()</span>
+<span class="nc" id="L47">                                .map(ctx -&gt; UUID.fromString(ctx.getAuthentication().getName()))</span>
+<span class="nc" id="L48">                                .map(userId -&gt; ResponseEntity.ok(formService.listForms(userId, taxYear, formType)));</span>
+        }
+
+        @Override
+        public Mono&lt;ResponseEntity&lt;com.taxdividend.bff.model.GeneratedForm&gt;&gt; getForm(
+                        UUID id,
+                        ServerWebExchange exchange) {
+
+<span class="nc" id="L56">                return ReactiveSecurityContextHolder.getContext()</span>
+<span class="nc" id="L57">                                .map(ctx -&gt; UUID.fromString(ctx.getAuthentication().getName()))</span>
+<span class="nc" id="L58">                                .flatMap(userId -&gt; formService.getForm(id, userId))</span>
+<span class="nc" id="L59">                                .map(ResponseEntity::ok)</span>
+<span class="nc" id="L60">                                .defaultIfEmpty(ResponseEntity.notFound().build());</span>
+        }
+
+        @Override
+        public Mono&lt;ResponseEntity&lt;org.springframework.core.io.Resource&gt;&gt; downloadForm(
+                        UUID id,
+                        ServerWebExchange exchange) {
+
+<span class="nc" id="L68">                return ReactiveSecurityContextHolder.getContext()</span>
+<span class="nc" id="L69">                                .map(ctx -&gt; UUID.fromString(ctx.getAuthentication().getName()))</span>
+<span class="nc" id="L70">                                .flatMap(userId -&gt; formService.downloadForm(id, userId));</span>
+        }
+
+        @Override
+        public Mono&lt;ResponseEntity&lt;com.taxdividend.bff.model.FormDownloadUrlResponse&gt;&gt; getFormDownloadUrl(
+                        UUID id,
+                        Integer expiresIn,
+                        ServerWebExchange exchange) {
+
+<span class="nc" id="L79">                return ReactiveSecurityContextHolder.getContext()</span>
+<span class="nc" id="L80">                                .map(ctx -&gt; UUID.fromString(ctx.getAuthentication().getName()))</span>
+<span class="nc" id="L81">                                .flatMap(userId -&gt; formService.getDownloadUrl(id, userId, expiresIn))</span>
+<span class="nc" id="L82">                                .map(ResponseEntity::ok)</span>
+<span class="nc" id="L83">                                .defaultIfEmpty(ResponseEntity.notFound().build());</span>
+        }
+
+        @Override
+        public Mono&lt;ResponseEntity&lt;Void&gt;&gt; deleteForm(
+                        UUID id,
+                        ServerWebExchange exchange) {
+
+<span class="nc" id="L91">                return ReactiveSecurityContextHolder.getContext()</span>
+<span class="nc" id="L92">                                .map(ctx -&gt; UUID.fromString(ctx.getAuthentication().getName()))</span>
+<span class="nc" id="L93">                                .flatMap(userId -&gt; formService.deleteForm(id, userId))</span>
+<span class="nc" id="L94">                                .then(Mono.just(ResponseEntity.noContent().build()));</span>
+        }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

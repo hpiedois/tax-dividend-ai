@@ -29,8 +29,8 @@ app:
 backend:
   url: ${BACKEND_URL:http://localhost:8081/internal}
 
-mock-agent:
-  url: ${MOCK_AGENT_URL:http://localhost:8083/api}
+dividend-agent:
+  url: ${DIVIDEND_AGENT_URL:http://localhost:8083/api}
 
 management:
   endpoints:

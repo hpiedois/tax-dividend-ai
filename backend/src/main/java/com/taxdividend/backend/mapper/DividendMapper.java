@@ -27,11 +27,21 @@ public class DividendMapper {
         dto.setPaymentDate(entity.getPaymentDate());
         dto.setWithholdingTax(entity.getWithholdingTax());
         dto.setReclaimableAmount(entity.getReclaimableAmount());
+        if (entity.getStatus() != null) {
+            try {
+                dto.setStatus(com.taxdividend.backend.api.dto.Dividend.StatusEnum.valueOf(entity.getStatus().name()));
+            } catch (IllegalArgumentException e) {
+                dto.setStatus(com.taxdividend.backend.api.dto.Dividend.StatusEnum.OPEN);
+            }
+        } else {
+            dto.setStatus(com.taxdividend.backend.api.dto.Dividend.StatusEnum.OPEN);
+        }
 
         return dto;
     }
 
-    public List<com.taxdividend.backend.api.dto.Dividend> toDtoList(List<com.taxdividend.backend.model.Dividend> entities) {
+    public List<com.taxdividend.backend.api.dto.Dividend> toDtoList(
+            List<com.taxdividend.backend.model.Dividend> entities) {
         if (entities == null) {
             return null;
         }
@@ -66,6 +76,14 @@ public class DividendMapper {
         entity.setPaymentDate(dto.getPaymentDate());
         entity.setWithholdingTax(dto.getWithholdingTax());
         entity.setReclaimableAmount(dto.getReclaimableAmount());
+        // Status typically set by default or separate logic, but mapping if present
+        if (dto.getStatus() != null) {
+            try {
+                entity.setStatus(com.taxdividend.backend.model.DividendStatus.valueOf(dto.getStatus().name()));
+            } catch (IllegalArgumentException e) {
+                entity.setStatus(com.taxdividend.backend.model.DividendStatus.OPEN);
+            }
+        }
 
         return entity;
     }

@@ -1,0 +1,73 @@
+openapi: 3.0.3
+info:
+  title: Dividend Agent API
+  description: API for extracting data from dividend statements
+  version: 1.0.0
+servers:
+  - url: http://localhost:8083/api
+paths:
+  /parse:
+    post:
+      tags:
+        - Parsing
+      summary: Parse a PDF or Image dividend statement
+      operationId: parseDocument
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The dividend statement file (PDF, JPEG, PNG)
+                password:
+                  type: string
+                  description: Optional password for encrypted PDFs
+              required:
+                - file
+      responses:
+        '200':
+          description: Successful extraction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseResponse'
+        '400':
+          description: Invalid input or unreadable file
+        '422':
+          description: Password required but not provided
+        '500':
+          description: Extraction failed
+
+components:
+  schemas:
+    ParseResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DividendData'
+    
+    DividendData:
+      type: object
+      properties:
+        securityName:
+          type: string
+        isin:
+          type: string
+        grossAmount:
+          type: number
+        currency:
+          type: string
+        paymentDate:
+          type: string
+          format: date
+        country:
+          type: string
+        withholdingTax:
+          type: number
+        reclaimableAmount:
+          type: number

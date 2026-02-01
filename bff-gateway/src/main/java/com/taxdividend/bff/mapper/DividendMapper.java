@@ -15,6 +15,6 @@ public interface DividendMapper {
     @Mapping(target = "date", source = "paymentDate")
     @Mapping(target = "security", source = "securityName")
     @Mapping(target = "reclaimedAmount", source = "reclaimableAmount")
-    @Mapping(target = "status", constant = "PENDING") // Default status as backend doesn't provide it
+    @Mapping(target = "status", expression = "java(source.getStatus() != null ? com.taxdividend.bff.model.DividendCase.StatusEnum.fromValue(source.getStatus().name()) : com.taxdividend.bff.model.DividendCase.StatusEnum.OPEN)")
     com.taxdividend.bff.model.DividendCase toDividendCase(com.taxdividend.bff.client.model.Dividend source);
 }

@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import jakarta.annotation.Generated;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T11:27:14.708089+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-01T10:04:28.893062+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 @Validated
 public interface TaxRulesApi {
 
@@ -72,8 +72,14 @@ public interface TaxRulesApi {
 
     String PATH_GET_ALL_TAX_RULES = "/tax-rules";
     /**
-     * GET /tax-rules : List all tax rules
+     * GET /tax-rules : List tax rules with optional filters
+     * Retrieve tax rules with optional filtering by countries, active status, and procedure availability
      *
+     * @param sourceCountry Filter by source country (ISO 3166-1 alpha-2 code) (optional)
+     * @param residenceCountry Filter by residence country (ISO 3166-1 alpha-2 code) (optional)
+     * @param active Filter by active status (rules effective as of today) (optional)
+     * @param reliefAtSource Filter by relief at source availability (optional)
+     * @param refundProcedure Filter by refund procedure availability (optional)
      * @return List of tax rules (status code 200)
      */
     @RequestMapping(
@@ -82,7 +88,11 @@ public interface TaxRulesApi {
         produces = { "application/json" }
     )
     default ResponseEntity<List<TaxRule>> getAllTaxRules(
-        
+        @Pattern(regexp = "^[A-Z]{2}$")  @Valid @RequestParam(value = "sourceCountry", required = false) @Nullable String sourceCountry,
+        @Pattern(regexp = "^[A-Z]{2}$")  @Valid @RequestParam(value = "residenceCountry", required = false) @Nullable String residenceCountry,
+         @Valid @RequestParam(value = "active", required = false) @Nullable Boolean active,
+         @Valid @RequestParam(value = "reliefAtSource", required = false) @Nullable Boolean reliefAtSource,
+         @Valid @RequestParam(value = "refundProcedure", required = false) @Nullable Boolean refundProcedure
     ) {
         getRequest().ifPresent(request -> {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {

@@ -46,6 +46,8 @@
         "email_placeholder": "your@email.com",
         "password_placeholder": "Password",
         "login_button": "Sign In",
+        "login_sso": "Sign In",
+        "register_sso": "Create Account",
         "logging_in": "Signing In...",
         "logout": "Logout",
         "login_success": "Successfully logged in"
@@ -61,6 +63,9 @@
     "history": {
         "export_csv": "Export CSV",
         "status": {
+            "open": "Open",
+            "sent": "Sent",
+            "paid": "Paid",
             "pending": "Pending",
             "submitted": "Submitted",
             "refunded": "Refunded"
@@ -79,6 +84,18 @@
             "reclaimed": "Reclaimed",
             "status": "Status",
             "actions": "Actions"
+        },
+        "actions": {
+            "mark_sent": "Mark as Sent",
+            "mark_paid": "Mark as Paid",
+            "mark_open": "Mark as Open",
+            "download_pdf": "Download PDF"
+        },
+        "confirmation": {
+            "title": "Update Status",
+            "message": "You are about to change the status of {{count}} dividend(s) to {{status}}.",
+            "confirm": "Confirm",
+            "cancel": "Cancel"
         }
     },
     "settings": {

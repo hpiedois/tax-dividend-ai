@@ -26,12 +26,14 @@ import java.util.UUID;
  * REST Controller for dividend-related operations.
  *
  * Endpoints:
- * - GET /internal/dividends - List user's dividends
+ * - GET /internal/dividends - List user's dividends (with optional filters:
+ * startDate, endDate, status)
  * - GET /internal/dividends/{id} - Get dividend details
  * - POST /internal/dividends/{id}/calculate - Calculate tax for single dividend
  * - POST /internal/dividends/calculate-batch - Calculate tax for multiple
  * dividends
- * - POST /internal/dividends/calculate-all - Calculate all user's dividends
+ * - POST /internal/dividends/{userId}/calculate-all - Calculate all user's
+ * dividends
  * - DELETE /internal/dividends/{id} - Delete dividend
  *
  * Note: PDF parsing is now handled by an AI agent (not in this controller)
@@ -50,16 +52,21 @@ public class DividendController implements DividendsApi {
     // Removed direct repository and mapper dependencies where service handles it
 
     /**
-     * Get all dividends for the authenticated user.
+     * Get all dividends for the authenticated user with optional filters.
      */
     @Override
     public ResponseEntity<com.taxdividend.backend.api.dto.ListDividends200Response> listDividends(
             UUID xUserId,
             Integer page,
-            Integer size) {
+            Integer size,
+            LocalDate startDate,
+            LocalDate endDate,
+            String status) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "paymentDate"));
-        return ResponseEntity.ok(dividendService.listDividends(xUserId, pageable));
+
+        // Delegate to service with filters
+        return ResponseEntity.ok(dividendService.listDividends(xUserId, pageable, startDate, endDate, status));
     }
 
     /**
@@ -169,14 +176,18 @@ public class DividendController implements DividendsApi {
     }
 
     /**
-     * Calculate tax for all user's dividends.
+     * Calculate tax for all user's dividends (OpenAPI implementation).
      */
-    @PostMapping("/calculate-all")
-    @Operation(summary = "Calculate tax for all dividends", description = "Calculate taxes for all dividends of the authenticated user")
-    public ResponseEntity<com.taxdividend.backend.dto.TaxCalculationBatchResultDTO> calculateAll(
-            @Parameter(description = "User ID") @RequestHeader("X-User-Id") String userIdHeader) {
+    @Override
+    public ResponseEntity<com.taxdividend.backend.api.dto.TaxCalculationBatchResultDTO> calculateAllUserDividends(
+            UUID userId,
+            UUID xUserId) {
 
-        UUID userId = UUID.fromString(userIdHeader);
+        // Verify user can only calculate their own dividends
+        if (!userId.equals(xUserId)) {
+            log.warn("User {} attempted to calculate dividends for user {}", xUserId, userId);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         try {
             com.taxdividend.backend.dto.TaxCalculationBatchResultDTO result = taxCalculationService
@@ -189,7 +200,7 @@ public class DividendController implements DividendsApi {
             log.info("Calculated all dividends for user {}: {} total reclaimable",
                     userId, result.getTotalReclaimableAmount());
 
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(taxCalculationMapper.toApiBatchDto(result));
 
         } catch (Exception e) {
             log.error("Failed to calculate all for user {}", userId, e);
@@ -197,44 +208,10 @@ public class DividendController implements DividendsApi {
         }
     }
 
-    /**
-     * Get dividends by date range.
-     * Fixed: Returns List<DividendDTO> instead of List<DividendEntity>
-     */
-    @GetMapping("/by-date-range")
-    @Operation(summary = "Get dividends by date range", description = "Filter dividends by payment date range")
-    public ResponseEntity<List<com.taxdividend.backend.api.dto.Dividend>> getDividendsByDateRange(
-            @Parameter(description = "User ID") @RequestHeader("X-User-Id") String userIdHeader,
-            @Parameter(description = "Start date (ISO format)") @RequestParam LocalDate startDate,
-            @Parameter(description = "End date (ISO format)") @RequestParam LocalDate endDate) {
-
-        UUID userId = UUID.fromString(userIdHeader);
-
-        List<com.taxdividend.backend.api.dto.Dividend> dividends = dividendService.getDividendsByDateRange(
-                userId, startDate, endDate);
-
-        log.info("Found {} dividends for user {} between {} and {}",
-                dividends.size(), userId, startDate, endDate);
-
-        return ResponseEntity.ok(dividends);
-    }
-
-    /**
-     * Get unsubmitted dividends (not linked to any form).
-     * Fixed: Returns List<DividendDTO> instead of List<DividendEntity>
-     */
-    @GetMapping("/unsubmitted")
-    @Operation(summary = "Get unsubmitted dividends", description = "Get all dividends not yet linked to a form")
-    public ResponseEntity<List<com.taxdividend.backend.api.dto.Dividend>> getUnsubmittedDividends(
-            @Parameter(description = "User ID") @RequestHeader("X-User-Id") String userIdHeader) {
-
-        UUID userId = UUID.fromString(userIdHeader);
-
-        List<com.taxdividend.backend.api.dto.Dividend> dividends = dividendService.getUnsubmittedDividends(userId);
-
-        log.info("Found {} unsubmitted dividends for user {}", dividends.size(), userId);
-
-        return ResponseEntity.ok(dividends);
+    @Override
+    public ResponseEntity<com.taxdividend.backend.api.dto.DividendStatsDTO> getDividendStats(UUID xUserId,
+            Integer taxYear) {
+        return ResponseEntity.ok(dividendService.getStats(xUserId, taxYear));
     }
 
     /**
@@ -247,5 +224,24 @@ public class DividendController implements DividendsApi {
 
         dividendService.deleteDividend(id, xUserId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Bulk import dividends from parsed statement.
+     * Called by AI Agent after parsing a broker statement.
+     */
+    @Override
+    public ResponseEntity<com.taxdividend.backend.api.dto.BulkImportDividendsResponse> bulkImportDividends(
+            UUID xUserId,
+            com.taxdividend.backend.api.dto.BulkImportDividendsRequest request) {
+
+        log.info("Bulk import request from user {} for statement {}", xUserId, request.getStatementId());
+
+        com.taxdividend.backend.api.dto.BulkImportDividendsResponse response =
+                dividendService.bulkImportDividends(xUserId, request);
+
+        auditService.logAction(xUserId, "BULK_IMPORT_DIVIDENDS");
+
+        return ResponseEntity.ok(response);
     }
 }

@@ -9,27 +9,36 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface TaxRuleService {
-    List<TaxRule> getAllTaxRules();
+    List<TaxRule> getAllTaxRules(String sourceCountry, String residenceCountry, Boolean active, Boolean reliefAtSource, Boolean refundProcedure);
 
     Optional<TaxRule> getTaxRule(UUID id);
 
     Optional<TaxRule> findApplicableRule(String sourceCountry, String residenceCountry, String securityType,
             LocalDate date);
 
+    // Legacy filter methods - deprecated, use getAllTaxRules with filters instead
+    @Deprecated
     List<TaxRule> getRulesBetweenCountries(String sourceCountry, String residenceCountry);
 
+    @Deprecated
     List<TaxRule> getActiveRules();
 
+    @Deprecated
     List<TaxRule> getExpiredRules();
 
+    @Deprecated
     boolean hasTaxTreaty(String sourceCountry, String residenceCountry, LocalDate date);
 
+    @Deprecated
     List<TaxRule> getRulesBySourceCountry(String country);
 
+    @Deprecated
     List<TaxRule> getRulesByResidenceCountry(String country);
 
+    @Deprecated
     List<TaxRule> getRulesWithReliefAtSource();
 
+    @Deprecated
     List<TaxRule> getRulesWithRefundProcedure();
 
     Optional<TreatyRateResponse> getTreatyRate(String sourceCountry, String residenceCountry, String securityType,

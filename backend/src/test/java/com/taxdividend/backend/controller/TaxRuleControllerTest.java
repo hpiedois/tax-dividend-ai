@@ -84,7 +84,7 @@ class TaxRuleControllerTest {
         dto2.setId(usChRule.getId());
         dto2.setSourceCountry("US");
 
-        when(taxRuleService.getAllTaxRules())
+        when(taxRuleService.getAllTaxRules(isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(Arrays.asList(dto1, dto2));
 
         // When/Then
@@ -92,7 +92,7 @@ class TaxRuleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
 
-        verify(taxRuleService).getAllTaxRules();
+        verify(taxRuleService).getAllTaxRules(isNull(), isNull(), isNull(), isNull(), isNull());
     }
 
     @Test

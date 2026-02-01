@@ -13,11 +13,16 @@
 
 package com.taxdividend.bff.client.api;
 
+import com.taxdividend.bff.client.model.BulkImportDividendsRequest;
+import com.taxdividend.bff.client.model.BulkImportDividendsResponse;
 import com.taxdividend.bff.client.model.Dividend;
+import com.taxdividend.bff.client.model.DividendStatsDTO;
 import com.taxdividend.bff.client.model.ListDividends200Response;
+import java.time.LocalDate;
 import com.taxdividend.bff.client.model.TaxCalculationBatchResultDTO;
 import com.taxdividend.bff.client.model.TaxCalculationResultDTO;
 import java.util.UUID;
+import com.taxdividend.bff.client.model.UpdateDividendStatusRequest;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -36,6 +41,36 @@ public class DividendsApiTest {
 
     private final DividendsApi api = new DividendsApi();
 
+    
+    /**
+     * Bulk import dividends from parsed statement
+     *
+     * Import multiple dividends at once from a parsed broker statement. Called by AI Agent after parsing a statement. Automatically calculates tax and updates statement metadata. 
+     */
+    @Test
+    public void bulkImportDividendsTest()  {
+        // uncomment below to test the function
+        //UUID xUserId = null;
+        //BulkImportDividendsRequest bulkImportDividendsRequest = null;
+        //BulkImportDividendsResponse response = api.bulkImportDividends(xUserId, bulkImportDividendsRequest).block();
+
+        // TODO: test validations
+    }
+    
+    /**
+     * Recalculate tax for all user dividends
+     *
+     * Triggers tax recalculation for all dividends of a user. Useful after tax rule updates.
+     */
+    @Test
+    public void calculateAllUserDividendsTest()  {
+        // uncomment below to test the function
+        //UUID userId = null;
+        //UUID xUserId = null;
+        //TaxCalculationBatchResultDTO response = api.calculateAllUserDividends(userId, xUserId).block();
+
+        // TODO: test validations
+    }
     
     /**
      * Calculate tax for multiple dividends
@@ -99,7 +134,22 @@ public class DividendsApiTest {
     }
     
     /**
-     * List user&#39;s dividends
+     * Get dividend statistics
+     *
+     * 
+     */
+    @Test
+    public void getDividendStatsTest()  {
+        // uncomment below to test the function
+        //UUID xUserId = null;
+        //Integer taxYear = null;
+        //DividendStatsDTO response = api.getDividendStats(xUserId, taxYear).block();
+
+        // TODO: test validations
+    }
+    
+    /**
+     * List user&#39;s dividends with optional filters
      *
      * 
      */
@@ -109,7 +159,25 @@ public class DividendsApiTest {
         //UUID xUserId = null;
         //Integer page = null;
         //Integer size = null;
-        //ListDividends200Response response = api.listDividends(xUserId, page, size).block();
+        //LocalDate startDate = null;
+        //LocalDate endDate = null;
+        //String status = null;
+        //ListDividends200Response response = api.listDividends(xUserId, page, size, startDate, endDate, status).block();
+
+        // TODO: test validations
+    }
+    
+    /**
+     * Update status for multiple dividends
+     *
+     * 
+     */
+    @Test
+    public void updateDividendStatusTest()  {
+        // uncomment below to test the function
+        //UUID xUserId = null;
+        //UpdateDividendStatusRequest updateDividendStatusRequest = null;
+        //api.updateDividendStatus(xUserId, updateDividendStatusRequest).block();
 
         // TODO: test validations
     }

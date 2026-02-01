@@ -49,7 +49,7 @@ export function FormGeneratorView() {
         withholdingTax: result.withholdingTax,
         treatyAmount: result.grossAmount * 0.15, // Treaty rate
         reclaimableAmount: result.reclaimableAmount,
-        frenchRate: result.frenchRate,
+        appliedRate: result.appliedRate || 0,
       })),
       totalGrossAmount: scanResults.reduce((sum, r) => sum + r.grossAmount, 0),
       totalWithholdingTax: scanResults.reduce((sum, r) => sum + r.withholdingTax, 0),

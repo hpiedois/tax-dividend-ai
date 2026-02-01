@@ -12,6 +12,8 @@ import { Toaster } from './components/ui/Toaster.tsx'
 import { queryClient } from './lib/query-client.ts'
 import { initDebugUtils } from './lib/debug-utils'
 
+import { setupApi } from './api';
+
 // Initialize debug utilities in development mode
 if (import.meta.env.DEV) {
   initDebugUtils();
@@ -21,17 +23,20 @@ const onSigninCallback = () => {
   window.history.replaceState({}, document.title, window.location.pathname);
 };
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AuthProvider userManager={userManager} onSigninCallback={onSigninCallback}>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="system" storageKey="tax-dividend-ui-theme">
-            <App />
-            <Toaster />
-          </ThemeProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </AuthProvider>
-  </StrictMode>,
-)
+// Initialize API (and mocks if enabled) before rendering
+setupApi().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <AuthProvider userManager={userManager} onSigninCallback={onSigninCallback}>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider defaultTheme="system" storageKey="tax-dividend-ui-theme">
+              <App />
+              <Toaster />
+            </ThemeProvider>
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </AuthProvider>
+    </StrictMode>,
+  );
+});

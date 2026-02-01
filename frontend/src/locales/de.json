@@ -61,6 +61,9 @@
     "history": {
         "export_csv": "CSV exportieren",
         "status": {
+            "open": "Offen",
+            "sent": "Gesendet",
+            "paid": "Bezahlt",
             "pending": "Ausstehend",
             "submitted": "Eingereicht",
             "refunded": "Erstattet"
@@ -79,6 +82,18 @@
             "reclaimed": "Zurückgefordert",
             "status": "Status",
             "actions": "Aktionen"
+        },
+        "actions": {
+            "mark_sent": "Als Gesendet markieren",
+            "mark_paid": "Als Bezahlt markieren",
+            "mark_open": "Als Offen markieren",
+            "download_pdf": "PDF herunterladen"
+        },
+        "confirmation": {
+            "title": "Statusaktualisierung",
+            "message": "Sie sind dabei, den Status von {{count}} Dividende(n) auf {{status}} zu ändern.",
+            "confirm": "Bestätigen",
+            "cancel": "Abbrechen"
         }
     },
     "settings": {

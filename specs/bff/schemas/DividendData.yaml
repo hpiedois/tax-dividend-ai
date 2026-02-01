@@ -15,9 +15,11 @@ properties:
     type: number
   reclaimableAmount:
     type: number
-  frenchRate:
-    type: number
-    description: Tracks which rate was applied (PFU or progressive)
+  sourceCountry:
+    type: string
+  appliedRateType:
+    type: string
+    description: Tracks which rate was applied (e.g. PFU, PROGRESSIVE, TREATY)
 required:
   - securityName
   - grossAmount

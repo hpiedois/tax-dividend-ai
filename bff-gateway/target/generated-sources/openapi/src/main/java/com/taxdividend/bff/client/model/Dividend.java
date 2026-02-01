@@ -38,9 +38,10 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
   Dividend.JSON_PROPERTY_CURRENCY,
   Dividend.JSON_PROPERTY_PAYMENT_DATE,
   Dividend.JSON_PROPERTY_WITHHOLDING_TAX,
-  Dividend.JSON_PROPERTY_RECLAIMABLE_AMOUNT
+  Dividend.JSON_PROPERTY_RECLAIMABLE_AMOUNT,
+  Dividend.JSON_PROPERTY_STATUS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-31T12:02:59.936362+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-02-01T09:58:25.591675+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class Dividend {
   public static final String JSON_PROPERTY_ID = "id";
   @jakarta.annotation.Nullable
@@ -73,6 +74,47 @@ public class Dividend {
   public static final String JSON_PROPERTY_RECLAIMABLE_AMOUNT = "reclaimableAmount";
   @jakarta.annotation.Nullable
   private BigDecimal reclaimableAmount;
+
+  /**
+   * Gets or Sets status
+   */
+  public enum StatusEnum {
+    OPEN(String.valueOf("OPEN")),
+    
+    SENT(String.valueOf("SENT")),
+    
+    PAID(String.valueOf("PAID"));
+
+    private String value;
+
+    StatusEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static StatusEnum fromValue(String value) {
+      for (StatusEnum b : StatusEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  public static final String JSON_PROPERTY_STATUS = "status";
+  @jakarta.annotation.Nullable
+  private StatusEnum status;
 
   public Dividend() {
   }
@@ -277,6 +319,31 @@ public class Dividend {
     this.reclaimableAmount = reclaimableAmount;
   }
 
+  public Dividend status(@jakarta.annotation.Nullable StatusEnum status) {
+    
+    this.status = status;
+    return this;
+  }
+
+  /**
+   * Get status
+   * @return status
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_STATUS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public StatusEnum getStatus() {
+    return status;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_STATUS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setStatus(@jakarta.annotation.Nullable StatusEnum status) {
+    this.status = status;
+  }
+
 
   @Override
   public boolean equals(Object o) {
@@ -294,12 +361,13 @@ public class Dividend {
         Objects.equals(this.currency, dividend.currency) &&
         Objects.equals(this.paymentDate, dividend.paymentDate) &&
         Objects.equals(this.withholdingTax, dividend.withholdingTax) &&
-        Objects.equals(this.reclaimableAmount, dividend.reclaimableAmount);
+        Objects.equals(this.reclaimableAmount, dividend.reclaimableAmount) &&
+        Objects.equals(this.status, dividend.status);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, securityName, isin, grossAmount, currency, paymentDate, withholdingTax, reclaimableAmount);
+    return Objects.hash(id, securityName, isin, grossAmount, currency, paymentDate, withholdingTax, reclaimableAmount, status);
   }
 
   @Override
@@ -314,6 +382,7 @@ public class Dividend {
     sb.append("    paymentDate: ").append(toIndentedString(paymentDate)).append("\n");
     sb.append("    withholdingTax: ").append(toIndentedString(withholdingTax)).append("\n");
     sb.append("    reclaimableAmount: ").append(toIndentedString(reclaimableAmount)).append("\n");
+    sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("}");
     return sb.toString();
   }

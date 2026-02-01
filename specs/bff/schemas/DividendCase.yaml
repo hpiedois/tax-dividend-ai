@@ -13,4 +13,4 @@ properties:
     type: number
   status:
     type: string
-    enum: [pending, submitted, refunded]
+    enum: [OPEN, SENT, PAID]

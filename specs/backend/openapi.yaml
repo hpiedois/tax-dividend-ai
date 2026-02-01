@@ -31,6 +31,9 @@ components:
           type: number
         reclaimableAmount:
           type: number
+        status:
+          type: string
+          enum: [OPEN, SENT, PAID]
 
     TaxCalculationResultDTO:
       type: object
@@ -67,6 +70,222 @@ components:
           items:
             $ref: '#/components/schemas/TaxCalculationResultDTO'
 
+    DividendStatsDTO:
+      $ref: './schemas/DividendStatsDTO.yaml'
+
+    # Bulk Import schemas
+    BulkImportDividendsRequest:
+      type: object
+      required:
+        - statementId
+        - dividends
+      properties:
+        statementId:
+          type: string
+          format: uuid
+          description: ID of the dividend statement being parsed
+        dividends:
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkImportDividendItem'
+          minItems: 1
+          description: List of dividends to import
+
+    BulkImportDividendItem:
+      type: object
+      required:
+        - securityName
+        - isin
+        - paymentDate
+        - grossAmount
+        - currency
+        - withholdingTax
+        - withholdingRate
+        - sourceCountry
+      properties:
+        securityName:
+          type: string
+          description: Security name (company name)
+          example: LVMH
+        isin:
+          type: string
+          description: ISIN code (12 characters)
+          pattern: '^[A-Z]{2}[A-Z0-9]{10}$'
+          example: FR0000121014
+        paymentDate:
+          type: string
+          format: date
+          description: Dividend payment date
+        grossAmount:
+          type: number
+          description: Gross dividend amount
+          minimum: 0
+        currency:
+          type: string
+          description: Currency code (ISO 4217)
+          pattern: '^[A-Z]{3}$'
+          example: EUR
+        withholdingTax:
+          type: number
+          description: Tax withheld at source
+          minimum: 0
+        withholdingRate:
+          type: number
+          description: Withholding rate applied (%)
+          minimum: 0
+          maximum: 100
+        sourceCountry:
+          type: string
+          description: Country where dividend was paid (ISO 3166-1 alpha-2)
+          pattern: '^[A-Z]{2}$'
+          example: FR
+
+    BulkImportDividendsResponse:
+      type: object
+      properties:
+        importedCount:
+          type: integer
+          description: Number of dividends successfully imported
+        failedCount:
+          type: integer
+          description: Number of dividends that failed to import
+        totalGrossAmount:
+          type: number
+          description: Total gross amount of all imported dividends
+        totalReclaimable:
+          type: number
+          description: Total reclaimable amount across all dividends
+        dividendIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs of successfully imported dividends
+        errors:
+          type: array
+          items:
+            type: string
+          description: Error messages for failed imports
+
+    # DividendStatement schemas
+    DividendStatement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        sourceFileName:
+          type: string
+          description: Original filename of uploaded broker statement
+        sourceFileS3Key:
+          type: string
+          description: S3/MinIO key for stored file
+        broker:
+          type: string
+          description: Broker name (InteractiveBrokers, Swissquote, etc.)
+        periodStart:
+          type: string
+          format: date
+          description: Start of period covered by statement
+        periodEnd:
+          type: string
+          format: date
+          description: End of period covered by statement
+        status:
+          $ref: '#/components/schemas/DividendStatementStatus'
+        parsedAt:
+          type: string
+          format: date-time
+          nullable: true
+        validatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        sentMethod:
+          type: string
+          nullable: true
+          description: Submission method (EMAIL, POSTAL, ONLINE)
+        sentNotes:
+          type: string
+          nullable: true
+          description: User notes about submission
+        paidAt:
+          type: string
+          format: date-time
+          nullable: true
+        paidAmount:
+          type: number
+          nullable: true
+          description: Amount received from tax authority
+        parsedBy:
+          type: string
+          nullable: true
+          description: Who/what triggered parsing (AI_AGENT, MANUAL, etc.)
+        dividendCount:
+          type: integer
+          description: Number of dividends extracted from statement
+        totalGrossAmount:
+          type: number
+          description: Total gross amount from all dividends
+        totalReclaimable:
+          type: number
+          description: Total reclaimable amount from all dividends
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DividendStatementStatus:
+      type: string
+      enum:
+        - UPLOADED
+        - PARSING
+        - PARSED
+        - VALIDATED
+        - SENT
+        - PAID
+      description: |
+        Status workflow for dividend statements:
+        - UPLOADED: File uploaded, awaiting parsing
+        - PARSING: Currently being parsed by AI Agent
+        - PARSED: Parsing complete, dividends extracted
+        - VALIDATED: Dividends validated, forms generated and downloaded
+        - SENT: User has submitted forms to tax authority (offline)
+        - PAID: Reimbursement received (marked manually by user)
+
+    DividendStatementUpdateDTO:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/DividendStatementStatus'
+        sentMethod:
+          type: string
+          description: For SENT status - submission method
+        sentNotes:
+          type: string
+          description: For SENT status - additional notes
+        paidAmount:
+          type: number
+          description: For PAID status - amount received
+        paidAt:
+          type: string
+          format: date-time
+          description: For PAID status - payment date (defaults to now if not provided)
+        parsedBy:
+          type: string
+          description: For AI Agent updates - who triggered the parsing
+
     # Form schemas
     FormGenerationRequest:
       $ref: './schemas/FormGenerationRequest.yaml'
@@ -77,6 +296,17 @@ components:
     VerifyEmailResponseDTO:
       $ref: './schemas/VerifyEmailResponseDTO.yaml'
 
+    FormDownloadUrlResponse:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Pre-signed download URL
+        expiresAt:
+          type: string
+          format: date-time
+          description: URL expiration timestamp
 
     GeneratedForm:
       type: object
@@ -146,23 +376,6 @@ components:
         notes:
           type: string
 
-    # Health schemas
-    HealthCheckResponse:
-      type: object
-      properties:
-        status:
-          type: string
-        application:
-          type: string
-        database:
-          type: object
-        storage:
-          type: object
-        taxRules:
-          type: object
-        services:
-          type: object
-
     # Auth schemas
     RegisterUserRequest:
       $ref: './schemas/RegisterUserRequest.yaml'
@@ -173,7 +386,7 @@ paths:
     get:
       tags:
         - Dividends
-      summary: List user's dividends
+      summary: List user's dividends with optional filters
       operationId: listDividends
       parameters:
         - name: X-User-Id
@@ -192,6 +405,24 @@ paths:
           schema:
             type: integer
             default: 20
+        - name: startDate
+          in: query
+          description: Filter dividends from this date (inclusive)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Filter dividends until this date (inclusive)
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          description: Filter by submission status
+          schema:
+            type: string
+            enum: [UNSUBMITTED, SUBMITTED, APPROVED, PAID]
       responses:
         '200':
           description: List of dividends
@@ -258,6 +489,65 @@ paths:
         '404':
           description: Not found
 
+  /dividends/status:
+    patch:
+      tags:
+        - Dividends
+      summary: Update status for multiple dividends
+      operationId: updateDividendStatus
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                status:
+                  type: string
+                  enum: [OPEN, SENT, PAID]
+      responses:
+        '204':
+          description: Status updated
+
+  /dividends/stats:
+    get:
+      tags:
+        - Dividends
+      summary: Get dividend statistics
+      operationId: getDividendStats
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: taxYear
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Optional tax year filter. If not provided, returns all-time stats.
+      responses:
+        '200':
+          description: Statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DividendStatsDTO'
+
   /dividends/{id}/calculate:
     post:
       tags:
@@ -318,6 +608,342 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TaxCalculationBatchResultDTO'
+
+  /dividends/{userId}/calculate-all:
+    post:
+      tags:
+        - Dividends
+      summary: Recalculate tax for all user dividends
+      description: Triggers tax recalculation for all dividends of a user. Useful after tax rule updates.
+      operationId: calculateAllUserDividends
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID whose dividends should be recalculated
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Tax recalculated for all dividends
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxCalculationBatchResultDTO'
+        '403':
+          description: Forbidden - user can only calculate their own dividends
+        '404':
+          description: User not found
+
+  /dividends/bulk:
+    post:
+      tags:
+        - Dividends
+      summary: Bulk import dividends from parsed statement
+      description: |
+        Import multiple dividends at once from a parsed broker statement.
+        Called by AI Agent after parsing a statement.
+        Automatically calculates tax and updates statement metadata.
+      operationId: bulkImportDividends
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkImportDividendsRequest'
+      responses:
+        '200':
+          description: Dividends imported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkImportDividendsResponse'
+        '400':
+          description: Invalid request or statement not found
+        '403':
+          description: User does not own the statement
+
+  # DividendStatements endpoints
+  /dividend-statements:
+    post:
+      tags:
+        - DividendStatements
+      summary: Upload broker statement
+      description: Upload a broker statement PDF/CSV file. Creates a new DividendStatement with status UPLOADED.
+      operationId: uploadDividendStatement
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: broker
+          in: query
+          required: false
+          description: Broker name (InteractiveBrokers, Swissquote, etc.)
+          schema:
+            type: string
+        - name: periodStart
+          in: query
+          required: false
+          description: Start of period covered by statement
+          schema:
+            type: string
+            format: date
+        - name: periodEnd
+          in: query
+          required: false
+          description: End of period covered by statement
+          schema:
+            type: string
+            format: date
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Broker statement file (PDF or CSV)
+      responses:
+        '201':
+          description: Statement uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DividendStatement'
+        '400':
+          description: Bad request - invalid file or parameters
+
+    get:
+      tags:
+        - DividendStatements
+      summary: List user's dividend statements
+      description: List dividend statements with optional status filter and pagination
+      operationId: listDividendStatements
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: false
+          description: Filter by status
+          schema:
+            $ref: '#/components/schemas/DividendStatementStatus'
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Page of dividend statements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DividendStatement'
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  size:
+                    type: integer
+                  number:
+                    type: integer
+
+  /dividend-statements/{id}:
+    get:
+      tags:
+        - DividendStatements
+      summary: Get dividend statement by ID
+      description: Get a specific dividend statement. Validates ownership.
+      operationId: getDividendStatement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dividend statement details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DividendStatement'
+        '404':
+          description: Not found or not owned by user
+
+    patch:
+      tags:
+        - DividendStatements
+      summary: Update dividend statement status
+      description: |
+        Update statement status. Validates status transitions:
+        - UPLOADED → PARSING (AI Agent starts parsing)
+        - PARSING → PARSED (AI Agent completes parsing)
+        - PARSED → VALIDATED (User downloads forms)
+        - VALIDATED → SENT (User submits forms offline)
+        - SENT → PAID (User receives payment)
+      operationId: updateDividendStatementStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DividendStatementUpdateDTO'
+      responses:
+        '200':
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DividendStatement'
+        '400':
+          description: Invalid status transition
+        '404':
+          description: Not found or not owned by user
+
+    delete:
+      tags:
+        - DividendStatements
+      summary: Delete dividend statement
+      description: Delete statement and associated file from storage
+      operationId: deleteDividendStatement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted successfully
+        '404':
+          description: Not found or not owned by user
+
+  /dividend-statements/by-date-range:
+    get:
+      tags:
+        - DividendStatements
+      summary: Find statements by date range
+      description: Find statements whose period overlaps with the specified date range
+      operationId: getDividendStatementsByDateRange
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of statements in date range
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DividendStatement'
+
+  /dividend-statements/count-by-status:
+    get:
+      tags:
+        - DividendStatements
+      summary: Count statements by status
+      description: Get count of statements for a specific status
+      operationId: countDividendStatementsByStatus
+      parameters:
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DividendStatementStatus'
+      responses:
+        '200':
+          description: Count of statements
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int64
 
   # Forms endpoints
   /forms/generate:
@@ -461,13 +1087,120 @@ paths:
                 type: string
                 format: binary
 
+  /forms/{id}/download-url:
+    get:
+      tags:
+        - Forms
+      summary: Get pre-signed download URL for form
+      description: Returns a temporary pre-signed URL to download the form from storage (MinIO/S3). URL expires after specified duration.
+      operationId: getFormDownloadUrl
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Form ID
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: expiresIn
+          in: query
+          description: URL expiration time in seconds
+          schema:
+            type: integer
+            default: 3600
+            minimum: 60
+            maximum: 86400
+      responses:
+        '200':
+          description: Pre-signed download URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FormDownloadUrlResponse'
+        '404':
+          description: Form not found
+        '403':
+          description: Forbidden - user does not own this form
+
+  /forms/{id}/regenerate:
+    post:
+      tags:
+        - Forms
+      summary: Regenerate expired form
+      description: Regenerates a form that has expired (after 30 days). The new form will have updated data and a new expiration date.
+      operationId: regenerateForm
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Form ID to regenerate
+          schema:
+            type: string
+            format: uuid
+        - name: X-User-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Form regenerated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratedForm'
+        '404':
+          description: Form not found
+        '403':
+          description: Forbidden - user does not own this form
+        '400':
+          description: Bad request - form is not expired yet
+
   # Tax Rules endpoints
   /tax-rules:
     get:
       tags:
         - TaxRules
-      summary: List all tax rules
+      summary: List tax rules with optional filters
+      description: Retrieve tax rules with optional filtering by countries, active status, and procedure availability
       operationId: getAllTaxRules
+      parameters:
+        - name: sourceCountry
+          in: query
+          description: Filter by source country (ISO 3166-1 alpha-2 code)
+          schema:
+            type: string
+            pattern: '^[A-Z]{2}$'
+          example: FR
+        - name: residenceCountry
+          in: query
+          description: Filter by residence country (ISO 3166-1 alpha-2 code)
+          schema:
+            type: string
+            pattern: '^[A-Z]{2}$'
+          example: CH
+        - name: active
+          in: query
+          description: Filter by active status (rules effective as of today)
+          schema:
+            type: boolean
+        - name: reliefAtSource
+          in: query
+          description: Filter by relief at source availability
+          schema:
+            type: boolean
+        - name: refundProcedure
+          in: query
+          description: Filter by refund procedure availability
+          schema:
+            type: boolean
       responses:
         '200':
           description: List of tax rules
@@ -574,43 +1307,6 @@ paths:
                 $ref: '#/components/schemas/TreatyRateResponse'
         '404':
           description: No treaty found
-
-  # Health endpoints
-  /health/deep:
-    get:
-      tags:
-        - Health
-      summary: Deep health check
-      operationId: deepHealthCheck
-      responses:
-        '200':
-          description: Health status
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthCheckResponse'
-
-  /health/live:
-    get:
-      tags:
-        - Health
-      summary: Liveness probe
-      operationId: liveness
-      responses:
-        '200':
-          description: Alive
-
-  /health/ready:
-    get:
-      tags:
-        - Health
-      summary: Readiness probe
-      operationId: readiness
-      responses:
-        '200':
-          description: Ready
-        '503':
-          description: Not ready
 
   # Auth endpoints (existing)
   /auth/register:

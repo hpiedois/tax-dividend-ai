@@ -173,6 +173,83 @@
                             </configOptions>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>generate-agent-client</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/../specs/agent/openapi.yaml</inputSpec>
+                            <generatorName>java</generatorName>
+                            <library>webclient</library>
+                            <apiPackage>com.taxdividend.bff.agent.client.api</apiPackage>
+                            <modelPackage>com.taxdividend.bff.agent.client.model</modelPackage>
+                            <configOptions>
+                                <useJakartaEe>true</useJakartaEe>
+                                <documentationProvider>none</documentationProvider>
+                                <openApiNullable>false</openApiNullable>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- JaCoCo for code coverage -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.13</version>
+                <configuration>
+                    <excludes>
+                        <!-- Generated code (OpenAPI) -->
+                        <exclude>**/api/**/*</exclude>
+                        <exclude>**/model/**/*</exclude>
+                        <exclude>**/client/**/*</exclude>
+                        <exclude>**/agent/client/**/*</exclude>
+                        <!-- Configuration classes (hard to test) -->
+                        <exclude>**/config/**/*</exclude>
+                        <!-- Simple exception classes -->
+                        <exclude>**/exception/**/*</exclude>
+                        <!-- Application main class -->
+                        <exclude>**/TaxDividendBffGatewayApplication.class</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <!-- Global bundle coverage (overall project, excluding generated code) -->
+                                <!-- Initial baseline - will increase as tests are added -->
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.10</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

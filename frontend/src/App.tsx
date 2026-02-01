@@ -12,6 +12,7 @@ import { ScanView } from './components/views/ScanView';
 import { HistoryView } from './components/views/HistoryView';
 import { FormGeneratorView } from './components/forms/FormGeneratorView';
 import { SettingsView } from './components/views/SettingsView';
+import { MockSelector } from './components/debug/MockSelector';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, isLoading } = useAuth();
@@ -64,7 +65,8 @@ function App() {
                     </Route>
                 </Routes>
             </BrowserRouter>
-        </AuthProvider>
+            {import.meta.env.VITE_USE_MOCK === 'true' && <MockSelector />}
+        </AuthProvider >
     );
 }
 

@@ -91,7 +91,7 @@ class DividendControllerTest {
         // Given
         com.taxdividend.backend.api.dto.ListDividends200Response response =
                 new com.taxdividend.backend.api.dto.ListDividends200Response();
-        when(dividendService.listDividends(eq(testUserId), any()))
+        when(dividendService.listDividends(eq(testUserId), any(), isNull(), isNull(), isNull()))
                 .thenReturn(response);
 
         // When/Then
@@ -101,7 +101,7 @@ class DividendControllerTest {
                         .param("size", "20"))
                 .andExpect(status().isOk());
 
-        verify(dividendService).listDividends(eq(testUserId), any());
+        verify(dividendService).listDividends(eq(testUserId), any(), isNull(), isNull(), isNull());
     }
 
     @Test

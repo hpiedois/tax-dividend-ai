@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:mock": "VITE_USE_MOCK=true VITE_USE_MOCK_AUTH=true vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "generate-api": "openapi-generator-cli generate -i ../specs/bff/openapi.yaml -g typescript-axios -o src/api/generated --additional-properties=supportsES6=true,npmName=tax-dividend-api,typescriptThreePlus=true"
   },
   "dependencies": {
     "@capacitor/android": "^8.0.2",
@@ -42,6 +44,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@openapitools/openapi-generator-cli": "^2.28.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

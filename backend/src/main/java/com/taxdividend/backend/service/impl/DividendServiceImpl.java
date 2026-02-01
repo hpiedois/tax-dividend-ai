@@ -1,11 +1,22 @@
 package com.taxdividend.backend.service.impl;
 
+import com.taxdividend.backend.api.dto.BulkImportDividendItem;
+import com.taxdividend.backend.api.dto.BulkImportDividendsRequest;
+import com.taxdividend.backend.api.dto.BulkImportDividendsResponse;
 import com.taxdividend.backend.api.dto.Dividend;
 import com.taxdividend.backend.api.dto.ListDividends200Response;
+import com.taxdividend.backend.api.dto.DividendStatsDTO;
+import com.taxdividend.backend.dto.TaxCalculationResultDTO;
 import com.taxdividend.backend.mapper.DividendMapper;
+import com.taxdividend.backend.model.DividendStatus;
+import com.taxdividend.backend.model.User;
 import com.taxdividend.backend.repository.DividendRepository;
+import com.taxdividend.backend.repository.DividendStatementRepository;
+import com.taxdividend.backend.repository.UserRepository;
 import com.taxdividend.backend.service.AuditService;
 import com.taxdividend.backend.service.DividendService;
+import com.taxdividend.backend.service.DividendStatementService;
+import com.taxdividend.backend.service.TaxCalculationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,7 +24,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,40 +39,33 @@ import java.util.UUID;
 public class DividendServiceImpl implements DividendService {
 
     private final DividendRepository dividendRepository;
+    private final DividendStatementRepository statementRepository;
+    private final UserRepository userRepository;
     private final DividendMapper dividendMapper;
     private final AuditService auditService;
+    private final TaxCalculationService taxCalculationService;
+    private final DividendStatementService statementService;
 
     @Override
-    public ListDividends200Response listDividends(UUID userId, Pageable pageable) {
-        List<com.taxdividend.backend.model.Dividend> dividends = dividendRepository.findByUserId(userId);
-        // Note: Repository returns List, but we need Page for mapper.
-        // Assuming we want to support actual pagination later, but for now logic was:
-        // List<Dividend> dividends = dividendRepository.findByUserId(xUserId);
-        // Page<Dividend> dividendPage = Page.empty(pageable);
-        // wait, the original code had:
-        // List<Dividend> dividends = dividendRepository.findByUserId(xUserId);
-        // Page<Dividend> dividendPage = Page.empty(pageable);
-        // return ResponseEntity.ok(dividendMapper.toPageResponse(dividendPage));
-        // It seems the original code was BROKEN or placeholder regarding listing. It
-        // fetched list but returned empty page?
-        // Ah: Page<Dividend> dividendPage = Page.empty(pageable);
-        // It seems it was returning empty page.
-        // I will attempt to fix this to return actual data if possible, or replicate
-        // behavior.
-        // Let's replicate behavior but map the list if the mapper supports it, or just
-        // use the logic from controller.
+    public ListDividends200Response listDividends(UUID userId, Pageable pageable, LocalDate startDate,
+            LocalDate endDate, String status) {
+        List<com.taxdividend.backend.model.Dividend> dividends;
 
-        // Actually, let's just return what the controller was doing but correctly.
-        // The current implementation seemed to ignore the fetched dividends and return
-        // empty page?
-        // "List<Dividend> dividends = dividendRepository.findByUserId(xUserId);"
-        // "Page<Dividend> dividendPage = Page.empty(pageable);"
-        // "return ResponseEntity.ok(dividendMapper.toPageResponse(dividendPage));"
+        // Apply filters based on provided parameters
+        if (startDate != null && endDate != null) {
+            // Date range filter
+            dividends = dividendRepository.findByUserIdAndPaymentDateBetween(userId, startDate, endDate);
+        } else if ("UNSUBMITTED".equalsIgnoreCase(status)) {
+            // Unsubmitted filter (dividends not linked to a form)
+            dividends = dividendRepository.findByUserIdAndFormIsNull(userId);
+        } else {
+            // No filters, get all dividends for user
+            dividends = dividendRepository.findByUserId(userId);
+        }
 
-        // Use PageImpl to wrap the list (suboptimal for large data but matches current
-        // repo method)
-        // Or if repo supports Pageable... it likely extends JpaRepository which does.
-        // But findByUserId returns List.
+        // Note: Status filtering for SUBMITTED, APPROVED, PAID would require additional
+        // logic
+        // based on form_submissions table, which is not yet implemented
 
         Page<com.taxdividend.backend.model.Dividend> dividendPage = org.springframework.data.support.PageableExecutionUtils
                 .getPage(
@@ -100,5 +107,125 @@ public class DividendServiceImpl implements DividendService {
                     log.info("Deleted dividend {} for user {}", id, userId);
                     auditService.logAction(userId, "DIVIDEND_DELETED", "DIVIDEND", id, null, null, null);
                 });
+    }
+
+    @Override
+    public DividendStatsDTO getStats(UUID userId, Integer taxYear) {
+        BigDecimal totalReclaimed;
+        BigDecimal pendingAmount;
+        long casesCount;
+
+        if (taxYear == null) {
+            // Global stats
+            totalReclaimed = dividendRepository.sumReclaimableByStatus(userId, DividendStatus.PAID);
+            pendingAmount = dividendRepository.sumReclaimableByStatuses(userId,
+                    Arrays.asList(DividendStatus.OPEN, DividendStatus.SENT));
+            casesCount = dividendRepository.countByUserId(userId);
+        } else {
+            // Stats filtered by year
+            totalReclaimed = dividendRepository.sumReclaimableByStatusAndYear(
+                    userId,
+                    Arrays.asList(DividendStatus.PAID),
+                    taxYear);
+            pendingAmount = dividendRepository.sumReclaimableByStatusAndYear(
+                    userId,
+                    Arrays.asList(DividendStatus.OPEN, DividendStatus.SENT),
+                    taxYear);
+            casesCount = dividendRepository.countByUserIdAndYear(userId, taxYear);
+        }
+
+        DividendStatsDTO stats = new DividendStatsDTO();
+        stats.setTotalReclaimed(totalReclaimed != null ? totalReclaimed : BigDecimal.ZERO);
+        stats.setPendingAmount(pendingAmount != null ? pendingAmount : BigDecimal.ZERO);
+        stats.setCasesCount((int) casesCount);
+
+        return stats;
+    }
+
+    @Override
+    @Transactional
+    public BulkImportDividendsResponse bulkImportDividends(UUID userId, BulkImportDividendsRequest request) {
+        log.info("Bulk importing {} dividends for user {} from statement {}",
+                request.getDividends().size(), userId, request.getStatementId());
+
+        // Validate statement exists and belongs to user
+        com.taxdividend.backend.model.DividendStatement statement = statementRepository
+                .findByIdAndUserId(request.getStatementId(), userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Statement not found or does not belong to user: " + request.getStatementId()));
+
+        // Get user entity
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        List<UUID> importedIds = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        BigDecimal totalGross = BigDecimal.ZERO;
+        BigDecimal totalReclaimable = BigDecimal.ZERO;
+        int successCount = 0;
+
+        // Process each dividend
+        for (BulkImportDividendItem item : request.getDividends()) {
+            try {
+                // Create dividend entity
+                com.taxdividend.backend.model.Dividend dividend = com.taxdividend.backend.model.Dividend.builder()
+                        .user(user)
+                        .statement(statement)
+                        .securityName(item.getSecurityName())
+                        .isin(item.getIsin())
+                        .paymentDate(item.getPaymentDate())
+                        .grossAmount(item.getGrossAmount())
+                        .currency(item.getCurrency())
+                        .withholdingTax(item.getWithholdingTax())
+                        .withholdingRate(item.getWithholdingRate())
+                        .sourceCountry(item.getSourceCountry())
+                        .status(DividendStatus.OPEN)
+                        .build();
+
+                // Calculate tax to get reclaimable amount and treaty rate
+                TaxCalculationResultDTO taxResult = taxCalculationService.calculateForDividend(
+                        dividend, user.getCountry());
+
+                // Set calculated values
+                dividend.setReclaimableAmount(taxResult.getReclaimableAmount());
+                dividend.setTreatyRate(taxResult.getTreatyRate());
+
+                // Save dividend
+                dividend = dividendRepository.save(dividend);
+                importedIds.add(dividend.getId());
+
+                totalGross = totalGross.add(item.getGrossAmount());
+                totalReclaimable = totalReclaimable.add(taxResult.getReclaimableAmount());
+                successCount++;
+
+                log.debug("Imported dividend {} - {} ({})", dividend.getId(),
+                        item.getSecurityName(), item.getIsin());
+
+            } catch (Exception e) {
+                log.error("Failed to import dividend: {} - {}", item.getIsin(), e.getMessage());
+                errors.add(String.format("%s (%s): %s", item.getSecurityName(), item.getIsin(), e.getMessage()));
+            }
+        }
+
+        // Update statement metadata
+        statementService.updateAfterParsing(
+                request.getStatementId(),
+                successCount,
+                totalGross,
+                totalReclaimable);
+
+        log.info("Bulk import completed: {} success, {} failures, total gross: {}, total reclaimable: {}",
+                successCount, errors.size(), totalGross, totalReclaimable);
+
+        // Build response
+        BulkImportDividendsResponse response = new BulkImportDividendsResponse();
+        response.setImportedCount(successCount);
+        response.setFailedCount(errors.size());
+        response.setTotalGrossAmount(totalGross);
+        response.setTotalReclaimable(totalReclaimable);
+        response.setDividendIds(importedIds);
+        response.setErrors(errors);
+
+        return response;
     }
 }

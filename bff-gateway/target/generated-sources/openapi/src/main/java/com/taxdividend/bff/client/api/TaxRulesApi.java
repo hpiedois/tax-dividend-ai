@@ -29,7 +29,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-01-31T12:02:59.936362+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-02-01T09:58:25.591675+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class TaxRulesApi {
     private ApiClient apiClient;
 
@@ -148,13 +148,18 @@ public class TaxRulesApi {
     }
 
     /**
-     * List all tax rules
-     * 
+     * List tax rules with optional filters
+     * Retrieve tax rules with optional filtering by countries, active status, and procedure availability
      * <p><b>200</b> - List of tax rules
+     * @param sourceCountry Filter by source country (ISO 3166-1 alpha-2 code)
+     * @param residenceCountry Filter by residence country (ISO 3166-1 alpha-2 code)
+     * @param active Filter by active status (rules effective as of today)
+     * @param reliefAtSource Filter by relief at source availability
+     * @param refundProcedure Filter by refund procedure availability
      * @return List&lt;TaxRule&gt;
      * @throws WebClientResponseException if an error occurs while attempting to invoke the API
      */
-    private ResponseSpec getAllTaxRulesRequestCreation() throws WebClientResponseException {
+    private ResponseSpec getAllTaxRulesRequestCreation(@jakarta.annotation.Nullable String sourceCountry, @jakarta.annotation.Nullable String residenceCountry, @jakarta.annotation.Nullable Boolean active, @jakarta.annotation.Nullable Boolean reliefAtSource, @jakarta.annotation.Nullable Boolean refundProcedure) throws WebClientResponseException {
         Object postBody = null;
         // create path and map variables
         final Map<String, Object> pathParams = new HashMap<String, Object>();
@@ -163,6 +168,12 @@ public class TaxRulesApi {
         final HttpHeaders headerParams = new HttpHeaders();
         final MultiValueMap<String, String> cookieParams = new LinkedMultiValueMap<String, String>();
         final MultiValueMap<String, Object> formParams = new LinkedMultiValueMap<String, Object>();
+
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "sourceCountry", sourceCountry));
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "residenceCountry", residenceCountry));
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "active", active));
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "reliefAtSource", reliefAtSource));
+        queryParams.putAll(apiClient.parameterToMultiValueMap(null, "refundProcedure", refundProcedure));
 
         final String[] localVarAccepts = { 
             "application/json"
@@ -178,38 +189,53 @@ public class TaxRulesApi {
     }
 
     /**
-     * List all tax rules
-     * 
+     * List tax rules with optional filters
+     * Retrieve tax rules with optional filtering by countries, active status, and procedure availability
      * <p><b>200</b> - List of tax rules
+     * @param sourceCountry Filter by source country (ISO 3166-1 alpha-2 code)
+     * @param residenceCountry Filter by residence country (ISO 3166-1 alpha-2 code)
+     * @param active Filter by active status (rules effective as of today)
+     * @param reliefAtSource Filter by relief at source availability
+     * @param refundProcedure Filter by refund procedure availability
      * @return List&lt;TaxRule&gt;
      * @throws WebClientResponseException if an error occurs while attempting to invoke the API
      */
-    public Flux<TaxRule> getAllTaxRules() throws WebClientResponseException {
+    public Flux<TaxRule> getAllTaxRules(@jakarta.annotation.Nullable String sourceCountry, @jakarta.annotation.Nullable String residenceCountry, @jakarta.annotation.Nullable Boolean active, @jakarta.annotation.Nullable Boolean reliefAtSource, @jakarta.annotation.Nullable Boolean refundProcedure) throws WebClientResponseException {
         ParameterizedTypeReference<TaxRule> localVarReturnType = new ParameterizedTypeReference<TaxRule>() {};
-        return getAllTaxRulesRequestCreation().bodyToFlux(localVarReturnType);
+        return getAllTaxRulesRequestCreation(sourceCountry, residenceCountry, active, reliefAtSource, refundProcedure).bodyToFlux(localVarReturnType);
     }
 
     /**
-     * List all tax rules
-     * 
+     * List tax rules with optional filters
+     * Retrieve tax rules with optional filtering by countries, active status, and procedure availability
      * <p><b>200</b> - List of tax rules
+     * @param sourceCountry Filter by source country (ISO 3166-1 alpha-2 code)
+     * @param residenceCountry Filter by residence country (ISO 3166-1 alpha-2 code)
+     * @param active Filter by active status (rules effective as of today)
+     * @param reliefAtSource Filter by relief at source availability
+     * @param refundProcedure Filter by refund procedure availability
      * @return ResponseEntity&lt;List&lt;TaxRule&gt;&gt;
      * @throws WebClientResponseException if an error occurs while attempting to invoke the API
      */
-    public Mono<ResponseEntity<List<TaxRule>>> getAllTaxRulesWithHttpInfo() throws WebClientResponseException {
+    public Mono<ResponseEntity<List<TaxRule>>> getAllTaxRulesWithHttpInfo(@jakarta.annotation.Nullable String sourceCountry, @jakarta.annotation.Nullable String residenceCountry, @jakarta.annotation.Nullable Boolean active, @jakarta.annotation.Nullable Boolean reliefAtSource, @jakarta.annotation.Nullable Boolean refundProcedure) throws WebClientResponseException {
         ParameterizedTypeReference<TaxRule> localVarReturnType = new ParameterizedTypeReference<TaxRule>() {};
-        return getAllTaxRulesRequestCreation().toEntityList(localVarReturnType);
+        return getAllTaxRulesRequestCreation(sourceCountry, residenceCountry, active, reliefAtSource, refundProcedure).toEntityList(localVarReturnType);
     }
 
     /**
-     * List all tax rules
-     * 
+     * List tax rules with optional filters
+     * Retrieve tax rules with optional filtering by countries, active status, and procedure availability
      * <p><b>200</b> - List of tax rules
+     * @param sourceCountry Filter by source country (ISO 3166-1 alpha-2 code)
+     * @param residenceCountry Filter by residence country (ISO 3166-1 alpha-2 code)
+     * @param active Filter by active status (rules effective as of today)
+     * @param reliefAtSource Filter by relief at source availability
+     * @param refundProcedure Filter by refund procedure availability
      * @return ResponseSpec
      * @throws WebClientResponseException if an error occurs while attempting to invoke the API
      */
-    public ResponseSpec getAllTaxRulesWithResponseSpec() throws WebClientResponseException {
-        return getAllTaxRulesRequestCreation();
+    public ResponseSpec getAllTaxRulesWithResponseSpec(@jakarta.annotation.Nullable String sourceCountry, @jakarta.annotation.Nullable String residenceCountry, @jakarta.annotation.Nullable Boolean active, @jakarta.annotation.Nullable Boolean reliefAtSource, @jakarta.annotation.Nullable Boolean refundProcedure) throws WebClientResponseException {
+        return getAllTaxRulesRequestCreation(sourceCountry, residenceCountry, active, reliefAtSource, refundProcedure);
     }
 
     /**

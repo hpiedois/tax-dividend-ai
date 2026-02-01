@@ -1,0 +1,11 @@
+type: object
+properties:
+  totalReclaimed:
+    type: number
+    description: Total amount successfully reclaimed (Status PAID)
+  pendingAmount:
+    type: number
+    description: Total amount pending (Status OPEN or SENT)
+  casesCount:
+    type: integer
+    description: Total number of dividend cases

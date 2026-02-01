@@ -22,7 +22,7 @@ import jakarta.annotation.Generated;
  * DividendData
  */
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T12:02:59.126017+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-01T09:58:25.268465+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 public class DividendData {
 
   private String securityName;
@@ -40,7 +40,9 @@ public class DividendData {
 
   private @Nullable BigDecimal reclaimableAmount;
 
-  private @Nullable BigDecimal frenchRate;
+  private @Nullable String sourceCountry;
+
+  private @Nullable String appliedRateType;
 
   public DividendData() {
     super();
@@ -195,24 +197,44 @@ public class DividendData {
     this.reclaimableAmount = reclaimableAmount;
   }
 
-  public DividendData frenchRate(@Nullable BigDecimal frenchRate) {
-    this.frenchRate = frenchRate;
+  public DividendData sourceCountry(@Nullable String sourceCountry) {
+    this.sourceCountry = sourceCountry;
     return this;
   }
 
   /**
-   * Tracks which rate was applied (PFU or progressive)
-   * @return frenchRate
+   * Get sourceCountry
+   * @return sourceCountry
    */
-  @Valid 
-  @Schema(name = "frenchRate", description = "Tracks which rate was applied (PFU or progressive)", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-  @JsonProperty("frenchRate")
-  public @Nullable BigDecimal getFrenchRate() {
-    return frenchRate;
+  
+  @Schema(name = "sourceCountry", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @JsonProperty("sourceCountry")
+  public @Nullable String getSourceCountry() {
+    return sourceCountry;
   }
 
-  public void setFrenchRate(@Nullable BigDecimal frenchRate) {
-    this.frenchRate = frenchRate;
+  public void setSourceCountry(@Nullable String sourceCountry) {
+    this.sourceCountry = sourceCountry;
+  }
+
+  public DividendData appliedRateType(@Nullable String appliedRateType) {
+    this.appliedRateType = appliedRateType;
+    return this;
+  }
+
+  /**
+   * Tracks which rate was applied (e.g. PFU, PROGRESSIVE, TREATY)
+   * @return appliedRateType
+   */
+  
+  @Schema(name = "appliedRateType", description = "Tracks which rate was applied (e.g. PFU, PROGRESSIVE, TREATY)", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+  @JsonProperty("appliedRateType")
+  public @Nullable String getAppliedRateType() {
+    return appliedRateType;
+  }
+
+  public void setAppliedRateType(@Nullable String appliedRateType) {
+    this.appliedRateType = appliedRateType;
   }
 
   @Override
@@ -231,12 +253,13 @@ public class DividendData {
         Objects.equals(this.paymentDate, dividendData.paymentDate) &&
         Objects.equals(this.withholdingTax, dividendData.withholdingTax) &&
         Objects.equals(this.reclaimableAmount, dividendData.reclaimableAmount) &&
-        Objects.equals(this.frenchRate, dividendData.frenchRate);
+        Objects.equals(this.sourceCountry, dividendData.sourceCountry) &&
+        Objects.equals(this.appliedRateType, dividendData.appliedRateType);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(securityName, isin, grossAmount, currency, paymentDate, withholdingTax, reclaimableAmount, frenchRate);
+    return Objects.hash(securityName, isin, grossAmount, currency, paymentDate, withholdingTax, reclaimableAmount, sourceCountry, appliedRateType);
   }
 
   @Override
@@ -250,7 +273,8 @@ public class DividendData {
     sb.append("    paymentDate: ").append(toIndentedString(paymentDate)).append("\n");
     sb.append("    withholdingTax: ").append(toIndentedString(withholdingTax)).append("\n");
     sb.append("    reclaimableAmount: ").append(toIndentedString(reclaimableAmount)).append("\n");
-    sb.append("    frenchRate: ").append(toIndentedString(frenchRate)).append("\n");
+    sb.append("    sourceCountry: ").append(toIndentedString(sourceCountry)).append("\n");
+    sb.append("    appliedRateType: ").append(toIndentedString(appliedRateType)).append("\n");
     sb.append("}");
     return sb.toString();
   }

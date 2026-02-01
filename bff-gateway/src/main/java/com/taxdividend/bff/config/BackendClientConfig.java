@@ -12,6 +12,7 @@ import com.taxdividend.bff.client.api.DividendsApi;
 import com.taxdividend.bff.client.api.FormsApi;
 import com.taxdividend.bff.client.api.PdfApi;
 import com.taxdividend.bff.client.api.TaxRulesApi;
+import com.taxdividend.bff.client.api.DividendStatementsApi;
 import com.taxdividend.bff.client.filter.UserContextHeaderFilter;
 
 @Configuration
@@ -27,14 +28,22 @@ public class BackendClientConfig {
                 .build();
     }
 
-    @Value("${mock-agent.url}")
-    private String mockAgentUrl;
+    @Value("${dividend-agent.url}")
+    private String dividendAgentUrl;
 
-    @Bean("mockAgentWebClient")
-    public WebClient mockAgentWebClient(WebClient.Builder builder) {
-        return builder
-                .baseUrl(mockAgentUrl)
-                .build();
+    @Bean
+    public com.taxdividend.bff.agent.client.ApiClient agentApiClient(WebClient.Builder builder) {
+        WebClient webClient = builder.build();
+        com.taxdividend.bff.agent.client.ApiClient apiClient = new com.taxdividend.bff.agent.client.ApiClient(
+                webClient);
+        apiClient.setBasePath(dividendAgentUrl);
+        return apiClient;
+    }
+
+    @Bean
+    public com.taxdividend.bff.agent.client.api.ParsingApi parsingApi(
+            com.taxdividend.bff.agent.client.ApiClient agentApiClient) {
+        return new com.taxdividend.bff.agent.client.api.ParsingApi(agentApiClient);
     }
 
     @Bean
@@ -67,5 +76,10 @@ public class BackendClientConfig {
     @Bean
     public TaxRulesApi taxRulesApi(ApiClient apiClient) {
         return new TaxRulesApi(apiClient);
+    }
+
+    @Bean
+    public DividendStatementsApi dividendStatementsApi(ApiClient apiClient) {
+        return new DividendStatementsApi(apiClient);
     }
 }

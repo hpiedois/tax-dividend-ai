@@ -14,6 +14,7 @@
 package com.taxdividend.bff.client.api;
 
 import java.io.File;
+import com.taxdividend.bff.client.model.FormDownloadUrlResponse;
 import com.taxdividend.bff.client.model.FormGenerationRequest;
 import com.taxdividend.bff.client.model.GenerateFormResultDTO;
 import com.taxdividend.bff.client.model.GeneratedForm;
@@ -98,6 +99,22 @@ public class FormsApiTest {
     }
     
     /**
+     * Get pre-signed download URL for form
+     *
+     * Returns a temporary pre-signed URL to download the form from storage (MinIO/S3). URL expires after specified duration.
+     */
+    @Test
+    public void getFormDownloadUrlTest()  {
+        // uncomment below to test the function
+        //UUID id = null;
+        //UUID xUserId = null;
+        //Integer expiresIn = null;
+        //FormDownloadUrlResponse response = api.getFormDownloadUrl(id, xUserId, expiresIn).block();
+
+        // TODO: test validations
+    }
+    
+    /**
      * List user&#39;s forms
      *
      * 
@@ -109,6 +126,21 @@ public class FormsApiTest {
         //Integer taxYear = null;
         //String formType = null;
         //List<GeneratedForm> response = api.listForms(xUserId, taxYear, formType).collectList().block();
+
+        // TODO: test validations
+    }
+    
+    /**
+     * Regenerate expired form
+     *
+     * Regenerates a form that has expired (after 30 days). The new form will have updated data and a new expiration date.
+     */
+    @Test
+    public void regenerateFormTest()  {
+        // uncomment below to test the function
+        //UUID id = null;
+        //UUID xUserId = null;
+        //GeneratedForm response = api.regenerateForm(id, xUserId).block();
 
         // TODO: test validations
     }

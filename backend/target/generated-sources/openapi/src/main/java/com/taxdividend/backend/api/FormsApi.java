@@ -5,6 +5,7 @@
  */
 package com.taxdividend.backend.api;
 
+import com.taxdividend.backend.api.dto.FormDownloadUrlResponse;
 import com.taxdividend.backend.api.dto.FormGenerationRequest;
 import com.taxdividend.backend.api.dto.GenerateFormResultDTO;
 import com.taxdividend.backend.api.dto.GeneratedForm;
@@ -25,7 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import jakarta.annotation.Generated;
 
-@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-01-31T11:27:14.708089+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
+@Generated(value = "org.openapitools.codegen.languages.SpringCodegen", date = "2026-02-01T10:04:28.893062+01:00[Europe/Zurich]", comments = "Generator version: 7.17.0")
 @Validated
 public interface FormsApi {
 
@@ -140,6 +141,42 @@ public interface FormsApi {
     }
 
 
+    String PATH_GET_FORM_DOWNLOAD_URL = "/forms/{id}/download-url";
+    /**
+     * GET /forms/{id}/download-url : Get pre-signed download URL for form
+     * Returns a temporary pre-signed URL to download the form from storage (MinIO/S3). URL expires after specified duration.
+     *
+     * @param id Form ID (required)
+     * @param xUserId  (required)
+     * @param expiresIn URL expiration time in seconds (optional, default to 3600)
+     * @return Pre-signed download URL (status code 200)
+     *         or Form not found (status code 404)
+     *         or Forbidden - user does not own this form (status code 403)
+     */
+    @RequestMapping(
+        method = RequestMethod.GET,
+        value = FormsApi.PATH_GET_FORM_DOWNLOAD_URL,
+        produces = { "application/json" }
+    )
+    default ResponseEntity<FormDownloadUrlResponse> getFormDownloadUrl(
+        @NotNull  @PathVariable("id") UUID id,
+        @NotNull  @RequestHeader(value = "X-User-Id", required = true) UUID xUserId,
+        @Min(value = 60) @Max(value = 86400)  @Valid @RequestParam(value = "expiresIn", required = false, defaultValue = "3600") Integer expiresIn
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "{ \"url\" : \"https://openapi-generator.tech\", \"expiresAt\" : \"2000-01-23T04:56:07.000+00:00\" }";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
     String PATH_LIST_FORMS = "/forms";
     /**
      * GET /forms : List user&#39;s forms
@@ -163,6 +200,41 @@ public interface FormsApi {
             for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
                 if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
                     String exampleString = "[ { \"formType\" : \"formType\", \"fileName\" : \"fileName\", \"s3Key\" : \"s3Key\", \"taxYear\" : 0, \"fileSize\" : 6, \"generatedAt\" : \"2000-01-23T04:56:07.000+00:00\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"expiresAt\" : \"2000-01-23T04:56:07.000+00:00\" }, { \"formType\" : \"formType\", \"fileName\" : \"fileName\", \"s3Key\" : \"s3Key\", \"taxYear\" : 0, \"fileSize\" : 6, \"generatedAt\" : \"2000-01-23T04:56:07.000+00:00\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"expiresAt\" : \"2000-01-23T04:56:07.000+00:00\" } ]";
+                    ApiUtil.setExampleResponse(request, "application/json", exampleString);
+                    break;
+                }
+            }
+        });
+        return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    }
+
+
+    String PATH_REGENERATE_FORM = "/forms/{id}/regenerate";
+    /**
+     * POST /forms/{id}/regenerate : Regenerate expired form
+     * Regenerates a form that has expired (after 30 days). The new form will have updated data and a new expiration date.
+     *
+     * @param id Form ID to regenerate (required)
+     * @param xUserId  (required)
+     * @return Form regenerated successfully (status code 200)
+     *         or Form not found (status code 404)
+     *         or Forbidden - user does not own this form (status code 403)
+     *         or Bad request - form is not expired yet (status code 400)
+     */
+    @RequestMapping(
+        method = RequestMethod.POST,
+        value = FormsApi.PATH_REGENERATE_FORM,
+        produces = { "application/json" }
+    )
+    default ResponseEntity<GeneratedForm> regenerateForm(
+        @NotNull  @PathVariable("id") UUID id,
+        @NotNull  @RequestHeader(value = "X-User-Id", required = true) UUID xUserId
+    ) {
+        getRequest().ifPresent(request -> {
+            for (MediaType mediaType: MediaType.parseMediaTypes(request.getHeader("Accept"))) {
+                if (mediaType.isCompatibleWith(MediaType.valueOf("application/json"))) {
+                    String exampleString = "{ \"formType\" : \"formType\", \"fileName\" : \"fileName\", \"s3Key\" : \"s3Key\", \"taxYear\" : 0, \"fileSize\" : 6, \"generatedAt\" : \"2000-01-23T04:56:07.000+00:00\", \"id\" : \"046b6c7f-0b8a-43b9-b35d-6489e6daee91\", \"expiresAt\" : \"2000-01-23T04:56:07.000+00:00\" }";
                     ApiUtil.setExampleResponse(request, "application/json", exampleString);
                     break;
                 }
