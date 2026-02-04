@@ -13,7 +13,7 @@ export const oidcConfig = {
 import { MockUserManager } from '../mocks/auth';
 
 // Check for mock mode
-const useMock = import.meta.env.VITE_USE_MOCK_AUTH === 'true';
+const useMock = import.meta.env.VITE_USE_MOCK === 'true' || import.meta.env.VITE_USE_MOCK_AUTH === 'true';
 
 export const userManager = useMock
     ? new MockUserManager()

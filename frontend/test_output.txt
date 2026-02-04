@@ -1,0 +1,157 @@
+
+> frontend@0.0.0 test
+> vitest src/hooks/useDashboardStats.test.ts
+
+
+ DEV  v3.2.4 /Users/hpiedois/perso/workspaces/tax-dividend-ai/frontend
+
+(node:56124) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/hooks/useDashboardStats.test.ts (2 tests | 2 failed) 16ms
+   × useDashboardStats > should fetch stats and history when user is authenticated 14ms
+     → localStorage.getItem is not a function
+   × useDashboardStats > should not fetch if user is not authenticated 1ms
+     → localStorage.getItem is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/hooks/useDashboardStats.test.ts > useDashboardStats > should fetch stats and history when user is authenticated
+ FAIL  src/hooks/useDashboardStats.test.ts > useDashboardStats > should not fetch if user is not authenticated
+TypeError: localStorage.getItem is not a function
+ ❯ src/components/theme-provider.tsx:17:29
+     15| }: ThemeProviderProps) {
+     16|     const [theme, setTheme] = useState<Theme>(
+     17|         () => (localStorage.getItem(storageKey) as Theme) || defaultTh…
+       |                             ^
+     18|     );
+     19| 
+ ❯ mountStateImpl node_modules/react-dom/cjs/react-dom-client.development.js:8268:24
+ ❯ mountState node_modules/react-dom/cjs/react-dom-client.development.js:8289:22
+ ❯ Object.useState node_modules/react-dom/cjs/react-dom-client.development.js:26243:18
+ ❯ process.env.NODE_ENV.exports.useState node_modules/react/cjs/react.development.js:1263:34
+ ❯ ThemeProvider src/components/theme-provider.tsx:16:31
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  11:45:05
+   Duration  2.42s (transform 84ms, setup 108ms, collect 221ms, tests 16ms, environment 730ms, prepare 138ms)
+
+ FAIL  Tests failed. Watching for file changes...
+       press h to show help, press q to quit
+c[3J RERUN  src/test/setup.ts x1 
+        Filename pattern: src/hooks/useDashboardStats.test.ts
+
+ ❯ src/hooks/useDashboardStats.test.ts (2 tests | 2 failed) 31ms
+   × useDashboardStats > should fetch stats and history when user is authenticated 27ms
+     → No QueryClient set, use QueryClientProvider to set one
+   × useDashboardStats > should not fetch if user is not authenticated 3ms
+     → No QueryClient set, use QueryClientProvider to set one
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/hooks/useDashboardStats.test.ts > useDashboardStats > should fetch stats and history when user is authenticated
+Error: No QueryClient set, use QueryClientProvider to set one
+ ❯ useQueryClient node_modules/@tanstack/react-query/src/QueryClientProvider.tsx:18:11
+ ❯ useBaseQuery node_modules/@tanstack/react-query/src/useBaseQuery.ts:54:18
+ ❯ useQuery node_modules/@tanstack/react-query/src/useQuery.ts:51:10
+ ❯ Module.useDashboardStats src/hooks/useDashboardStats.ts:8:12
+      6|     const { user } = useAuth();
+      7| 
+      8|     return useQuery({
+       |            ^
+      9|         queryKey: ['dashboard-stats', user?.id, taxYear],
+     10|         queryFn: async () => {
+ ❯ __vi_import_0__.renderHook.wrapper.wrapper src/hooks/useDashboardStats.test.ts:37:45
+ ❯ TestComponent node_modules/@testing-library/react/dist/pure.js:330:27
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/hooks/useDashboardStats.test.ts > useDashboardStats > should not fetch if user is not authenticated
+Error: No QueryClient set, use QueryClientProvider to set one
+ ❯ useQueryClient node_modules/@tanstack/react-query/src/QueryClientProvider.tsx:18:11
+ ❯ useBaseQuery node_modules/@tanstack/react-query/src/useBaseQuery.ts:54:18
+ ❯ useQuery node_modules/@tanstack/react-query/src/useQuery.ts:51:10
+ ❯ Module.useDashboardStats src/hooks/useDashboardStats.ts:8:12
+      6|     const { user } = useAuth();
+      7| 
+      8|     return useQuery({
+       |            ^
+      9|         queryKey: ['dashboard-stats', user?.id, taxYear],
+     10|         queryFn: async () => {
+ ❯ __vi_import_0__.renderHook.wrapper.wrapper src/hooks/useDashboardStats.test.ts:48:45
+ ❯ TestComponent node_modules/@testing-library/react/dist/pure.js:330:27
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:25904:20
+ ❯ renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:7662:22
+ ❯ updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10166:19
+ ❯ beginWork node_modules/react-dom/cjs/react-dom-client.development.js:11778:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  11:45:44
+   Duration  284ms
+
+ FAIL  Tests failed. Watching for file changes...
+       press h to show help, press q to quit
+c[3J RERUN  src/test/utils.tsx x2 
+        Filename pattern: src/hooks/useDashboardStats.test.ts
+
+ ❯ src/hooks/useDashboardStats.test.ts (2 tests | 1 failed) 75ms
+   ✓ useDashboardStats > should fetch stats and history when user is authenticated 67ms
+   × useDashboardStats > should not fetch if user is not authenticated 6ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/hooks/useDashboardStats.test.ts > useDashboardStats > should not fetch if user is not authenticated
+AssertionError: expected false to be true // Object.is equality
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- true[39m
+[31m+ false[39m
+
+ ❯ src/hooks/useDashboardStats.test.ts:50:42
+     48|         const { result } = renderHook(() => useDashboardStats(), { wra…
+     49| 
+     50|         expect(result.current.isLoading).toBe(true); // React Query st…
+       |                                          ^
+     51|         // Specifically check call counts
+     52|         expect(dividendsApi.getDividendStats).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  11:46:03
+   Duration  369ms
+
+ FAIL  Tests failed. Watching for file changes...
+       press h to show help, press q to quit
+c[3J RERUN  src/hooks/useDashboardStats.test.ts x3 
+        Filename pattern: src/hooks/useDashboardStats.test.ts
+
+ ✓ src/hooks/useDashboardStats.test.ts (2 tests) 66ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  11:47:25
+   Duration  397ms
+
+ PASS  Waiting for file changes...
+       press h to show help, press q to quit

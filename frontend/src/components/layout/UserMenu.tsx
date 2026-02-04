@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { User as UserIcon, LogOut, HelpCircle } from 'lucide-react';
 import { HelpModal } from './HelpModal';
-import type { User } from '../../context/AuthContext';
+import type { User } from '../../hooks/useAuth';
 
 interface UserMenuProps {
     user: User | null;
@@ -29,7 +29,7 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
     }, []);
 
     const initials = user?.fullName
-        ? user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+        ? user.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
         : 'JD';
 
     return (
