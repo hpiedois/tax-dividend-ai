@@ -6,8 +6,8 @@
 
 \echo '==> Installing PostgreSQL extensions...'
 
--- Extension UUID pour générer des identifiants uniques
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Extension UUID: using gen_random_uuid() (built-in since PostgreSQL 13)
+-- No extension needed for UUID generation
 
 -- Extension pour le chiffrement (passwords, sensitive data)
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
