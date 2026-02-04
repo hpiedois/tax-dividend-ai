@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -45,7 +46,6 @@ import java.util.stream.Collectors;
  * - /error - Error handling
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class InternalApiKeyFilter extends OncePerRequestFilter {
 
@@ -56,6 +56,11 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
     private String expectedApiKey;
 
     private final ObjectMapper objectMapper;
+
+    // Constructor with @Lazy to defer ObjectMapper initialization
+    public InternalApiKeyFilter(@Lazy ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @Override
     protected void doFilterInternal(
