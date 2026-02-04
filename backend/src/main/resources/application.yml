@@ -16,8 +16,8 @@ spring:
   # ========================================
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:taxdividend_dev}?currentSchema=taxdividend
-    username: ${DB_USERNAME:taxdividend_user}
-    password: ${DB_PASSWORD:dev_password_123}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     # Connection pool (HikariCP)
     hikari:
@@ -100,8 +100,8 @@ storage:
   s3:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     bucket: ${MINIO_BUCKET:tax-dividend-forms-dev}
-    access-key: ${MINIO_ACCESS_KEY:minioadmin}
-    secret-key: ${MINIO_SECRET_KEY:minioadmin123}
+    access-key: ${MINIO_ACCESS_KEY}
+    secret-key: ${MINIO_SECRET_KEY}
 
 # ========================================
 # Actuator & Monitoring
@@ -122,8 +122,8 @@ management:
   # Security for actuator endpoints (except health probes and prometheus)
   security:
     enabled: true
-    username: ${ACTUATOR_USERNAME:admin}
-    password: ${ACTUATOR_PASSWORD:changeme-strong-password}
+    username: ${ACTUATOR_USERNAME}
+    password: ${ACTUATOR_PASSWORD}
   metrics:
     tags:
       application: ${spring.application.name}
@@ -197,14 +197,14 @@ logging:
 app:
   # Security Configuration
   security:
-    internal-api-key: ${INTERNAL_API_KEY:changeme-internal-api-key-min-32-chars}
+    internal-api-key: ${INTERNAL_API_KEY}
 
   # Keycloak Configuration
   keycloak:
     server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8180}
     realm: ${KEYCLOAK_REALM:tax-dividend}
-    admin-username: ${KEYCLOAK_ADMIN_USERNAME:admin}
-    admin-password: ${KEYCLOAK_ADMIN_PASSWORD:changeme}
+    admin-username: ${KEYCLOAK_ADMIN_USERNAME}
+    admin-password: ${KEYCLOAK_ADMIN_PASSWORD}
     client-id: ${KEYCLOAK_CLIENT_ID:backend-service}
 
   # PDF Processing

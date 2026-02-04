@@ -1,10 +1,10 @@
 # CLAUDE.md - Backend
 
-Ce fichier fournit des directives à Claude Code pour travailler sur le backend du projet Tax Dividend AI.
+Ce fichier fournit des directives à Claude Code pour travailler sur le backend du projet Tax TaxCalculationResultDtoDto AI.
 
 ## Vue d'ensemble du projet Backend
 
-**Tax Dividend AI Backend** est une API REST Spring Boot 4.0.2 avec Java 25 qui gère les opérations de calcul fiscal et de génération de formulaires pour les investisseurs transfrontaliers.
+**Tax TaxCalculationResultDtoDto AI Backend** est une API REST Spring Boot 4.0.2 avec Java 25 qui gère les opérations de calcul fiscal et de génération de formulaires pour les investisseurs transfrontaliers.
 
 ## Stack Technique
 
@@ -53,7 +53,7 @@ public class DividendController {
     private final DividendRepository repository;
 
     @GetMapping
-    public List<Dividend> list() {  // ❌ Retourne Entity directement
+    public List<TaxCalculationResultDtoDto> list() {  // ❌ Retourne Entity directement
         return repository.findAll();
     }
 }
@@ -91,8 +91,8 @@ com.taxdividend.backend/
 │   ├── HealthController.java
 │   └── AuthController.java
 ├── dto/                    # DTOs internes (business logic)
-│   ├── TaxCalculationResultDTO.java
-│   ├── GenerateFormResultDTO.java
+│   ├── TaxCalculationResultDto.java
+│   ├── GenerateFormResultDto.java
 │   └── ...
 ├── mapper/                 # Conversion Entity ↔ DTO API
 │   ├── DividendMapper.java
@@ -101,7 +101,7 @@ com.taxdividend.backend/
 │   └── TaxRuleMapper.java
 ├── model/                  # JPA Entities
 │   ├── User.java
-│   ├── Dividend.java
+│   ├── TaxCalculationResultDtoDto.java
 │   ├── GeneratedForm.java
 │   └── TaxRule.java
 ├── repository/             # Spring Data JPA repositories
@@ -163,7 +163,7 @@ Génération de PDF (Forms 5000, 5001):
 
 ## Agents IA autonomes
 
-### 1. Agent de parsing des Dividend Statements (À implémenter)
+### 1. Agent de parsing des TaxCalculationResultDtoDto Statements (À implémenter)
 
 **Responsabilité**: Parser les relevés de dividendes PDF des brokers (Interactive Brokers, Swissquote, etc.)
 
@@ -179,7 +179,7 @@ Agent IA parse PDF (LLM-assisted)
     ↓
 Agent retourne données structurées
     ↓
-Backend crée entités Dividend
+Backend crée entités TaxCalculationResultDtoDto
 ```
 
 **Note**: Le parsing n'est PAS fait dans `PdfParsingService` - ce service a été supprimé. Un agent IA externe le remplacera.
@@ -225,7 +225,7 @@ Migrations existantes:
 - Pays de résidence (pour calculs fiscaux)
 - Statut de vérification
 
-#### Dividend
+#### TaxCalculationResultDtoDto
 - Dividendes reçus par l'utilisateur
 - Lien vers User
 - Lien optionnel vers GeneratedForm
@@ -309,13 +309,13 @@ mvn jacoco:report
 
 ❌ Ne JAMAIS faire:
 ```java
-public ResponseEntity<Dividend> getDividend() { ... }  // Entity exposée
+public ResponseEntity<TaxCalculationResultDtoDto> getDividend() { ... }  // Entity exposée
 public List<GeneratedForm> listForms() { ... }        // Entities exposées
 ```
 
 ✅ Toujours faire:
 ```java
-public ResponseEntity<com.taxdividend.backend.api.dto.Dividend> getDividend() { ... }
+public ResponseEntity<com.taxdividend.backend.api.dto.TaxCalculationResultDtoDto> getDividend() { ... }
 public List<com.taxdividend.backend.api.dto.GeneratedForm> listForms() { ... }
 ```
 
@@ -329,7 +329,7 @@ public class DividendServiceImpl implements DividendService {
     private final DividendRepository repository;
     private final DividendMapper mapper;
 
-    public Optional<com.taxdividend.backend.api.dto.Dividend> getDividend(UUID id, UUID userId) {
+    public Optional<com.taxdividend.backend.api.dto.TaxCalculationResultDtoDto> getDividend(UUID id, UUID userId) {
         return repository.findById(id)
             .filter(entity -> entity.getUser().getId().equals(userId))
             .map(mapper::toApiDto);  // ✅ Entity → DTO API
@@ -347,7 +347,7 @@ public class DividendController implements DividendsApi {
     private final DividendService service;  // Pas de Repository!
 
     @Override
-    public ResponseEntity<Dividend> getDividend(UUID id, UUID userId) {
+    public ResponseEntity<TaxCalculationResultDtoDto> getDividend(UUID id, UUID userId) {
         return service.getDividend(id, userId)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
@@ -357,18 +357,18 @@ public class DividendController implements DividendsApi {
 
 ### 4. Mappers sont dédiés et simples
 
-Un mapper par domaine (Dividend, Form, TaxRule, etc.):
+Un mapper par domaine (TaxCalculationResultDtoDto, Form, TaxRule, etc.):
 
 ```java
 @Component
 public class DividendMapper {
-    public com.taxdividend.backend.api.dto.Dividend toApiDto(
-        com.taxdividend.backend.model.Dividend entity) {
+    public com.taxdividend.backend.api.dto.TaxCalculationResultDtoDto toApiDto(
+        com.taxdividend.backend.model.TaxCalculationResultDtoDto entity) {
         // Conversion entity → DTO API
     }
 
-    public List<com.taxdividend.backend.api.dto.Dividend> toApiDtoList(
-        List<com.taxdividend.backend.model.Dividend> entities) {
+    public List<com.taxdividend.backend.api.dto.TaxCalculationResultDtoDto> toApiDtoList(
+        List<com.taxdividend.backend.model.TaxCalculationResultDtoDto> entities) {
         // Conversion liste
     }
 }

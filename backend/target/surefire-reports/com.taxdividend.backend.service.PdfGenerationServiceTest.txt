@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.taxdividend.backend.service.PdfGenerationServiceTest
--------------------------------------------------------------------------------
-Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.278 s -- in com.taxdividend.backend.service.PdfGenerationServiceTest

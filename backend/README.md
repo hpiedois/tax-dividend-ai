@@ -67,78 +67,139 @@ Should return `{"status":"UP","database":"connected","storage":"connected"}`.
 
 ## Configuration
 
-Configuration is split across multiple files:
-- `src/main/resources/application.yml` - Base configuration with environment variable placeholders
-- `src/main/resources/application-dev.yml` - Development profile (verbose logging, full stack traces)
-- `src/main/resources/application-prod.yml` - Production profile (minimal logging, security hardened)
+### Configuration Files
+
+The backend uses a layered configuration approach for security:
+
+1. **`application.yml`** - Base configuration with environment variable references (NO default secrets)
+2. **`application-dev.yml`** - Development profile with safe local defaults
+3. **`.env.example`** - Template documenting all required environment variables
+
+### Security Model
+
+🔐 **All sensitive credentials are externalized:**
+
+- **Production**: Environment variables MUST be set (no defaults provided)
+- **Development**: Use `dev` profile for safe local defaults
+- **Startup Validation**: `EnvironmentValidator` fails fast if required vars are missing
 
 ### Environment Variables
 
-**All sensitive credentials MUST be provided via environment variables.** Never commit credentials to the repository.
-
 #### Creating your .env file
 
-Copy the example file and customize it:
+For local development, the `./dev-setup.sh` script automatically creates `.env` from `.env.example`:
 
 ```bash
+# Automatic setup (recommended)
+./dev-setup.sh  # Creates .env with dev profile
+
+# Manual setup
 cp .env.example .env
 # Edit .env with your actual credentials
 ```
 
-**⚠️ IMPORTANT:** The `.env` file is in `.gitignore` and should NEVER be committed.
+**⚠️ CRITICAL SECURITY:**
+- The `.env` file is in `.gitignore` and **NEVER committed**
+- Production deployments MUST set environment variables explicitly
+- The `dev` profile provides safe defaults for local development only
+- Production profile requires ALL secrets to be provided (fails on startup if missing)
 
 #### Complete Environment Variables Reference
 
-| Variable | Default (dev) | Required | Description |
-|----------|---------------|----------|-------------|
+| Variable | Profile: dev | Profile: prod | Description |
+|----------|--------------|---------------|-------------|
+| **Profile Selection** | | | |
+| `SPRING_PROFILES_ACTIVE` | `dev` | `prod` | Active Spring profile |
 | **Database** | | | |
-| `DB_HOST` | `localhost` | Yes | PostgreSQL hostname |
-| `DB_PORT` | `5432` | Yes | PostgreSQL port |
-| `DB_NAME` | `taxdividend_dev` | Yes | Database name |
-| `DB_USERNAME` | `taxdividend_user` | Yes | Database user |
-| `DB_PASSWORD` | `changeme` | Yes | Database password ⚠️ CHANGE IN PRODUCTION |
+| `DB_HOST` | `localhost` | **Required** | PostgreSQL hostname |
+| `DB_PORT` | `5432` | **Required** | PostgreSQL port |
+| `DB_NAME` | `taxdividend_dev` | **Required** | Database name |
+| `DB_USERNAME` | `taxdividend_user` | **Required** | Database user |
+| `DB_PASSWORD` | `dev_password_123` | **Required** ⚠️ | Strong password (16+ chars) |
 | **Storage (MinIO/S3)** | | | |
-| `MINIO_ENDPOINT` | `http://localhost:9000` | Yes | MinIO/S3 endpoint URL |
-| `MINIO_ACCESS_KEY` | `changeme` | Yes | S3 access key ⚠️ CHANGE IN PRODUCTION |
-| `MINIO_SECRET_KEY` | `changeme` | Yes | S3 secret key ⚠️ CHANGE IN PRODUCTION |
-| `MINIO_BUCKET` | `tax-dividend-forms` | Yes | S3 bucket name |
+| `MINIO_ENDPOINT` | `http://localhost:9000` | **Required** | MinIO/S3 endpoint URL |
+| `MINIO_BUCKET` | `tax-dividend-forms-dev` | **Required** | S3 bucket name |
+| `MINIO_ACCESS_KEY` | `minioadmin` | **Required** ⚠️ | S3 access key |
+| `MINIO_SECRET_KEY` | `minioadmin123` | **Required** ⚠️ | S3 secret key (32+ chars) |
 | **Security** | | | |
-| `INTERNAL_API_KEY` | `changeme-internal-api-key-min-32-chars` | Yes | Internal API authentication key (min 32 chars) ⚠️ CHANGE IN PRODUCTION |
-| `JWT_SECRET_KEY` | *(must be 256+ bits)* | Yes | JWT signing key (HMAC-SHA256) ⚠️ CHANGE IN PRODUCTION |
+| `INTERNAL_API_KEY` | `dev-internal-api-key-...` | **Required** ⚠️ | Internal API key (min 32 chars, cryptographically random) |
+| **Keycloak** | | | |
+| `KEYCLOAK_SERVER_URL` | `http://localhost:8180` | **Required** | Keycloak server URL |
+| `KEYCLOAK_REALM` | `tax-dividend` | **Required** | Keycloak realm name |
+| `KEYCLOAK_ADMIN_USERNAME` | `admin` | **Required** ⚠️ | Keycloak admin username |
+| `KEYCLOAK_ADMIN_PASSWORD` | `admin` | **Required** ⚠️ | Strong password (16+ chars) |
+| `KEYCLOAK_CLIENT_ID` | `backend-service` | **Required** | Keycloak client ID |
 | **Email (SMTP)** | | | |
-| `SMTP_HOST` | `localhost` | Yes | SMTP server hostname |
-| `SMTP_PORT` | `1025` | Yes | SMTP server port (587 for TLS, 465 for SSL) |
-| `SMTP_USERNAME` | *(empty)* | No | SMTP authentication username |
-| `SMTP_PASSWORD` | *(empty)* | No | SMTP authentication password |
-| `SMTP_FROM` | `noreply@taxdividend.com` | Yes | Email sender address |
-| `SMTP_AUTH` | `false` | No | Enable SMTP authentication (true/false) |
-| `SMTP_STARTTLS` | `false` | No | Enable STARTTLS (true/false) |
+| `SMTP_HOST` | `localhost` | **Required** | SMTP server hostname |
+| `SMTP_PORT` | `1025` | **Required** | SMTP port (587 for TLS) |
+| `SMTP_USERNAME` | *(empty)* | Optional | SMTP auth username |
+| `SMTP_PASSWORD` | *(empty)* | Optional | SMTP auth password |
+| `SMTP_FROM` | `noreply@taxdividend.com` | **Required** | Email sender address |
+| `SMTP_AUTH` | `false` | Optional | Enable SMTP auth |
+| `SMTP_STARTTLS` | `false` | Optional | Enable STARTTLS |
 | **Actuator Security** | | | |
-| `ACTUATOR_USERNAME` | `admin` | Yes | Actuator endpoints username ⚠️ CHANGE IN PRODUCTION |
-| `ACTUATOR_PASSWORD` | `changeme-strong-password` | Yes | Actuator endpoints password ⚠️ CHANGE IN PRODUCTION |
-| **Redis (optional)** | | | |
-| `REDIS_HOST` | `localhost` | No | Redis hostname |
-| `REDIS_PORT` | `6379` | No | Redis port |
-| `REDIS_PASSWORD` | *(empty)* | No | Redis password |
+| `ACTUATOR_USERNAME` | `admin` | **Required** ⚠️ | Actuator username |
+| `ACTUATOR_PASSWORD` | `dev-admin-password` | **Required** ⚠️ | Strong password (16+ chars) |
 | **Observability** | | | |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4317` | No | OpenTelemetry OTLP endpoint |
-| `OTEL_TRACES_SAMPLER_PROBABILITY` | `1.0` (dev), `0.1` (prod) | No | Trace sampling rate (0.0 to 1.0) |
-| **Application** | | | |
-| `APP_FRONTEND_URL` | `http://localhost:5173` | Yes | Frontend URL for CORS |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4317` | Optional | OpenTelemetry endpoint |
+| `OTEL_TRACES_SAMPLER_PROBABILITY` | `1.0` | Optional | Trace sampling (0.0-1.0) |
+| **Metadata** | | | |
+| `ENVIRONMENT` | `development` | **Required** | Environment name |
+| `PROJECT_VERSION` | `0.0.1-SNAPSHOT` | Optional | Application version |
+| `HOSTNAME` | `localhost` | Optional | Host identifier |
+
+**Legend:**
+- ⚠️ **Security Critical**: Must use strong, unique values in production
+- **Profile: dev**: Value provided by `application-dev.yml` (safe for local development)
+- **Profile: prod**: **Required** means `EnvironmentValidator` will fail startup if not set
 
 ### Spring Profiles
 
-Activate profiles using `-Dspring.profiles.active`:
+#### Development Profile (`dev`)
+
+**Safe for local development** - provides default values for all secrets:
 
 ```bash
-# Development (verbose logging, full stack traces)
-java -jar backend.jar -Dspring.profiles.active=dev
+# Set in .env
+SPRING_PROFILES_ACTIVE=dev
 
-# Production (minimal logging, security hardened)
+# Or via command line
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+Features:
+- ✅ Verbose logging (`DEBUG` level)
+- ✅ Full stack traces in responses
+- ✅ Safe default credentials (e.g., `dev_password_123`)
+- ✅ No environment validation (convenience)
+
+#### Production Profile (`prod`)
+
+**Security-hardened** - requires all secrets via environment variables:
+
+```bash
+# All secrets must be set
+export DB_PASSWORD="strong_password_here"
+export MINIO_SECRET_KEY="cryptographically_random_secret"
+export INTERNAL_API_KEY="min_32_chars_random_key_here"
+# ... (see .env.example for complete list)
+
 java -jar backend.jar -Dspring.profiles.active=prod
 ```
 
-**Default profile**: If no profile is specified, base `application.yml` configuration is used (not recommended for production).
+Features:
+- ✅ Minimal logging (`INFO` level)
+- ✅ No stack traces in API responses
+- ✅ **`EnvironmentValidator` fails startup if critical vars missing**
+- ✅ Password strength validation
+- ✅ Security hardening enabled
+
+**⚠️ NEVER use default credentials in production!**
+
+If the `EnvironmentValidator` detects missing or weak credentials, it will:
+1. Log detailed error messages
+2. **Fail application startup immediately**
+3. Prevent insecure deployment
 
 ## API Endpoints
 
@@ -457,6 +518,31 @@ String downloadUrl = storageService.generatePresignedUrl(s3Key, 3600);
 This allows frontend to download without exposing S3 credentials.
 
 ## Security Notes
+
+### Configuration Security
+
+🔐 **Environment-based secrets management:**
+
+1. **No secrets in code/config files**
+   - `application.yml` uses environment variable references only
+   - No default values for production credentials
+   - `.env.example` documents required variables (never committed)
+
+2. **Automatic validation on startup**
+   - `EnvironmentValidator` checks all critical environment variables
+   - Validates minimum lengths (e.g., API keys must be 32+ chars)
+   - Warns about weak passwords in production profile
+   - **Fails fast** if requirements not met
+
+3. **Profile-based security**
+   - `dev` profile: Safe defaults for local development
+   - `prod` profile: All secrets required, strict validation
+
+4. **Production recommendations**
+   - Use secret management systems (AWS Secrets Manager, Vault)
+   - Rotate credentials regularly
+   - Use strong passwords (16+ chars, mixed case, numbers, symbols)
+   - Generate API keys cryptographically random (32+ chars)
 
 ### Internal API Only
 

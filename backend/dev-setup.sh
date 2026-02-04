@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ============================================================================
-# Backend Development Setup - Tax Dividend AI
+# Backend Development Setup - Tax TaxCalculationResultDto AI
 # ============================================================================
 # Sets up backend for development (infrastructure + dependencies)
 # ============================================================================
@@ -11,7 +11,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-echo "🏗️  Tax Dividend AI - Backend Setup"
+echo "🏗️  Tax TaxCalculationResultDto AI - Backend Setup"
 echo "======================================"
 echo ""
 
@@ -61,9 +61,25 @@ fi
 
 echo ""
 
+# Setup environment variables for development
+echo "🔐 Setting up environment configuration..."
+cd "$SCRIPT_DIR"
+
+if [ ! -f ".env" ]; then
+    echo "ℹ️  Creating .env from .env.example..."
+    cp .env.example .env
+    # Set dev profile
+    sed -i '' 's/SPRING_PROFILES_ACTIVE=dev/SPRING_PROFILES_ACTIVE=dev/' .env
+    echo "✅ .env file created - using 'dev' profile with safe defaults"
+    echo "   To customize, edit .env and set your own values"
+else
+    echo "✅ .env file already exists"
+fi
+
+echo ""
+
 # Install dependencies
 echo "📦 Installing backend dependencies..."
-cd "$SCRIPT_DIR"
 ./mvnw clean install -DskipTests
 
 echo ""
@@ -73,9 +89,8 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "📚 Next steps:"
 echo ""
-echo "1️⃣  Start backend:"
+echo "1️⃣  Start backend (dev profile automatically active via .env):"
 echo "   ./mvnw spring-boot:run"
-echo "   # Or with profile: ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev"
 echo ""
 echo "2️⃣  Access backend:"
 echo "   http://localhost:8081/internal/health"
