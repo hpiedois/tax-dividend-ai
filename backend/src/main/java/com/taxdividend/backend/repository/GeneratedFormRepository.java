@@ -2,6 +2,7 @@ package com.taxdividend.backend.repository;
 
 import com.taxdividend.backend.model.GeneratedForm;
 import com.taxdividend.backend.model.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,32 +18,44 @@ public interface GeneratedFormRepository extends JpaRepository<GeneratedForm, UU
 
     /**
      * Find all forms for a specific user
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user"})
     List<GeneratedForm> findByUser(User user);
 
     /**
      * Find all forms for a specific user ID
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user"})
     List<GeneratedForm> findByUserId(UUID userId);
 
     /**
      * Find forms by user and tax year
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user"})
     List<GeneratedForm> findByUserAndTaxYear(User user, Integer taxYear);
 
     /**
      * Find forms by user ID and tax year
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user"})
     List<GeneratedForm> findByUserIdAndTaxYear(UUID userId, Integer taxYear);
 
     /**
      * Find forms by user and status
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user"})
     List<GeneratedForm> findByUserAndStatus(User user, String status);
 
     /**
      * Find forms by form type
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user"})
     List<GeneratedForm> findByFormType(String formType);
 
     /**
@@ -52,13 +65,17 @@ public interface GeneratedFormRepository extends JpaRepository<GeneratedForm, UU
 
     /**
      * Find expired forms
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user"})
     @Query("SELECT f FROM GeneratedForm f WHERE f.expiresAt < :now")
     List<GeneratedForm> findExpiredForms(@Param("now") LocalDateTime now);
 
     /**
      * Find forms created between dates
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user"})
     List<GeneratedForm> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
     /**

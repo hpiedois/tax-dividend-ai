@@ -4,6 +4,7 @@ import com.taxdividend.backend.model.Dividend;
 import com.taxdividend.backend.model.DividendStatus;
 import com.taxdividend.backend.model.GeneratedForm;
 import com.taxdividend.backend.model.User;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,62 +20,86 @@ public interface DividendRepository extends JpaRepository<Dividend, UUID> {
 
     /**
      * Find all dividends for a specific user
+     * Uses EntityGraph to avoid N+1 queries on user, form, and statement relationships
      */
+    @EntityGraph(attributePaths = {"user", "form", "statement"})
     List<Dividend> findByUser(User user);
 
     /**
      * Find all dividends for a specific user ID
+     * Uses EntityGraph to avoid N+1 queries on user, form, and statement relationships
      */
+    @EntityGraph(attributePaths = {"user", "form", "statement"})
     List<Dividend> findByUserId(UUID userId);
 
     /**
      * Find dividends by form
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "statement"})
     List<Dividend> findByForm(GeneratedForm form);
 
     /**
      * Find dividends by form ID
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "form", "statement"})
     List<Dividend> findByFormId(UUID formId);
 
     /**
      * Find dividends by ISIN
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "form", "statement"})
     List<Dividend> findByIsin(String isin);
 
     /**
      * Find dividends by user and ISIN
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "form", "statement"})
     List<Dividend> findByUserIdAndIsin(UUID userId, String isin);
 
     /**
      * Find dividends by source country
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "form", "statement"})
     List<Dividend> findBySourceCountry(String sourceCountry);
 
     /**
      * Find dividends by user and source country
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "form", "statement"})
     List<Dividend> findByUserIdAndSourceCountry(UUID userId, String sourceCountry);
 
     /**
      * Find dividends by payment date range
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "form", "statement"})
     List<Dividend> findByPaymentDateBetween(LocalDate startDate, LocalDate endDate);
 
     /**
      * Find dividends by user and payment date range
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "form", "statement"})
     List<Dividend> findByUserIdAndPaymentDateBetween(UUID userId, LocalDate startDate, LocalDate endDate);
 
     /**
      * Find dividends not yet associated with a form
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "statement"})
     List<Dividend> findByFormIsNull();
 
     /**
      * Find dividends not yet associated with a form for a specific user
+     * Uses EntityGraph to avoid N+1 queries
      */
+    @EntityGraph(attributePaths = {"user", "statement"})
     List<Dividend> findByUserIdAndFormIsNull(UUID userId);
 
     /**
