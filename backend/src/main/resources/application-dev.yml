@@ -15,6 +15,19 @@ spring:
     username: ""
     password: ""
 
+  # Disable OpenTelemetry in dev (not needed for local development)
+  autoconfigure:
+    exclude:
+      - io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration
+      - io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.RestClientInstrumentationAutoConfiguration
+
+# Disable OpenTelemetry tracing for dev
+otel:
+  sdk:
+    disabled: true
+  traces:
+    exporter: none
+
 # MinIO / S3 Storage - Local defaults
 storage:
   s3:
