@@ -13,6 +13,9 @@ spring:
   # Enable Flyway schema creation in dev
   flyway:
     enabled: true  # Explicitly enable Flyway in dev
+    url: ${spring.datasource.url}  # Spring Boot 4 requires explicit URL
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
     create-schemas: true  # Create taxdividend schema if it doesn't exist
 
 logging:
