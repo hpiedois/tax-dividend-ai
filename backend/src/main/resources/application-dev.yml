@@ -10,6 +10,16 @@ spring:
     username: taxdividend_user
     password: dev_password_123
 
+  # Enable Flyway schema creation in dev
+  flyway:
+    enabled: true  # Explicitly enable Flyway in dev
+    create-schemas: true  # Create taxdividend schema if it doesn't exist
+
+logging:
+  level:
+    org.flywaydb: DEBUG
+    org.springframework.boot.autoconfigure.flyway: DEBUG
+
   mail:
     # Use local MailHog or similar for email testing
     username: ""
