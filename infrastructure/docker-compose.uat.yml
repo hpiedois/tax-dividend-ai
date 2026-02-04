@@ -15,8 +15,10 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-taxdividend_uat}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Required from .env.uat
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-uat_password}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      TAXDIVIDEND_DB_USER: ${TAXDIVIDEND_DB_USER:-taxdividend_user}
+      TAXDIVIDEND_DB_PASSWORD: ${TAXDIVIDEND_DB_PASSWORD:-uat_password_123}
       # UAT settings - closer to production
       POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-256MB}
       POSTGRES_EFFECTIVE_CACHE_SIZE: ${POSTGRES_EFFECTIVE_CACHE_SIZE:-1GB}

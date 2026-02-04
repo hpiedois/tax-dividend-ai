@@ -1,65 +1,34 @@
 package com.taxdividend.backend.mapper;
 
-import org.springframework.stereotype.Component;
+import com.taxdividend.backend.api.dto.TaxRuleDto;
+import com.taxdividend.backend.api.dto.TreatyRateResponseDto;
+import com.taxdividend.backend.model.TaxRule;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 /**
  * Mapper for converting between TaxRule entities and DTOs.
  */
-@Component
-public class TaxRuleMapper {
+@Mapper(componentModel = "spring")
+public interface TaxRuleMapper {
 
-    public com.taxdividend.backend.api.dto.TaxRule toApiDto(
-            com.taxdividend.backend.model.TaxRule entity) {
-        if (entity == null) {
+    TaxRuleDto toApiDto(TaxRule entity);
+
+    List<TaxRuleDto> toApiDtoList(List<TaxRule> entities);
+
+    @Mapping(target = "standardRate", source = "standardWithholdingRate")
+    TreatyRateResponseDto toTreatyRateResponse(TaxRule entity);
+
+    default OffsetDateTime map(LocalDate value) {
+        if (value == null) {
             return null;
         }
-
-        com.taxdividend.backend.api.dto.TaxRule api =
-                new com.taxdividend.backend.api.dto.TaxRule();
-
-        api.setId(entity.getId());
-        api.setSourceCountry(entity.getSourceCountry());
-        api.setResidenceCountry(entity.getResidenceCountry());
-        api.setSecurityType(entity.getSecurityType());
-        api.setStandardWithholdingRate(entity.getStandardWithholdingRate());
-        api.setTreatyRate(entity.getTreatyRate());
-        api.setReliefAtSourceAvailable(entity.getReliefAtSourceAvailable());
-        api.setRefundProcedureAvailable(entity.getRefundProcedureAvailable());
-        api.setEffectiveFrom(entity.getEffectiveFrom());
-        api.setEffectiveTo(entity.getEffectiveTo());
-        api.setNotes(entity.getNotes());
-
-        return api;
-    }
-
-    public List<com.taxdividend.backend.api.dto.TaxRule> toApiDtoList(
-            List<com.taxdividend.backend.model.TaxRule> entities) {
-        if (entities == null) {
-            return null;
-        }
-
-        return entities.stream()
-                .map(this::toApiDto)
-                .toList();
-    }
-
-    public com.taxdividend.backend.api.dto.TreatyRateResponse toTreatyRateResponse(
-            com.taxdividend.backend.model.TaxRule entity) {
-        if (entity == null) {
-            return null;
-        }
-
-        com.taxdividend.backend.api.dto.TreatyRateResponse response =
-                new com.taxdividend.backend.api.dto.TreatyRateResponse();
-
-        response.setStandardRate(entity.getStandardWithholdingRate());
-        response.setTreatyRate(entity.getTreatyRate());
-        response.setReliefAtSourceAvailable(entity.getReliefAtSourceAvailable());
-        response.setRefundProcedureAvailable(entity.getRefundProcedureAvailable());
-        response.setNotes(entity.getNotes());
-
-        return response;
+        return value.atStartOfDay().atOffset(ZoneOffset.UTC);
     }
 }

@@ -1,0 +1,566 @@
+/dividends:
+  get:
+    tags:
+      - Dividends
+    summary: List user's dividends with optional filters
+    operationId: listDividends
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          default: 20
+      - name: startDate
+        in: query
+        description: Filter dividends from this date (inclusive)
+        schema:
+          type: string
+          format: date
+      - name: endDate
+        in: query
+        description: Filter dividends until this date (inclusive)
+        schema:
+          type: string
+          format: date
+      - name: status
+        in: query
+        description: Filter by submission status
+        schema:
+          type: string
+          enum: [UNSUBMITTED, SUBMITTED, APPROVED, PAID]
+    responses:
+      '200':
+        description: List of dividends
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividend.yaml#/PaginatedDividendList'
+
+/dividends/{id}:
+  get:
+    tags:
+      - Dividends
+    summary: Get dividend by ID
+    operationId: getDividend
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Dividend details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividend.yaml#/Dividend'
+      '404':
+        description: Not found
+
+  delete:
+    tags:
+      - Dividends
+    summary: Delete dividend
+    operationId: deleteDividend
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Deleted
+      '404':
+        description: Not found
+
+/dividends/status:
+  patch:
+    tags:
+      - Dividends
+    summary: Update status for multiple dividends
+    operationId: updateDividendStatus
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              ids:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+              status:
+                type: string
+                enum: [OPEN, SENT, PAID]
+    responses:
+      '204':
+        description: Status updated
+
+/dividends/stats:
+  get:
+    tags:
+      - Dividends
+    summary: Get dividend statistics
+    operationId: getDividendStats
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: taxYear
+        in: query
+        required: false
+        schema:
+          type: integer
+        description: Optional tax year filter. If not provided, returns all-time stats.
+    responses:
+      '200':
+        description: Statistics
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividend.yaml#/DividendStats'
+
+/dividends/{id}/calculate:
+  post:
+    tags:
+      - Dividends
+    summary: Calculate tax for dividend
+    operationId: calculateTax
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: residenceCountry
+        in: query
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Calculation result
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/tax-rule.yaml#/TaxCalculationResult'
+
+/dividends/calculate-batch:
+  post:
+    tags:
+      - Dividends
+    summary: Calculate tax for multiple dividends
+    operationId: calculateBatch
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+    responses:
+      '200':
+        description: Batch calculation result
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/tax-rule.yaml#/TaxCalculationBatchResult'
+
+/dividends/{userId}/calculate-all:
+  post:
+    tags:
+      - Dividends
+    summary: Recalculate tax for all user dividends
+    description: Triggers tax recalculation for all dividends of a user. Useful after tax rule updates.
+    operationId: calculateAllUserDividends
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: User ID whose dividends should be recalculated
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Tax recalculated for all dividends
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/tax-rule.yaml#/TaxCalculationBatchResult'
+      '403':
+        description: Forbidden - user can only calculate their own dividends
+      '404':
+        description: User not found
+
+/dividends/bulk:
+  post:
+    tags:
+      - Dividends
+    summary: Bulk import dividends from parsed statement
+    description: |
+      Import multiple dividends at once from a parsed broker statement.
+      Called by AI Agent after parsing a statement.
+      Automatically calculates tax and updates statement metadata.
+    operationId: bulkImportDividends
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/dividend.yaml#/BulkImportDividendsRequest'
+    responses:
+      '200':
+        description: Dividends imported successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividend.yaml#/BulkImportDividendsResponse'
+      '400':
+        description: Invalid request or statement not found
+      '403':
+        description: User does not own the statement
+
+/dividend-statements:
+  post:
+    tags:
+      - DividendStatements
+    summary: Upload broker statement
+    description: Upload a broker statement PDF/CSV file. Creates a new DividendStatement with status UPLOADED.
+    operationId: uploadDividendStatement
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: broker
+        in: query
+        required: false
+        description: Broker name (InteractiveBrokers, Swissquote, etc.)
+        schema:
+          type: string
+      - name: periodStart
+        in: query
+        required: false
+        description: Start of period covered by statement
+        schema:
+          type: string
+          format: date
+      - name: periodEnd
+        in: query
+        required: false
+        description: End of period covered by statement
+        schema:
+          type: string
+          format: date
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+                description: Broker statement file (PDF or CSV)
+    responses:
+      '201':
+        description: Statement uploaded successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividend.yaml#/DividendStatement'
+      '400':
+        description: Bad request - invalid file or parameters
+
+  get:
+    tags:
+      - DividendStatements
+    summary: List user's dividend statements
+    description: List dividend statements with optional status filter and pagination
+    operationId: listDividendStatements
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        description: Filter by status
+        schema:
+          $ref: '../schemas/dividend.yaml#/DividendStatementStatus'
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 0
+      - name: size
+        in: query
+        schema:
+          type: integer
+          default: 20
+    responses:
+      '200':
+        description: Page of dividend statements
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividend.yaml#/PaginatedDividendStatements'
+
+/dividend-statements/{id}:
+  get:
+    tags:
+      - DividendStatements
+    summary: Get dividend statement by ID
+    description: Get a specific dividend statement. Validates ownership.
+    operationId: getDividendStatement
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Dividend statement details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividend.yaml#/DividendStatement'
+      '404':
+        description: Not found or not owned by user
+
+  patch:
+    tags:
+      - DividendStatements
+    summary: Update dividend statement status
+    description: |
+      Update statement status. Validates status transitions:
+      - UPLOADED → PARSING (AI Agent starts parsing)
+      - PARSING → PARSED (AI Agent completes parsing)
+      - PARSED → VALIDATED (User downloads forms)
+      - VALIDATED → SENT (User submits forms offline)
+      - SENT → PAID (User receives payment)
+    operationId: updateDividendStatementStatus
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/dividend.yaml#/DividendStatementUpdate'
+    responses:
+      '200':
+        description: Status updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividend.yaml#/DividendStatement'
+      '400':
+        description: Invalid status transition
+      '404':
+        description: Not found or not owned by user
+
+  delete:
+    tags:
+      - DividendStatements
+    summary: Delete dividend statement
+    description: Delete statement and associated file from storage
+    operationId: deleteDividendStatement
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Deleted successfully
+      '404':
+        description: Not found or not owned by user
+
+/dividend-statements/by-date-range:
+  get:
+    tags:
+      - DividendStatements
+    summary: Find statements by date range
+    description: Find statements whose period overlaps with the specified date range
+    operationId: getDividendStatementsByDateRange
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: startDate
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+      - name: endDate
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+    responses:
+      '200':
+        description: List of statements in date range
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/dividend.yaml#/DividendStatement'
+
+/dividend-statements/count-by-status:
+  get:
+    tags:
+      - DividendStatements
+    summary: Count statements by status
+    description: Get count of statements for a specific status
+    operationId: countDividendStatementsByStatus
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: true
+        schema:
+          $ref: '../schemas/dividend.yaml#/DividendStatementStatus'
+    responses:
+      '200':
+        description: Count of statements
+        content:
+          application/json:
+            schema:
+              type: integer
+              format: int64
+
+/dividends/parse-statement:
+  post:
+    tags:
+      - Dividends
+    summary: Parse a dividend statement (PDF/Image)
+    operationId: parseDividendStatement
+    requestBody:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+    responses:
+      '200':
+        description: Successful parsing
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividend.yaml#/DividendStatement'

@@ -22,7 +22,7 @@ export function DashboardView() {
     // Fallback while loading or if error (could optionally show error state)
     // Note: In a real app we'd have a Skeleton loader here
     if (isLoading) {
-        return <div className="p-8 text-center">Loading dashboard...</div>;
+        return <div className="p-8 text-center">{t('dashboard.loading')}</div>;
     }
 
     const data = dashboardData;
@@ -154,11 +154,11 @@ export function DashboardView() {
                                                         </p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-slate-500 mb-1">{t('result.reclaimable')}</p>
+                                                        <p className="text-slate-500 mb-1">{t('result.reclaimable_est')}</p>
                                                         <p className="font-medium text-emerald-600">+{activity.reclaimedAmount?.toFixed(2)} {activity.currency}</p>
                                                     </div>
                                                     <div>
-                                                        <p className="text-slate-500 mb-1">Status</p>
+                                                        <p className="text-slate-500 mb-1">{t('dashboard.status')}</p>
                                                         <p className="font-medium text-foreground">{activity.status}</p>
                                                     </div>
                                                 </div>
@@ -169,7 +169,7 @@ export function DashboardView() {
                             ))
                         ) : (
                             <div className="p-12 text-center">
-                                <p className="text-slate-400">No recent activity</p>
+                                <p className="text-slate-400">{t('dashboard.no_activity')}</p>
                             </div>
                         )}
                     </Card>

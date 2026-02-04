@@ -1,8 +1,11 @@
 package com.taxdividend.bff.mapper;
 
 import com.taxdividend.bff.client.model.FormDownloadUrlResponse;
-import com.taxdividend.bff.client.model.GenerateFormResultDTO;
+import com.taxdividend.bff.client.model.GenerateFormResult;
 import com.taxdividend.bff.client.model.GeneratedForm;
+import com.taxdividend.bff.model.FormDownloadUrlResponseDto;
+import com.taxdividend.bff.model.GenerateTaxFormsResponseDto;
+import com.taxdividend.bff.model.GeneratedFormDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +41,7 @@ class FormMapperTest {
         source.setGeneratedAt(OffsetDateTime.of(2024, 12, 1, 10, 0, 0, 0, ZoneOffset.UTC));
 
         // Act
-        com.taxdividend.bff.model.GeneratedForm result = mapper.toGeneratedForm(source);
+        GeneratedFormDto result = mapper.toGeneratedForm(source);
 
         // Assert
         assertThat(result).isNotNull();
@@ -57,7 +60,7 @@ class FormMapperTest {
         source.setExpiresAt(null);
 
         // Act
-        com.taxdividend.bff.model.GeneratedForm result = mapper.toGeneratedForm(source);
+        GeneratedFormDto result = mapper.toGeneratedForm(source);
 
         // Assert
         assertThat(result).isNotNull();
@@ -67,14 +70,14 @@ class FormMapperTest {
     // ==================== toGenerateResponse Tests ====================
 
     @Test
-    @DisplayName("Should map GenerateFormResultDTO with downloadUrl to formUrl")
+    @DisplayName("Should map GenerateFormResultDto with downloadUrl to formUrl")
     void toGenerateResponse_MapDownloadUrlToFormUrl() {
         // Arrange
-        GenerateFormResultDTO source = new GenerateFormResultDTO();
+        GenerateFormResult source = new GenerateFormResult();
         source.setDownloadUrl("https://example.com/forms/form-456.pdf");
 
         // Act
-        com.taxdividend.bff.model.GenerateTaxFormsResponse result = mapper.toGenerateResponse(source);
+        GenerateTaxFormsResponseDto result = mapper.toGenerateResponse(source);
 
         // Assert
         assertThat(result).isNotNull();
@@ -83,14 +86,14 @@ class FormMapperTest {
     }
 
     @Test
-    @DisplayName("Should handle null downloadUrl in GenerateFormResultDTO")
+    @DisplayName("Should handle null downloadUrl in GenerateFormResultDto")
     void toGenerateResponse_NullDownloadUrl() {
         // Arrange
-        GenerateFormResultDTO source = new GenerateFormResultDTO();
+        GenerateFormResult source = new GenerateFormResult();
         source.setDownloadUrl(null);
 
         // Act
-        com.taxdividend.bff.model.GenerateTaxFormsResponse result = mapper.toGenerateResponse(source);
+        GenerateTaxFormsResponseDto result = mapper.toGenerateResponse(source);
 
         // Assert
         assertThat(result).isNotNull();
@@ -101,11 +104,11 @@ class FormMapperTest {
     @DisplayName("Should handle empty downloadUrl string")
     void toGenerateResponse_EmptyDownloadUrl() {
         // Arrange
-        GenerateFormResultDTO source = new GenerateFormResultDTO();
+        GenerateFormResult source = new GenerateFormResult();
         source.setDownloadUrl("");
 
         // Act
-        com.taxdividend.bff.model.GenerateTaxFormsResponse result = mapper.toGenerateResponse(source);
+        GenerateTaxFormsResponseDto result = mapper.toGenerateResponse(source);
 
         // Assert
         assertThat(result).isNotNull();
@@ -123,7 +126,7 @@ class FormMapperTest {
         source.setExpiresAt(OffsetDateTime.of(2025, 6, 15, 10, 0, 0, 0, ZoneOffset.UTC));
 
         // Act
-        com.taxdividend.bff.model.FormDownloadUrlResponse result = mapper.toDownloadResponse(source);
+        FormDownloadUrlResponseDto result = mapper.toDownloadResponse(source);
 
         // Assert
         assertThat(result).isNotNull();
@@ -140,7 +143,7 @@ class FormMapperTest {
         source.setExpiresAt(null);
 
         // Act
-        com.taxdividend.bff.model.FormDownloadUrlResponse result = mapper.toDownloadResponse(source);
+        FormDownloadUrlResponseDto result = mapper.toDownloadResponse(source);
 
         // Assert
         assertThat(result).isNotNull();
@@ -159,7 +162,7 @@ class FormMapperTest {
         source.setUrl(new URI(longUrl));
 
         // Act
-        com.taxdividend.bff.model.FormDownloadUrlResponse result = mapper.toDownloadResponse(source);
+        FormDownloadUrlResponseDto result = mapper.toDownloadResponse(source);
 
         // Assert
         assertThat(result.getUrl()).isEqualTo(new URI(longUrl));

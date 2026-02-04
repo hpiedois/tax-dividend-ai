@@ -1,7 +1,7 @@
 package com.taxdividend.backend.service;
 
-import com.taxdividend.backend.dto.DividendStatementDTO;
-import com.taxdividend.backend.dto.DividendStatementUpdateDTO;
+import com.taxdividend.backend.api.dto.DividendStatementDto;
+import com.taxdividend.backend.api.dto.DividendStatementUpdateDto;
 import com.taxdividend.backend.dto.FileUploadResultDTO;
 import com.taxdividend.backend.exception.StorageException;
 import com.taxdividend.backend.mapper.DividendStatementMapper;
@@ -10,7 +10,7 @@ import com.taxdividend.backend.model.DividendStatementStatus;
 import com.taxdividend.backend.model.User;
 import com.taxdividend.backend.repository.DividendStatementRepository;
 import com.taxdividend.backend.repository.UserRepository;
-import com.taxdividend.backend.service.impl.DividendStatementServiceImpl;
+import com.taxdividend.backend.api.dto.DividendStatementStatusDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import com.taxdividend.backend.api.dto.DividendStatementStatusDto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -58,16 +59,18 @@ class DividendStatementServiceTest {
     private DividendStatementMapper mapper;
 
     @InjectMocks
-    private DividendStatementServiceImpl service;
+    private DividendStatementService service;
 
     @Mock
     private MultipartFile mockFile;
 
     private UUID userId;
     private UUID statementId;
+
     private User user;
     private DividendStatement statement;
-    private DividendStatementDTO statementDTO;
+
+    private DividendStatementDto statementDTO;
 
     @BeforeEach
     void setUp() {
@@ -95,13 +98,16 @@ class DividendStatementServiceTest {
                 .totalReclaimable(BigDecimal.ZERO)
                 .build();
 
-        statementDTO = DividendStatementDTO.builder()
-                .id(statementId)
-                .userId(userId)
-                .sourceFileName("statement.pdf")
-                .broker("InteractiveBrokers")
-                .status(DividendStatementStatus.UPLOADED)
-                .build();
+        statementDTO = new DividendStatementDto();
+        statementDTO.setId(statementId);
+        statementDTO.setUserId(userId);
+        statementDTO.setSourceFileName("statement.pdf");
+        statementDTO.setBroker("InteractiveBrokers");
+        statementDTO.setStatus(DividendStatementStatusDto.UPLOADED);
+        // So `statementDTO.setStatus(DividendStatementStatusDto.UPLOADED);`
+        // I need to add import for DividendStatementStatusDto.
+        // I will add it in import chunk.
+
     }
 
     @Nested
@@ -129,7 +135,7 @@ class DividendStatementServiceTest {
             when(mapper.toDto(statement)).thenReturn(statementDTO);
 
             // When
-            DividendStatementDTO result = service.uploadStatement(mockFile, userId, broker, periodStart, periodEnd);
+            DividendStatementDto result = service.uploadStatement(mockFile, userId, broker, periodStart, periodEnd);
 
             // Then
             assertThat(result).isNotNull();
@@ -218,7 +224,7 @@ class DividendStatementServiceTest {
             when(mapper.toDto(statement)).thenReturn(statementDTO);
 
             // When
-            Optional<DividendStatementDTO> result = service.getStatement(statementId, userId);
+            Optional<DividendStatementDto> result = service.getStatement(statementId, userId);
 
             // Then
             assertThat(result).isPresent();
@@ -234,7 +240,7 @@ class DividendStatementServiceTest {
                     .thenReturn(Optional.empty());
 
             // When
-            Optional<DividendStatementDTO> result = service.getStatement(statementId, userId);
+            Optional<DividendStatementDto> result = service.getStatement(statementId, userId);
 
             // Then
             assertThat(result).isEmpty();
@@ -256,7 +262,7 @@ class DividendStatementServiceTest {
             when(mapper.toDtoPage(page)).thenReturn(page.map(s -> statementDTO));
 
             // When
-            Page<DividendStatementDTO> result = service.listStatements(userId, null, pageable);
+            Page<DividendStatementDto> result = service.listStatements(userId, null, pageable);
 
             // Then
             assertThat(result).isNotEmpty();
@@ -276,7 +282,7 @@ class DividendStatementServiceTest {
             when(mapper.toDtoPage(page)).thenReturn(page.map(s -> statementDTO));
 
             // When
-            Page<DividendStatementDTO> result = service.listStatements(
+            Page<DividendStatementDto> result = service.listStatements(
                     userId, DividendStatementStatus.UPLOADED, pageable);
 
             // Then
@@ -294,18 +300,16 @@ class DividendStatementServiceTest {
         @DisplayName("Should update status successfully with valid transition")
         void shouldUpdateStatusWithValidTransition() {
             // Given
-            DividendStatementUpdateDTO updateDTO = DividendStatementUpdateDTO.builder()
-                    .status(DividendStatementStatus.PARSING)
-                    .parsedBy("AI_AGENT")
-                    .build();
-
+            DividendStatementUpdateDto updateDTO = new DividendStatementUpdateDto();
+            updateDTO.setStatus(DividendStatementStatusDto.PARSING);
+            updateDTO.setParsedBy("AI_AGENT");
             when(statementRepository.findByIdAndUserId(statementId, userId))
                     .thenReturn(Optional.of(statement));
             when(statementRepository.save(any(DividendStatement.class))).thenReturn(statement);
             when(mapper.toDto(statement)).thenReturn(statementDTO);
 
             // When
-            DividendStatementDTO result = service.updateStatus(statementId, userId, updateDTO);
+            DividendStatementDto result = service.updateStatus(statementId, userId, updateDTO);
 
             // Then
             assertThat(result).isNotNull();
@@ -317,9 +321,8 @@ class DividendStatementServiceTest {
         @DisplayName("Should throw exception when statement not found")
         void shouldThrowExceptionWhenStatementNotFound() {
             // Given
-            DividendStatementUpdateDTO updateDTO = DividendStatementUpdateDTO.builder()
-                    .status(DividendStatementStatus.PARSING)
-                    .build();
+            DividendStatementUpdateDto updateDTO = new DividendStatementUpdateDto();
+            updateDTO.setStatus(DividendStatementStatusDto.PARSING);
 
             when(statementRepository.findByIdAndUserId(statementId, userId))
                     .thenReturn(Optional.empty());
@@ -335,19 +338,17 @@ class DividendStatementServiceTest {
         void shouldUpdateSentStatusWithMethodAndNotes() {
             // Given
             statement.setStatus(DividendStatementStatus.VALIDATED);
-            DividendStatementUpdateDTO updateDTO = DividendStatementUpdateDTO.builder()
-                    .status(DividendStatementStatus.SENT)
-                    .sentMethod("EMAIL")
-                    .sentNotes("Submitted via email")
-                    .build();
-
+            DividendStatementUpdateDto updateDTO = new DividendStatementUpdateDto();
+            updateDTO.setStatus(DividendStatementStatusDto.SENT);
+            updateDTO.setSentMethod("EMAIL");
+            updateDTO.setSentNotes("Submitted via email");
             when(statementRepository.findByIdAndUserId(statementId, userId))
                     .thenReturn(Optional.of(statement));
             when(statementRepository.save(any(DividendStatement.class))).thenReturn(statement);
             when(mapper.toDto(statement)).thenReturn(statementDTO);
 
             // When
-            DividendStatementDTO result = service.updateStatus(statementId, userId, updateDTO);
+            DividendStatementDto result = service.updateStatus(statementId, userId, updateDTO);
 
             // Then
             assertThat(result).isNotNull();
@@ -363,18 +364,16 @@ class DividendStatementServiceTest {
         void shouldUpdatePaidStatusWithAmount() {
             // Given
             statement.setStatus(DividendStatementStatus.SENT);
-            DividendStatementUpdateDTO updateDTO = DividendStatementUpdateDTO.builder()
-                    .status(DividendStatementStatus.PAID)
-                    .paidAmount(new BigDecimal("150.50"))
-                    .build();
-
+            DividendStatementUpdateDto updateDTO = new DividendStatementUpdateDto();
+            updateDTO.setStatus(DividendStatementStatusDto.PAID);
+            updateDTO.setPaidAmount(new BigDecimal("150.50"));
             when(statementRepository.findByIdAndUserId(statementId, userId))
                     .thenReturn(Optional.of(statement));
             when(statementRepository.save(any(DividendStatement.class))).thenReturn(statement);
             when(mapper.toDto(statement)).thenReturn(statementDTO);
 
             // When
-            DividendStatementDTO result = service.updateStatus(statementId, userId, updateDTO);
+            DividendStatementDto result = service.updateStatus(statementId, userId, updateDTO);
 
             // Then
             assertThat(result).isNotNull();
@@ -498,7 +497,7 @@ class DividendStatementServiceTest {
             when(mapper.toDtoList(List.of(statement))).thenReturn(List.of(statementDTO));
 
             // When
-            List<DividendStatementDTO> result = service.findByDateRange(userId, startDate, endDate);
+            List<DividendStatementDto> result = service.findByDateRange(userId, startDate, endDate);
 
             // Then
             assertThat(result).hasSize(1);

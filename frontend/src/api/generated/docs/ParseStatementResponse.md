@@ -1,19 +1,19 @@
-# ParseStatementResponse
+# DividendStatement
 
 
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**dividends** | [**Array&lt;DividendData&gt;**](DividendData.md) |  | [optional] [default to undefined]
+**dividends** | [**Array&lt;&gt;**](.md) |  | [optional] [default to undefined]
 **metadata** | [**ParseStatementResponseMetadata**](ParseStatementResponseMetadata.md) |  | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { ParseStatementResponse } from 'tax-dividend-api';
+import { DividendStatement } from 'tax-dividend-api';
 
-const instance: ParseStatementResponse = {
+const instance: DividendStatement = {
     dividends,
     metadata,
 };

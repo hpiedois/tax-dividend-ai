@@ -4,6 +4,7 @@ import com.taxdividend.backend.model.Dividend;
 import com.taxdividend.backend.model.DividendStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -24,7 +25,7 @@ class DividendMapperTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new DividendMapper();
+        mapper = Mappers.getMapper(DividendMapper.class);
     }
 
     @Test
@@ -33,7 +34,7 @@ class DividendMapperTest {
         Dividend entity = createTestDividend();
 
         // When
-        com.taxdividend.backend.api.dto.Dividend dto = mapper.toDto(entity);
+        com.taxdividend.backend.api.dto.DividendDto dto = mapper.toDto(entity);
 
         // Then
         assertThat(dto).isNotNull();
@@ -55,10 +56,10 @@ class DividendMapperTest {
         entity.setStatus(null);
 
         // When
-        com.taxdividend.backend.api.dto.Dividend dto = mapper.toDto(entity);
+        com.taxdividend.backend.api.dto.DividendDto dto = mapper.toDto(entity);
 
         // Then
-        assertThat(dto.getStatus()).isEqualTo(com.taxdividend.backend.api.dto.Dividend.StatusEnum.OPEN);
+        assertThat(dto.getStatus()).isEqualTo(com.taxdividend.backend.api.dto.DividendDto.StatusEnum.OPEN);
     }
 
     @Test
@@ -68,10 +69,10 @@ class DividendMapperTest {
         entity.setStatus(DividendStatus.SENT);
 
         // When
-        com.taxdividend.backend.api.dto.Dividend dto = mapper.toDto(entity);
+        com.taxdividend.backend.api.dto.DividendDto dto = mapper.toDto(entity);
 
         // Then
-        assertThat(dto.getStatus()).isEqualTo(com.taxdividend.backend.api.dto.Dividend.StatusEnum.SENT);
+        assertThat(dto.getStatus()).isEqualTo(com.taxdividend.backend.api.dto.DividendDto.StatusEnum.SENT);
     }
 
     @Test
@@ -81,16 +82,16 @@ class DividendMapperTest {
         entity.setStatus(DividendStatus.PAID);
 
         // When
-        com.taxdividend.backend.api.dto.Dividend dto = mapper.toDto(entity);
+        com.taxdividend.backend.api.dto.DividendDto dto = mapper.toDto(entity);
 
         // Then
-        assertThat(dto.getStatus()).isEqualTo(com.taxdividend.backend.api.dto.Dividend.StatusEnum.PAID);
+        assertThat(dto.getStatus()).isEqualTo(com.taxdividend.backend.api.dto.DividendDto.StatusEnum.PAID);
     }
 
     @Test
     void toDto_NullEntity_ReturnsNull() {
         // When
-        com.taxdividend.backend.api.dto.Dividend dto = mapper.toDto(null);
+        com.taxdividend.backend.api.dto.DividendDto dto = mapper.toDto(null);
 
         // Then
         assertThat(dto).isNull();
@@ -101,11 +102,10 @@ class DividendMapperTest {
         // Given
         List<Dividend> entities = List.of(
                 createTestDividend(),
-                createTestDividend()
-        );
+                createTestDividend());
 
         // When
-        List<com.taxdividend.backend.api.dto.Dividend> dtos = mapper.toDtoList(entities);
+        List<com.taxdividend.backend.api.dto.DividendDto> dtos = mapper.toDtoList(entities);
 
         // Then
         assertThat(dtos).hasSize(2);
@@ -116,7 +116,7 @@ class DividendMapperTest {
     @Test
     void toDtoList_NullList_ReturnsNull() {
         // When
-        List<com.taxdividend.backend.api.dto.Dividend> dtos = mapper.toDtoList(null);
+        List<com.taxdividend.backend.api.dto.DividendDto> dtos = mapper.toDtoList(null);
 
         // Then
         assertThat(dtos).isNull();
@@ -125,7 +125,7 @@ class DividendMapperTest {
     @Test
     void toDtoList_EmptyList_ReturnsEmptyList() {
         // When
-        List<com.taxdividend.backend.api.dto.Dividend> dtos = mapper.toDtoList(List.of());
+        List<com.taxdividend.backend.api.dto.DividendDto> dtos = mapper.toDtoList(List.of());
 
         // Then
         assertThat(dtos).isEmpty();
@@ -138,7 +138,7 @@ class DividendMapperTest {
         Page<Dividend> page = new PageImpl<>(content, PageRequest.of(0, 10), 2);
 
         // When
-        com.taxdividend.backend.api.dto.ListDividends200Response response = mapper.toPageResponse(page);
+        com.taxdividend.backend.api.dto.PaginatedDividendListDto response = mapper.toPageResponse(page);
 
         // Then
         assertThat(response).isNotNull();
@@ -148,7 +148,7 @@ class DividendMapperTest {
     @Test
     void toPageResponse_NullPage_ReturnsNull() {
         // When
-        com.taxdividend.backend.api.dto.ListDividends200Response response = mapper.toPageResponse(null);
+        com.taxdividend.backend.api.dto.PaginatedDividendListDto response = mapper.toPageResponse(null);
 
         // Then
         assertThat(response).isNull();
@@ -157,7 +157,7 @@ class DividendMapperTest {
     @Test
     void toEntity_AllFields_MapsCorrectly() {
         // Given
-        com.taxdividend.backend.api.dto.Dividend dto = new com.taxdividend.backend.api.dto.Dividend();
+        com.taxdividend.backend.api.dto.DividendDto dto = new com.taxdividend.backend.api.dto.DividendDto();
         dto.setId(UUID.randomUUID());
         dto.setSecurityName("Apple Inc.");
         dto.setIsin("US0378331005");
@@ -166,7 +166,7 @@ class DividendMapperTest {
         dto.setPaymentDate(LocalDate.of(2024, 3, 15));
         dto.setWithholdingTax(new BigDecimal("45.00"));
         dto.setReclaimableAmount(new BigDecimal("22.50"));
-        dto.setStatus(com.taxdividend.backend.api.dto.Dividend.StatusEnum.OPEN);
+        dto.setStatus(com.taxdividend.backend.api.dto.DividendDto.StatusEnum.OPEN);
 
         // When
         Dividend entity = mapper.toEntity(dto);
@@ -185,9 +185,9 @@ class DividendMapperTest {
     }
 
     @Test
-    void toEntity_NullStatus_HandlesGracefully() {
+    void toEntity_NullStatus_DefaultsToOpen() {
         // Given
-        com.taxdividend.backend.api.dto.Dividend dto = new com.taxdividend.backend.api.dto.Dividend();
+        com.taxdividend.backend.api.dto.DividendDto dto = new com.taxdividend.backend.api.dto.DividendDto();
         dto.setId(UUID.randomUUID());
         // status is null
 
@@ -196,7 +196,7 @@ class DividendMapperTest {
 
         // Then
         assertThat(entity).isNotNull();
-        assertThat(entity.getStatus()).isNull();
+        assertThat(entity.getStatus()).isEqualTo(DividendStatus.OPEN);
     }
 
     @Test

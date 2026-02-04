@@ -1,5 +1,5 @@
 import { calculateTaxReclaim, TAX_RATES } from './tax-calculator';
-import type { DividendData } from '../types/dividend.types';
+import type { Dividend } from '../types/dividend.types';
 
 const MOCK_COMPANIES = [
     { name: "AIR LIQUIDE SA", isin: "FR0000120073" },
@@ -10,7 +10,7 @@ const MOCK_COMPANIES = [
     { name: "L'OREAL", isin: "FR0000120321" },
 ];
 
-export async function parseDividendPDF(file: File): Promise<DividendData> {
+export async function parseDividendPDF(file: File): Promise<Dividend> {
     console.log("Parsing file:", file.name);
 
     // Simulate network/OCR delay with some randomness
@@ -38,8 +38,8 @@ export async function parseDividendPDF(file: File): Promise<DividendData> {
                 paymentDate: new Date().toISOString().split('T')[0],
                 withholdingTax: taxCalc.withholdingTax,
                 reclaimableAmount: taxCalc.reclaimableAmount,
-                appliedRate: taxCalc.appliedRate,
-                status: 'OPEN',
+                appliedRateType: 'PROGRESSIVE',
+                sourceCountry: 'FR',
             });
         }, delay);
     });

@@ -1,0 +1,63 @@
+# ============================================================================
+# Tax Dividend AI - UAT Environment Configuration (User Acceptance Testing)
+# ============================================================================
+# This profile is activated with: -Dspring.profiles.active=uat
+
+server:
+  port: 8082  # Different port to avoid conflict with Dev (8081)
+
+spring:
+  # UAT Database
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:taxdividend_uat}?currentSchema=taxdividend
+    username: ${DB_USERNAME:postgres} # Default to postgres for UAT as simple setup, or taxdividend_user
+    password: ${DB_PASSWORD:uat_password} 
+  
+  # UAT Redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
+
+  # JPA
+  jpa:
+    show-sql: false # Cleaner logs for UAT
+    properties:
+      hibernate:
+        format_sql: false
+
+# UAT Storage (MinIO)
+storage:
+  s3:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9002}
+    bucket: ${MINIO_BUCKET:tax-dividend-forms-uat}
+    access-key: ${MINIO_ACCESS_KEY:uat_minio_admin}
+    secret-key: ${MINIO_SECRET_KEY:uat_minio_secure_password_change_me}
+
+# Logging (Cleaner than Dev)
+logging:
+  level:
+    root: INFO
+    com.taxdividend: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+
+# Actuator (Tagged as UAT)
+management:
+  metrics:
+    tags:
+      environment: uat
+
+# Application Specific
+app:
+  # Keycloak (If using UAT specific realm/client)
+  keycloak:
+    realm: ${KEYCLOAK_REALM:tax-dividend}
+    # UAT might reuse local Keycloak (8080) or have its own
+    server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+    
+  forms:
+    watermark-enabled: true # Simulate production-like PDFs but maybe with watermark? 
+                            # Usually UAT is "User Acceptance", sometimes clean, sometimes watermarked.
+                            # Dev has true. Prod has false (default).
+                            # Let's keep watermark true for UAT to distinguish from Prod.

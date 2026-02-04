@@ -1,0 +1,89 @@
+FormGenerationRequest:
+  type: object
+  required:
+    - userId
+    - taxYear
+    - formType
+  properties:
+    userId:
+      type: string
+      format: uuid
+    taxYear:
+      type: integer
+    formType:
+      type: string
+      enum: ['5000', '5001', 'BUNDLE']
+    dividendIds:
+      type: array
+      items:
+        type: string
+        format: uuid
+    includeAttestation:
+      type: boolean
+      default: false
+    includeDividends:
+      type: boolean
+      default: false
+    canton:
+      type: string
+    address:
+      type: string
+    taxId:
+      type: string
+
+GenerateFormResult:
+  type: object
+  properties:
+    success:
+      type: boolean
+    formId:
+      type: string
+      format: uuid
+    formType:
+      type: string
+    downloadUrl:
+      type: string
+    fileName:
+      type: string
+    dividendCount:
+      type: integer
+    errors:
+      type: array
+      items:
+        type: string
+
+FormDownloadUrlResponse:
+  type: object
+  properties:
+    url:
+      type: string
+      format: uri
+      description: Pre-signed download URL
+    expiresAt:
+      type: string
+      format: date-time
+      description: URL expiration timestamp
+
+GeneratedForm:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+    formType:
+      type: string
+    taxYear:
+      type: integer
+    fileName:
+      type: string
+    s3Key:
+      type: string
+    fileSize:
+      type: integer
+      format: int64
+    generatedAt:
+      type: string
+      format: date-time
+    expiresAt:
+      type: string
+      format: date-time

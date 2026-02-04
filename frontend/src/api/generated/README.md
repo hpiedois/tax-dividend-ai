@@ -67,16 +67,16 @@ Class | Method | HTTP request | Description
 
 ### Documentation For Models
 
+ - [Dividend](docs/Dividend.md)
  - [DividendCase](docs/DividendCase.md)
- - [DividendData](docs/DividendData.md)
  - [DividendHistoryResponse](docs/DividendHistoryResponse.md)
+ - [DividendStatement](docs/DividendStatement.md)
+ - [DividendStatementMetadata](docs/DividendStatementMetadata.md)
  - [DividendStats](docs/DividendStats.md)
  - [FormDownloadUrlResponse](docs/FormDownloadUrlResponse.md)
  - [GenerateTaxFormsRequest](docs/GenerateTaxFormsRequest.md)
  - [GenerateTaxFormsResponse](docs/GenerateTaxFormsResponse.md)
  - [GeneratedForm](docs/GeneratedForm.md)
- - [ParseStatementResponse](docs/ParseStatementResponse.md)
- - [ParseStatementResponseMetadata](docs/ParseStatementResponseMetadata.md)
  - [RegisterRequest](docs/RegisterRequest.md)
  - [UpdateDividendStatusRequest](docs/UpdateDividendStatusRequest.md)
 

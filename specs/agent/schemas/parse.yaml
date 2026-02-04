@@ -1,0 +1,62 @@
+ParsedDividendStatement:
+  type: object
+  properties:
+    data:
+      type: array
+      description: List of dividend data extracted from the statement
+      items:
+        $ref: '#/DocumentDividendData'
+    broker:
+      type: string
+      description: Detected broker name (if identifiable)
+      example: Interactive Brokers
+    periodStart:
+      type: string
+      format: date
+      description: Start of period covered by the statement
+      example: '2024-01-01'
+    periodEnd:
+      type: string
+      format: date
+      description: End of period covered by the statement
+      example: '2024-12-31'
+
+DocumentDividendData:
+  type: object
+  properties:
+    securityName:
+      type: string
+      description: Security name (company name)
+      example: LVMH
+    isin:
+      type: string
+      description: ISIN code (12 characters)
+      pattern: '^[A-Z]{2}[A-Z0-9]{10}$'
+      example: FR0000121014
+    grossAmount:
+      type: number
+      description: Gross dividend amount
+      example: 150.00
+    currency:
+      type: string
+      description: Currency code (ISO 4217)
+      pattern: '^[A-Z]{3}$'
+      example: EUR
+    paymentDate:
+      type: string
+      format: date
+      description: Dividend payment date
+      example: '2024-03-15'
+    country:
+      type: string
+      description: Country where dividend was paid (ISO 3166-1 alpha-2)
+      pattern: '^[A-Z]{2}$'
+      example: FR
+    withholdingTax:
+      type: number
+      description: Tax withheld at source
+      example: 45.00
+    reclaimableAmount:
+      type: number
+      description: Amount that can be reclaimed
+      example: 22.50

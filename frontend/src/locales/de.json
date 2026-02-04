@@ -51,10 +51,13 @@
         "login_success": "Erfolgreich angemeldet"
     },
     "dashboard": {
+        "loading": "Dashboard wird geladen...",
         "total_reclaimed": "Insgesamt zurückgefordert",
         "pending": "Ausstehend",
         "cases_processed": "Fälle bearbeitet",
         "recent_activity": "Letzte Aktivität",
+        "no_activity": "Keine aktuelle Aktivität",
+        "status": "Status",
         "scan_imported": "Scan importiert",
         "refund_received": "Rückerstattung erhalten"
     },

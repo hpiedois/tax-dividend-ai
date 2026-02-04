@@ -1,162 +1,194 @@
 package com.taxdividend.backend.service;
 
 import com.taxdividend.backend.model.AuditLog;
+import com.taxdividend.backend.model.User;
+import com.taxdividend.backend.repository.AuditLogRepository;
+import com.taxdividend.backend.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
- * Service for managing audit logs and security trail.
- *
- * Tracks:
- * - User actions (login, logout, form generation, etc.)
- * - Security events (failed logins, permission changes)
- * - Data modifications (CRUD operations)
+ * Implementation of audit service for logging user actions and security events.
  */
-public interface AuditService {
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AuditService {
 
-    /**
-     * Log a user action.
-     *
-     * @param userId User ID (can be null for anonymous actions)
-     * @param action Action name (e.g., "LOGIN", "FORM_GENERATED")
-     * @param entityType Type of entity affected (e.g., "USER", "FORM", "DIVIDEND")
-     * @param entityId ID of the entity affected
-     * @param details Additional details as JSON
-     * @param ipAddress Client IP address
-     * @param userAgent Client user agent string
-     * @return Created audit log
-     */
-    AuditLog logAction(UUID userId, String action, String entityType, UUID entityId,
-                       Map<String, Object> details, String ipAddress, String userAgent);
+    private final AuditLogRepository auditLogRepository;
+    private final UserRepository userRepository;
 
-    /**
-     * Log a user action without entity.
-     *
-     * @param userId User ID
-     * @param action Action name
-     * @param details Additional details
-     * @param ipAddress Client IP
-     * @param userAgent User agent
-     * @return Created audit log
-     */
-    AuditLog logAction(UUID userId, String action, Map<String, Object> details,
-                       String ipAddress, String userAgent);
+    @Transactional
+    public AuditLog logAction(UUID userId, String action, String entityType, UUID entityId,
+            Map<String, Object> details, String ipAddress, String userAgent) {
 
-    /**
-     * Log a simple action without details.
-     *
-     * @param userId User ID
-     * @param action Action name
-     * @return Created audit log
-     */
-    AuditLog logAction(UUID userId, String action);
+        User user = userId != null ? userRepository.findById(userId).orElse(null) : null;
 
-    /**
-     * Log a login attempt.
-     *
-     * @param userId User ID (null if login failed)
-     * @param email Email used for login
-     * @param success Whether login was successful
-     * @param ipAddress Client IP
-     * @param userAgent User agent
-     * @return Created audit log
-     */
-    AuditLog logLogin(UUID userId, String email, boolean success, String ipAddress, String userAgent);
+        AuditLog auditLog = AuditLog.builder()
+                .user(user)
+                .action(action)
+                .entityType(entityType)
+                .entityId(entityId)
+                .details(details)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
 
-    /**
-     * Log a logout.
-     *
-     * @param userId User ID
-     * @param ipAddress Client IP
-     * @return Created audit log
-     */
-    AuditLog logLogout(UUID userId, String ipAddress);
+        AuditLog saved = auditLogRepository.save(auditLog);
 
-    /**
-     * Log PDF parsing action.
-     *
-     * @param userId User ID
-     * @param fileName PDF filename
-     * @param dividendCount Number of dividends found
-     * @param success Whether parsing succeeded
-     * @return Created audit log
-     */
-    AuditLog logPdfParsing(UUID userId, String fileName, int dividendCount, boolean success);
+        log.info("Audit log created: action={}, user={}, entity={}:{}",
+                action, userId, entityType, entityId);
 
-    /**
-     * Log form generation.
-     *
-     * @param userId User ID
-     * @param formId Generated form ID
-     * @param formType Form type (5000, 5001, BUNDLE)
-     * @param dividendCount Number of dividends included
-     * @return Created audit log
-     */
-    AuditLog logFormGeneration(UUID userId, UUID formId, String formType, int dividendCount);
+        return saved;
+    }
 
-    /**
-     * Log tax calculation.
-     *
-     * @param userId User ID
-     * @param dividendCount Number of dividends calculated
-     * @param totalReclaimable Total reclaimable amount
-     * @return Created audit log
-     */
-    AuditLog logTaxCalculation(UUID userId, int dividendCount, String totalReclaimable);
+    @Transactional
+    public AuditLog logAction(UUID userId, String action, Map<String, Object> details,
+            String ipAddress, String userAgent) {
+        return logAction(userId, action, null, null, details, ipAddress, userAgent);
+    }
 
-    /**
-     * Get audit logs for a user.
-     *
-     * @param userId User ID
-     * @param limit Maximum number of logs to return
-     * @return List of audit logs
-     */
-    List<AuditLog> getUserLogs(UUID userId, int limit);
+    @Transactional
+    public AuditLog logAction(UUID userId, String action) {
+        return logAction(userId, action, null, null, null, null, null);
+    }
 
-    /**
-     * Get audit logs by action type.
-     *
-     * @param action Action name
-     * @param limit Maximum number of logs
-     * @return List of audit logs
-     */
-    List<AuditLog> getLogsByAction(String action, int limit);
+    @Transactional
+    public AuditLog logLogin(UUID userId, String email, boolean success, String ipAddress, String userAgent) {
+        String action = success ? "LOGIN" : "LOGIN_FAILED";
 
-    /**
-     * Get failed login attempts for an IP address.
-     *
-     * @param ipAddress IP address
-     * @param since Time threshold (e.g., last 15 minutes)
-     * @return List of failed login attempts
-     */
-    List<AuditLog> getFailedLoginAttempts(String ipAddress, LocalDateTime since);
+        Map<String, Object> details = new HashMap<>();
+        details.put("email", email);
+        details.put("success", success);
 
-    /**
-     * Check if IP address is rate-limited due to failed logins.
-     *
-     * @param ipAddress IP address
-     * @param maxAttempts Maximum allowed attempts
-     * @param windowMinutes Time window in minutes
-     * @return true if rate-limited
-     */
-    boolean isRateLimited(String ipAddress, int maxAttempts, int windowMinutes);
+        if (!success) {
+            log.warn("Failed login attempt for email: {} from IP: {}", email, ipAddress);
+        } else {
+            log.info("Successful login for user: {} from IP: {}", userId, ipAddress);
+        }
 
-    /**
-     * Delete old audit logs (data retention policy).
-     *
-     * @param retentionDays Number of days to retain logs
-     * @return Number of logs deleted
-     */
-    int cleanupOldLogs(int retentionDays);
+        return logAction(userId, action, details, ipAddress, userAgent);
+    }
 
-    /**
-     * Get audit log statistics for a user.
-     *
-     * @param userId User ID
-     * @return Map of action counts
-     */
-    Map<String, Long> getUserActionStatistics(UUID userId);
+    @Transactional
+    public AuditLog logLogout(UUID userId, String ipAddress) {
+        log.info("User logout: {} from IP: {}", userId, ipAddress);
+
+        return logAction(userId, "LOGOUT", null, ipAddress, null);
+    }
+
+    @Transactional
+    public AuditLog logPdfParsing(UUID userId, String fileName, int dividendCount, boolean success) {
+        Map<String, Object> details = new HashMap<>();
+        details.put("fileName", fileName);
+        details.put("dividendCount", dividendCount);
+        details.put("success", success);
+
+        String action = success ? "PDF_PARSED" : "PDF_PARSE_FAILED";
+
+        log.info("PDF parsing logged: user={}, file={}, dividends={}, success={}",
+                userId, fileName, dividendCount, success);
+
+        return logAction(userId, action, "DIVIDEND", null, details, null, null);
+    }
+
+    @Transactional
+    public AuditLog logFormGeneration(UUID userId, UUID formId, String formType, int dividendCount) {
+        Map<String, Object> details = new HashMap<>();
+        details.put("formType", formType);
+        details.put("dividendCount", dividendCount);
+
+        log.info("Form generation logged: user={}, form={}, type={}, dividends={}",
+                userId, formId, formType, dividendCount);
+
+        return logAction(userId, "FORM_GENERATED", "FORM", formId, details, null, null);
+    }
+
+    @Transactional
+    public AuditLog logTaxCalculation(UUID userId, int dividendCount, String totalReclaimable) {
+        Map<String, Object> details = new HashMap<>();
+        details.put("dividendCount", dividendCount);
+        details.put("totalReclaimable", totalReclaimable);
+
+        log.info("Tax calculation logged: user={}, dividends={}, total={}",
+                userId, dividendCount, totalReclaimable);
+
+        return logAction(userId, "TAX_CALCULATED", "DIVIDEND", null, details, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditLog> getUserLogs(UUID userId, int limit) {
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return auditLogRepository.findRecentByUserId(userId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditLog> getLogsByAction(String action, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return auditLogRepository.findByAction(action);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AuditLog> getFailedLoginAttempts(String ipAddress, LocalDateTime since) {
+        return auditLogRepository.findFailedLoginAttempts(ipAddress, since);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isRateLimited(String ipAddress, int maxAttempts, int windowMinutes) {
+        LocalDateTime since = LocalDateTime.now().minusMinutes(windowMinutes);
+        List<AuditLog> failedAttempts = getFailedLoginAttempts(ipAddress, since);
+
+        boolean isLimited = failedAttempts.size() >= maxAttempts;
+
+        if (isLimited) {
+            log.warn("IP address {} is rate-limited: {} failed attempts in {} minutes",
+                    ipAddress, failedAttempts.size(), windowMinutes);
+        }
+
+        return isLimited;
+    }
+
+    @Transactional
+    public int cleanupOldLogs(int retentionDays) {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(retentionDays);
+
+        log.info("Cleaning up audit logs older than {} days (before {})", retentionDays, cutoffDate);
+
+        // Note: This should be done in batches for large datasets
+        long countBefore = auditLogRepository.count();
+        auditLogRepository.deleteOlderThan(cutoffDate);
+        long countAfter = auditLogRepository.count();
+
+        int deletedCount = (int) (countBefore - countAfter);
+
+        log.info("Deleted {} old audit logs", deletedCount);
+
+        return deletedCount;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Long> getUserActionStatistics(UUID userId) {
+        List<AuditLog> allLogs = auditLogRepository.findByUserId(userId);
+
+        Map<String, Long> statistics = allLogs.stream()
+                .collect(Collectors.groupingBy(
+                        AuditLog::getAction,
+                        Collectors.counting()));
+
+        log.debug("Action statistics for user {}: {}", userId, statistics);
+
+        return statistics;
+    }
 }

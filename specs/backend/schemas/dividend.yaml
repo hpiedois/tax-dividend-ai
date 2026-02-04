@@ -1,0 +1,284 @@
+Dividend:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+    securityName:
+      type: string
+    isin:
+      type: string
+    grossAmount:
+      type: number
+    currency:
+      type: string
+    paymentDate:
+      type: string
+      format: date
+    withholdingTax:
+      type: number
+    reclaimableAmount:
+      type: number
+    status:
+      type: string
+      enum: [OPEN, SENT, PAID]
+
+PaginatedDividendList:
+  type: object
+  properties:
+    content:
+      type: array
+      items:
+        $ref: '#/Dividend'
+    totalElements:
+      type: integer
+      format: int64
+    totalPages:
+      type: integer
+    size:
+      type: integer
+    number:
+      type: integer
+
+DividendStats:
+  type: object
+  properties:
+    totalReclaimed:
+      type: number
+      description: Total amount successfully reclaimed (Status PAID)
+    pendingAmount:
+      type: number
+      description: Total amount pending (Status OPEN or SENT)
+    casesCount:
+      type: integer
+      description: Total number of dividend cases
+
+BulkImportDividendItem:
+  type: object
+  required:
+    - securityName
+    - isin
+    - paymentDate
+    - grossAmount
+    - currency
+    - withholdingTax
+    - withholdingRate
+    - sourceCountry
+  properties:
+    securityName:
+      type: string
+      description: Security name (company name)
+      example: LVMH
+    isin:
+      type: string
+      description: ISIN code (12 characters)
+      pattern: '^[A-Z]{2}[A-Z0-9]{10}$'
+      example: FR0000121014
+    paymentDate:
+      type: string
+      format: date
+      description: Dividend payment date
+    grossAmount:
+      type: number
+      description: Gross dividend amount
+      minimum: 0
+    currency:
+      type: string
+      description: Currency code (ISO 4217)
+      pattern: '^[A-Z]{3}$'
+      example: EUR
+    withholdingTax:
+      type: number
+      description: Tax withheld at source
+      minimum: 0
+    withholdingRate:
+      type: number
+      description: Withholding rate applied (%)
+      minimum: 0
+      maximum: 100
+    sourceCountry:
+      type: string
+      description: Country where dividend was paid (ISO 3166-1 alpha-2)
+      pattern: '^[A-Z]{2}$'
+      example: FR
+
+BulkImportDividendsRequest:
+  type: object
+  required:
+    - statementId
+    - dividends
+  properties:
+    statementId:
+      type: string
+      format: uuid
+      description: ID of the dividend statement being parsed
+    broker:
+      type: string
+      description: Broker name detected in the statement
+    dividends:
+      type: array
+      items:
+        $ref: '#/BulkImportDividendItem'
+      minItems: 1
+      description: List of dividends to import
+
+BulkImportDividendsResponse:
+  type: object
+  properties:
+    importedCount:
+      type: integer
+      description: Number of dividends successfully imported
+    failedCount:
+      type: integer
+      description: Number of dividends that failed to import
+    totalGrossAmount:
+      type: number
+      description: Total gross amount of all imported dividends
+    totalReclaimable:
+      type: number
+      description: Total reclaimable amount across all dividends
+    dividendIds:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: IDs of successfully imported dividends
+    errors:
+      type: array
+      items:
+        type: string
+      description: Error messages for failed imports
+
+DividendStatement:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+    userId:
+      type: string
+      format: uuid
+    sourceFileName:
+      type: string
+      description: Original filename of uploaded broker statement
+    sourceFileS3Key:
+      type: string
+      description: S3/MinIO key for stored file
+    broker:
+      type: string
+      description: Broker name (InteractiveBrokers, Swissquote, etc.)
+    periodStart:
+      type: string
+      format: date
+      description: Start of period covered by statement
+    periodEnd:
+      type: string
+      format: date
+      description: End of period covered by statement
+    status:
+      $ref: '#/DividendStatementStatus'
+    parsedAt:
+      type: string
+      format: date-time
+      nullable: true
+    validatedAt:
+      type: string
+      format: date-time
+      nullable: true
+    sentAt:
+      type: string
+      format: date-time
+      nullable: true
+    sentMethod:
+      type: string
+      nullable: true
+      description: Submission method (EMAIL, POSTAL, ONLINE)
+    sentNotes:
+      type: string
+      nullable: true
+      description: User notes about submission
+    paidAt:
+      type: string
+      format: date-time
+      nullable: true
+    paidAmount:
+      type: number
+      nullable: true
+      description: Amount received from tax authority
+    parsedBy:
+      type: string
+      nullable: true
+      description: Who/what triggered parsing (AI_AGENT, MANUAL, etc.)
+    dividendCount:
+      type: integer
+      description: Number of dividends extracted from statement
+    totalGrossAmount:
+      type: number
+      description: Total gross amount from all dividends
+    totalReclaimable:
+      type: number
+      description: Total reclaimable amount from all dividends
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+DividendStatementStatus:
+  type: string
+  enum:
+    - UPLOADED
+    - PARSING
+    - PARSED
+    - VALIDATED
+    - SENT
+    - PAID
+  description: |
+    Status workflow for dividend statements:
+    - UPLOADED: File uploaded, awaiting parsing
+    - PARSING: Currently being parsed by AI Agent
+    - PARSED: Parsing complete, dividends extracted
+    - VALIDATED: Dividends validated, forms generated and downloaded
+    - SENT: User has submitted forms to tax authority (offline)
+    - PAID: Reimbursement received (marked manually by user)
+
+DividendStatementUpdate:
+  type: object
+  required:
+    - status
+  properties:
+    status:
+      $ref: '#/DividendStatementStatus'
+    sentMethod:
+      type: string
+      description: For SENT status - submission method
+    sentNotes:
+      type: string
+      description: For SENT status - additional notes
+    paidAmount:
+      type: number
+      description: For PAID status - amount received
+    paidAt:
+      type: string
+      format: date-time
+      description: For PAID status - payment date (defaults to now if not provided)
+    parsedBy:
+      type: string
+      description: For AI Agent updates - who triggered the parsing
+
+PaginatedDividendStatements:
+  type: object
+  properties:
+    content:
+      type: array
+      items:
+        $ref: '#/DividendStatement'
+    totalElements:
+      type: integer
+    totalPages:
+      type: integer
+    size:
+      type: integer
+    number:
+      type: integer

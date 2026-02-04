@@ -51,10 +51,13 @@
         "login_success": "Accesso effettuato con successo"
     },
     "dashboard": {
+        "loading": "Caricamento dashboard...",
         "total_reclaimed": "Totale Recuperato",
         "pending": "In attesa",
         "cases_processed": "Pratiche elaborate",
         "recent_activity": "Attività Recente",
+        "no_activity": "Nessuna attività recente",
+        "status": "Stato",
         "scan_imported": "Scansione importata",
         "refund_received": "Rimborso ricevuto"
     },

@@ -33,6 +33,7 @@ public class PdfParserService {
             result.put("securityName", "Mock Security from PDF");
             result.put("isin", "FR0000000000");
             result.put("grossAmount", BigDecimal.valueOf(100.00));
+            result.put("broker", "Mock Broker (IBKR)");
 
             // Here you would implement real regex parsing
 

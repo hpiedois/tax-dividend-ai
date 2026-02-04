@@ -549,7 +549,7 @@ specs/
 │   │   ├── dividends-stats.yaml        ✅
 │   │   └── dividends-forms.yaml        ✅
 │   └── schemas/
-│       ├── DividendData.yaml           ✅
+│       ├── Dividend.yaml           ✅
 │       ├── DividendCase.yaml           ✅
 │       ├── ParsePDFResponse.yaml       ✅
 │       └── DividendStats.yaml          ✅
@@ -686,7 +686,7 @@ PostgreSQL + S3/MinIO
 #### **Type Safety Complète**
 ```typescript
 // Frontend TypeScript strict
-interface DividendData {
+interface Dividend {
   securityName: string;
   isin: string;
   grossAmount: number;
@@ -802,7 +802,7 @@ public byte[] create(byte[] pdf1, byte[] pdf2) {
 
 ```typescript
 // frontend/src/lib/mock-parser.ts
-export const parseDividendPDF = async (file: File): Promise<DividendData> => {
+export const parseDividendPDF = async (file: File): Promise<Dividend> => {
   await new Promise(resolve => setTimeout(resolve, 1500)); // ❌ Mock delay
   return {
     securityName: "TOTAL ENERGIES SE",
@@ -816,7 +816,7 @@ export const parseDividendPDF = async (file: File): Promise<DividendData> => {
 **Devrait être**:
 ```typescript
 // frontend/src/lib/api/dividends.ts
-export const parseDividendPDF = async (file: File): Promise<DividendData> => {
+export const parseDividendPDF = async (file: File): Promise<Dividend> => {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -945,7 +945,7 @@ public Mono<ResponseEntity<PdfGenerationResponse>> generateForms(
 ```
 User → Drag PDF → DropZone →
   mock-parser.ts (1.5s delay) →
-    Random DividendData →
+    Random Dividend →
       Display Results
 ```
 
@@ -958,7 +958,7 @@ User → Upload PDF → Frontend →
         Validate ISIN (API externe) →
           Calculate Tax (Treaty rules) →
             Save to DB →
-              Return DividendData →
+              Return Dividend →
                 Display Results
 ```
 
@@ -1113,7 +1113,7 @@ function validateISIN(isin: string): boolean {
 ```typescript
 // ❌ Actuel: tout est accepté
 // ✅ Devrait filtrer
-function isEligibleForReclaim(dividend: DividendData): boolean {
+function isEligibleForReclaim(dividend: Dividend): boolean {
   // 1. ISIN doit être français (FR...)
   if (!dividend.isin.startsWith('FR')) return false;
 
@@ -1683,7 +1683,7 @@ Estimation: 2h
 ✅ Tâche 3: Dividends API
 // frontend/src/lib/api/dividends.ts
 export const dividendsAPI = {
-  async parsePDF(file: File): Promise<DividendData[]> {
+  async parsePDF(file: File): Promise<Dividend[]> {
     const formData = new FormData();
     formData.append('file', file);
 

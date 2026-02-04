@@ -1,6 +1,6 @@
 package com.taxdividend.backend.service.strategy;
 
-import com.taxdividend.backend.api.dto.FormGenerationRequest;
+import com.taxdividend.backend.api.dto.FormGenerationRequestDto;
 
 public interface TaxFormStrategy {
 
@@ -18,7 +18,7 @@ public interface TaxFormStrategy {
      * @param request The form generation request
      * @return A byte array containing the combined PDF or serialized data
      */
-    byte[] generate(FormGenerationRequest request);
+    byte[] generate(FormGenerationRequestDto request);
 
     /**
      * Prefix for the generated file name (e.g., "france-forms")

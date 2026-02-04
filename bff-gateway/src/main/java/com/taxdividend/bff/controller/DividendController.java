@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.taxdividend.bff.api.DividendsApi;
-import com.taxdividend.bff.model.DividendHistoryResponse;
-import com.taxdividend.bff.model.DividendStats;
-import com.taxdividend.bff.model.ParseStatementResponse;
+import com.taxdividend.bff.model.DividendHistoryResponseDto;
+import com.taxdividend.bff.model.DividendStatsDto;
+import com.taxdividend.bff.model.DividendStatementDto;
 import com.taxdividend.bff.service.DividendService;
 
 import reactor.core.publisher.Mono;
@@ -30,16 +30,16 @@ public class DividendController implements DividendsApi {
     private final DividendService dividendService;
 
     @Override
-    public Mono<ResponseEntity<DividendStats>> getDividendStats(Integer taxYear, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<DividendStatsDto>> getDividendStats(Integer taxYear, ServerWebExchange exchange) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
                 .flatMap(userId -> dividendService.getDividendStats(userId, taxYear))
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.ok(new DividendStats()));
+                .defaultIfEmpty(ResponseEntity.ok(new DividendStatsDto()));
     }
 
     @Override
-    public Mono<ResponseEntity<DividendHistoryResponse>> getDividendHistory(Integer page, Integer pageSize,
+    public Mono<ResponseEntity<DividendHistoryResponseDto>> getDividendHistory(Integer page, Integer pageSize,
             ServerWebExchange exchange) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
@@ -48,8 +48,10 @@ public class DividendController implements DividendsApi {
     }
 
     @Override
-    public Mono<ResponseEntity<ParseStatementResponse>> parseDividendStatement(Part file, ServerWebExchange exchange) {
-        return dividendService.parseDividendStatement(file)
+    public Mono<ResponseEntity<DividendStatementDto>> parseDividendStatement(Part file, ServerWebExchange exchange) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
+                .flatMap(userId -> dividendService.parseDividendStatement(userId, file))
                 .map(ResponseEntity::ok);
     }
 }

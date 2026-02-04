@@ -1,5 +1,7 @@
 # Environment files with real credentials
 .env.prod
+.env.dev
+.env.uat
 
 # Backups (can be large)
 backups/

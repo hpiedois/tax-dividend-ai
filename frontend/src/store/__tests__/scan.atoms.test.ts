@@ -44,8 +44,7 @@ describe('scan.atoms', () => {
         paymentDate: '2024-01-01',
         withholdingTax: 25,
         reclaimableAmount: 10,
-        appliedRate: 0.25,
-        status: 'OPEN',
+        appliedRateType: 'PROGRESSIVE',
       },
       {
         securityName: 'Test 2',
@@ -55,8 +54,7 @@ describe('scan.atoms', () => {
         paymentDate: '2024-01-02',
         withholdingTax: 50,
         reclaimableAmount: 20,
-        appliedRate: 0.25,
-        status: 'OPEN',
+        appliedRateType: 'PROGRESSIVE',
       },
     ]);
 
@@ -75,8 +73,7 @@ describe('scan.atoms', () => {
         paymentDate: '2024-01-01',
         withholdingTax: 25,
         reclaimableAmount: 10,
-        appliedRate: 0.25,
-        status: 'OPEN',
+        appliedRateType: 'PROGRESSIVE',
       },
       {
         securityName: 'Test 2',
@@ -86,8 +83,7 @@ describe('scan.atoms', () => {
         paymentDate: '2024-01-02',
         withholdingTax: 50,
         reclaimableAmount: 20,
-        appliedRate: 0.25,
-        status: 'OPEN',
+        appliedRateType: 'PROGRESSIVE',
       },
     ]);
 
@@ -117,8 +113,7 @@ describe('scan.atoms', () => {
         paymentDate: '2024-01-01',
         withholdingTax: 25,
         reclaimableAmount: 10,
-        appliedRate: 0.25,
-        status: 'OPEN',
+        appliedRateType: 'PROGRESSIVE',
       },
     ]);
     store.set(processingCountAtom, { current: 1, total: 1 });
@@ -142,8 +137,7 @@ describe('scan.atoms', () => {
       paymentDate: '2024-01-01',
       withholdingTax: 25,
       reclaimableAmount: 10,
-      appliedRate: 0.25,
-      status: 'OPEN' as const,
+      appliedRateType: 'PROGRESSIVE',
     };
 
     store.set(addScanResultAtom, result);

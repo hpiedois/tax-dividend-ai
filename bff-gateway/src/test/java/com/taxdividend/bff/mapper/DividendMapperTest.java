@@ -1,7 +1,7 @@
 package com.taxdividend.bff.mapper;
 
 import com.taxdividend.bff.client.model.Dividend;
-import com.taxdividend.bff.model.DividendCase;
+import com.taxdividend.bff.model.DividendCaseDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ class DividendMapperTest {
         source.setStatus(Dividend.StatusEnum.OPEN);
 
         // Act
-        DividendCase result = mapper.toDividendCase(source);
+        DividendCaseDto result = mapper.toDividendCase(source);
 
         // Assert
         assertThat(result).isNotNull();
@@ -48,7 +48,7 @@ class DividendMapperTest {
         assertThat(result.getDate()).isEqualTo("2024-06-15");
         assertThat(result.getGrossAmount()).isEqualTo(new BigDecimal("100.00"));
         assertThat(result.getReclaimedAmount()).isEqualTo(new BigDecimal("15.00"));
-        assertThat(result.getStatus()).isEqualTo(DividendCase.StatusEnum.OPEN);
+        assertThat(result.getStatus()).isEqualTo(DividendCaseDto.StatusEnum.OPEN);
     }
 
     @Test
@@ -62,11 +62,11 @@ class DividendMapperTest {
         source.setStatus(null);
 
         // Act
-        DividendCase result = mapper.toDividendCase(source);
+        DividendCaseDto result = mapper.toDividendCase(source);
 
         // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getStatus()).isEqualTo(DividendCase.StatusEnum.OPEN);
+        assertThat(result.getStatus()).isEqualTo(DividendCaseDto.StatusEnum.OPEN);
     }
 
     @Test
@@ -80,10 +80,10 @@ class DividendMapperTest {
         source.setStatus(Dividend.StatusEnum.SENT);
 
         // Act
-        DividendCase result = mapper.toDividendCase(source);
+        DividendCaseDto result = mapper.toDividendCase(source);
 
         // Assert
-        assertThat(result.getStatus()).isEqualTo(DividendCase.StatusEnum.SENT);
+        assertThat(result.getStatus()).isEqualTo(DividendCaseDto.StatusEnum.SENT);
     }
 
     @Test
@@ -97,10 +97,10 @@ class DividendMapperTest {
         source.setStatus(Dividend.StatusEnum.PAID);
 
         // Act
-        DividendCase result = mapper.toDividendCase(source);
+        DividendCaseDto result = mapper.toDividendCase(source);
 
         // Assert
-        assertThat(result.getStatus()).isEqualTo(DividendCase.StatusEnum.PAID);
+        assertThat(result.getStatus()).isEqualTo(DividendCaseDto.StatusEnum.PAID);
     }
 
     @Test
@@ -116,7 +116,7 @@ class DividendMapperTest {
         source.setReclaimableAmount(null);
 
         // Act
-        DividendCase result = mapper.toDividendCase(source);
+        DividendCaseDto result = mapper.toDividendCase(source);
 
         // Assert
         assertThat(result).isNotNull();
@@ -136,7 +136,7 @@ class DividendMapperTest {
         source.setPaymentDate(LocalDate.of(2024, 6, 15));
 
         // Act
-        DividendCase result = mapper.toDividendCase(source);
+        DividendCaseDto result = mapper.toDividendCase(source);
 
         // Assert
         assertThat(result.getId()).isEqualTo(testId.toString());

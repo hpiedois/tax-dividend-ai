@@ -1,73 +1,57 @@
 openapi: 3.0.3
 info:
   title: Dividend Agent API
-  description: API for extracting data from dividend statements
+  description: |
+    AI-powered API for extracting dividend data from broker statements.
+
+    This microservice handles:
+    - PDF parsing (with password support for encrypted files)
+    - Image analysis (JPEG, PNG)
+    - LLM-assisted data extraction
+    - Multi-broker format support (Interactive Brokers, Swissquote, etc.)
+
+    The agent returns structured dividend data that can be imported into the backend.
   version: 1.0.0
+  contact:
+    name: Tax Dividend AI Team
+
 servers:
   - url: http://localhost:8083/api
-paths:
-  /parse:
-    post:
-      tags:
-        - Parsing
-      summary: Parse a PDF or Image dividend statement
-      operationId: parseDocument
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-                  description: The dividend statement file (PDF, JPEG, PNG)
-                password:
-                  type: string
-                  description: Optional password for encrypted PDFs
-              required:
-                - file
-      responses:
-        '200':
-          description: Successful extraction
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ParseResponse'
-        '400':
-          description: Invalid input or unreadable file
-        '422':
-          description: Password required but not provided
-        '500':
-          description: Extraction failed
+    description: Local development server
+  - url: http://agent:8083/api
+    description: Docker container (internal network)
 
 components:
   schemas:
-    ParseResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/DividendData'
-    
-    DividendData:
-      type: object
-      properties:
-        securityName:
-          type: string
-        isin:
-          type: string
-        grossAmount:
-          type: number
-        currency:
-          type: string
-        paymentDate:
-          type: string
-          format: date
-        country:
-          type: string
-        withholdingTax:
-          type: number
-        reclaimableAmount:
-          type: number
+    ParsedDividendStatement:
+      $ref: './schemas/parse.yaml#/ParsedDividendStatement'
+    DocumentDividendData:
+      $ref: './schemas/parse.yaml#/DocumentDividendData'
+
+paths:
+  /parse:
+    $ref: './paths/parse.yaml'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns the health status of the agent service
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [UP, DOWN]
+                  version:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time

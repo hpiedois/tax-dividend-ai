@@ -98,7 +98,15 @@ export function applyMockAdapter(axiosInstance: AxiosInstance) {
 
         // --- AUTH (Login) ---
         if (config.url?.includes('/auth/login') && config.method === 'post') {
-            const { username } = JSON.parse(config.data || '{}');
+            let requestData = config.data || {};
+            if (typeof requestData === 'string') {
+                try {
+                    requestData = JSON.parse(requestData);
+                } catch (e) {
+                    console.error('[MockAdapter] Failed to parse request body', e);
+                }
+            }
+            const { username } = requestData;
             return Promise.reject({
                 response: {
                     data: {

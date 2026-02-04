@@ -1,9 +1,9 @@
 package com.taxdividend.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.taxdividend.backend.api.dto.FormGenerationRequest;
+import com.taxdividend.backend.api.dto.FormGenerationRequestDto;
 import com.taxdividend.backend.config.TestSecurityConfig;
-import com.taxdividend.backend.dto.GenerateFormResultDTO;
+import com.taxdividend.backend.api.dto.GenerateFormResultDto;
 import com.taxdividend.backend.mapper.FormMapper;
 import com.taxdividend.backend.model.GeneratedForm;
 import com.taxdividend.backend.model.User;
@@ -89,19 +89,19 @@ class FormControllerTest {
     @DisplayName("Should generate Form 5000 successfully")
     void shouldGenerateForm5000() throws Exception {
         // Given
-        FormGenerationRequest request = new FormGenerationRequest()
+        FormGenerationRequestDto request = new FormGenerationRequestDto()
                 .userId(testUserId)
-                .formType(FormGenerationRequest.FormTypeEnum._5000)
+                .formType(FormGenerationRequestDto.FormTypeEnum._5000)
                 .taxYear(2024);
 
-        GenerateFormResultDTO result = GenerateFormResultDTO.builder()
+        GenerateFormResultDto result = new GenerateFormResultDto()
                 .success(true)
                 .formId(UUID.randomUUID())
                 .formType("5000")
                 .downloadUrl("https://minio.example.com/form.pdf")
-                .build();
+;
 
-        when(pdfGenerationService.generateForms(any(FormGenerationRequest.class)))
+        when(pdfGenerationService.generateForms(any(FormGenerationRequestDto.class)))
                 .thenReturn(result);
 
         // When/Then
@@ -114,7 +114,7 @@ class FormControllerTest {
                 .andExpect(jsonPath("$.formType").value("5000"))
                 .andExpect(jsonPath("$.downloadUrl").isNotEmpty());
 
-        verify(pdfGenerationService).generateForms(any(FormGenerationRequest.class));
+        verify(pdfGenerationService).generateForms(any(FormGenerationRequestDto.class));
         verify(auditService).logFormGeneration(eq(testUserId), any(), eq("5000"), anyInt());
     }
 
@@ -124,21 +124,21 @@ class FormControllerTest {
     void shouldGenerateForm5001() throws Exception {
         // Given
         List<UUID> dividendIds = Arrays.asList(UUID.randomUUID(), UUID.randomUUID());
-        FormGenerationRequest request = new FormGenerationRequest()
+        FormGenerationRequestDto request = new FormGenerationRequestDto()
                 .userId(testUserId)
-                .formType(FormGenerationRequest.FormTypeEnum._5001)
+                .formType(FormGenerationRequestDto.FormTypeEnum._5001)
                 .taxYear(2024)
                 .dividendIds(dividendIds);
 
-        GenerateFormResultDTO result = GenerateFormResultDTO.builder()
+        GenerateFormResultDto result = new GenerateFormResultDto()
                 .success(true)
                 .formId(UUID.randomUUID())
                 .formType("5001")
                 .dividendCount(2)
                 .downloadUrl("https://minio.example.com/form.pdf")
-                .build();
+;
 
-        when(pdfGenerationService.generateForms(any(FormGenerationRequest.class)))
+        when(pdfGenerationService.generateForms(any(FormGenerationRequestDto.class)))
                 .thenReturn(result);
 
         // When/Then
@@ -160,21 +160,21 @@ class FormControllerTest {
     void shouldGenerateBundle() throws Exception {
         // Given
         List<UUID> dividendIds = Arrays.asList(UUID.randomUUID());
-        FormGenerationRequest request = new FormGenerationRequest()
+        FormGenerationRequestDto request = new FormGenerationRequestDto()
                 .userId(testUserId)
-                .formType(FormGenerationRequest.FormTypeEnum.BUNDLE)
+                .formType(FormGenerationRequestDto.FormTypeEnum.BUNDLE)
                 .taxYear(2024)
                 .dividendIds(dividendIds);
 
-        GenerateFormResultDTO result = GenerateFormResultDTO.builder()
+        GenerateFormResultDto result = new GenerateFormResultDto()
                 .success(true)
                 .formId(UUID.randomUUID())
                 .formType("BUNDLE")
                 .dividendCount(1)
                 .downloadUrl("https://minio.example.com/bundle.zip")
-                .build();
+;
 
-        when(pdfGenerationService.generateForms(any(FormGenerationRequest.class)))
+        when(pdfGenerationService.generateForms(any(FormGenerationRequestDto.class)))
                 .thenReturn(result);
 
         // When/Then
@@ -190,12 +190,12 @@ class FormControllerTest {
     @DisplayName("Should handle generation failure")
     void shouldHandleGenerationFailure() throws Exception {
         // Given
-        FormGenerationRequest request = new FormGenerationRequest()
+        FormGenerationRequestDto request = new FormGenerationRequestDto()
                 .userId(testUserId)
-                .formType(FormGenerationRequest.FormTypeEnum._5000)
+                .formType(FormGenerationRequestDto.FormTypeEnum._5000)
                 .taxYear(2024);
 
-        when(pdfGenerationService.generateForms(any(FormGenerationRequest.class)))
+        when(pdfGenerationService.generateForms(any(FormGenerationRequestDto.class)))
                 .thenThrow(new RuntimeException("Generation failed"));
 
         // When/Then
@@ -212,8 +212,8 @@ class FormControllerTest {
     @DisplayName("Should list user's forms")
     void shouldListUserForms() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.GeneratedForm formDto =
-                new com.taxdividend.backend.api.dto.GeneratedForm();
+        com.taxdividend.backend.api.dto.GeneratedFormDto formDto =
+                new com.taxdividend.backend.api.dto.GeneratedFormDto();
         formDto.setId(testForm.getId());
 
         when(formService.listForms(testUserId, null, null))
@@ -231,8 +231,8 @@ class FormControllerTest {
     @DisplayName("Should filter forms by tax year")
     void shouldFilterFormsByTaxYear() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.GeneratedForm formDto =
-                new com.taxdividend.backend.api.dto.GeneratedForm();
+        com.taxdividend.backend.api.dto.GeneratedFormDto formDto =
+                new com.taxdividend.backend.api.dto.GeneratedFormDto();
         formDto.setId(testForm.getId());
 
         when(formService.listForms(testUserId, 2024, null))
@@ -252,8 +252,8 @@ class FormControllerTest {
     void shouldGetFormById() throws Exception {
         // Given
         UUID formId = testForm.getId();
-        com.taxdividend.backend.api.dto.GeneratedForm formDto =
-                new com.taxdividend.backend.api.dto.GeneratedForm();
+        com.taxdividend.backend.api.dto.GeneratedFormDto formDto =
+                new com.taxdividend.backend.api.dto.GeneratedFormDto();
         formDto.setId(formId);
 
         when(formService.getForm(formId, testUserId))
@@ -342,12 +342,12 @@ class FormControllerTest {
     void shouldRegenerateExpiredForm() throws Exception {
         // Given
         UUID formId = testForm.getId();
-        GenerateFormResultDTO result = GenerateFormResultDTO.builder()
+        GenerateFormResultDto result = new GenerateFormResultDto()
                 .success(true)
                 .formId(formId)
                 .formType("5000")
                 .downloadUrl("https://minio.example.com/new-form.pdf")
-                .build();
+;
 
         when(pdfGenerationService.regenerateForm(formId))
                 .thenReturn(result);
@@ -384,13 +384,13 @@ class FormControllerTest {
     @DisplayName("Should generate forms for all unsubmitted dividends")
     void shouldGenerateForAllUnsubmitted() throws Exception {
         // Given
-        GenerateFormResultDTO result = GenerateFormResultDTO.builder()
+        GenerateFormResultDto result = new GenerateFormResultDto()
                 .success(true)
                 .formId(UUID.randomUUID())
                 .formType("BUNDLE")
                 .dividendCount(5)
                 .downloadUrl("https://minio.example.com/bundle.zip")
-                .build();
+;
 
         when(pdfGenerationService.generateForUserDividends(testUserId, 2024, "BUNDLE"))
                 .thenReturn(result);

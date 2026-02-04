@@ -2,7 +2,7 @@ package com.taxdividend.backend.service;
 
 import com.taxdividend.backend.dto.FileUploadResultDTO;
 import com.taxdividend.backend.exception.StorageException;
-import com.taxdividend.backend.service.impl.StorageServiceImpl;
+
 import io.minio.*;
 import io.minio.messages.DeleteError;
 import io.minio.messages.Item;
@@ -37,7 +37,7 @@ class StorageServiceTest {
         private MinioClient minioClient;
 
         @InjectMocks
-        private StorageServiceImpl storageService;
+        private StorageService storageService;
 
         private static final String TEST_BUCKET = "test-bucket";
 
@@ -129,7 +129,8 @@ class StorageServiceTest {
                 InputStream inputStream = new ByteArrayInputStream(content);
                 String fileName = "test.pdf";
 
-                // Note: bucketExists() stubbing removed as it's called in @PostConstruct, not in uploadFile()
+                // Note: bucketExists() stubbing removed as it's called in @PostConstruct, not
+                // in uploadFile()
                 when(minioClient.putObject(any(PutObjectArgs.class)))
                                 .thenReturn(mock(ObjectWriteResponse.class));
 

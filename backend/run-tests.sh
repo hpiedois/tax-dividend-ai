@@ -18,17 +18,17 @@ echo ""
 case $TEST_TYPE in
   unit)
     echo "Running unit tests only..."
-    ./mvnw test
+    mvn test
     ;;
 
   integration)
     echo "Running integration tests (with Testcontainers)..."
-    ./mvnw verify -DskipUnitTests
+    mvn verify -DskipUnitTests
     ;;
 
   all)
     echo "Running all tests..."
-    ./mvnw verify
+    mvn verify
     ;;
 
   *)

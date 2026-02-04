@@ -1,4 +1,0 @@
-type: object
-properties:
-  formUrl:
-    type: string

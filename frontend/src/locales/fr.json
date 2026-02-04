@@ -59,10 +59,13 @@
         "creating_account": "Création du compte..."
     },
     "dashboard": {
+        "loading": "Chargement du tableau de bord...",
         "total_reclaimed": "Total Récupéré",
         "pending": "En attente",
         "cases_processed": "Dossiers traités",
         "recent_activity": "Activité Récente",
+        "no_activity": "Aucune activité récente",
+        "status": "Statut",
         "scan_imported": "Scan importé",
         "refund_received": "Remboursement reçu"
     },

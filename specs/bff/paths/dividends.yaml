@@ -1,0 +1,83 @@
+/dividends/parse-statement:
+  post:
+    tags:
+      - Dividends
+    summary: Parse a dividend statement (PDF/Image)
+    operationId: parseDividendStatement
+    requestBody:
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              file:
+                type: string
+                format: binary
+    responses:
+      '200':
+        description: Successful parsing
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividends.yaml#/DividendStatement'
+
+/dividends/history:
+  get:
+    tags:
+      - Dividends
+    summary: Get dividend history
+    operationId: getDividendHistory
+    parameters:
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 0
+      - name: pageSize
+        in: query
+        schema:
+          type: integer
+          default: 10
+    responses:
+      '200':
+        description: History retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividends.yaml#/DividendHistoryResponse'
+
+/dividends/stats:
+  get:
+    tags:
+      - Dividends
+    summary: Get dividend statistics
+    operationId: getDividendStats
+    parameters:
+      - name: taxYear
+        in: query
+        schema:
+          type: integer
+        description: Optional tax year filter
+    responses:
+      '200':
+        description: Stats retrieved
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/dividends.yaml#/DividendStats'
+
+/dividends/status:
+  patch:
+    tags:
+      - Dividends
+    summary: Update status for multiple dividends
+    operationId: updateDividendStatus
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/dividends.yaml#/UpdateDividendStatusRequest'
+    responses:
+      '204':
+        description: Status updated

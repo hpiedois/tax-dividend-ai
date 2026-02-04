@@ -31,9 +31,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-taxdividend}
       POSTGRES_USER: ${POSTGRES_USER}  # Must be set in .env.prod
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Must be set in .env.prod (use secrets!)
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C --data-checksums"
-      # Production-tuned settings (adjust based on hardware)
-      POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-512MB}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      TAXDIVIDEND_DB_USER: ${TAXDIVIDEND_DB_USER}
+      TAXDIVIDEND_DB_PASSWORD: ${TAXDIVIDEND_DB_PASSWORD}
+      
+      # Performance Tuning for Production
+      POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-1GB}
       POSTGRES_EFFECTIVE_CACHE_SIZE: ${POSTGRES_EFFECTIVE_CACHE_SIZE:-2GB}
       POSTGRES_MAX_CONNECTIONS: ${POSTGRES_MAX_CONNECTIONS:-200}
       POSTGRES_WORK_MEM: ${POSTGRES_WORK_MEM:-8MB}

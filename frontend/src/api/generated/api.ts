@@ -23,6 +23,20 @@ import type { RequestArgs } from './base';
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
+export interface Dividend {
+    'securityName': string;
+    'isin'?: string;
+    'grossAmount': number;
+    'currency': string;
+    'paymentDate'?: string;
+    'withholdingTax'?: number;
+    'reclaimableAmount'?: number;
+    'sourceCountry'?: string;
+    /**
+     * Tracks which rate was applied (e.g. PFU, PROGRESSIVE, TREATY)
+     */
+    'appliedRateType'?: string;
+}
 export interface DividendCase {
     'id'?: string;
     'date'?: string;
@@ -40,25 +54,19 @@ export const DividendCaseStatusEnum = {
 
 export type DividendCaseStatusEnum = typeof DividendCaseStatusEnum[keyof typeof DividendCaseStatusEnum];
 
-export interface DividendData {
-    'securityName': string;
-    'isin'?: string;
-    'grossAmount': number;
-    'currency': string;
-    'paymentDate'?: string;
-    'withholdingTax'?: number;
-    'reclaimableAmount'?: number;
-    'sourceCountry'?: string;
-    /**
-     * Tracks which rate was applied (e.g. PFU, PROGRESSIVE, TREATY)
-     */
-    'appliedRateType'?: string;
-}
 export interface DividendHistoryResponse {
     'data'?: Array<DividendCase>;
     'total'?: number;
     'page'?: number;
     'pageSize'?: number;
+}
+export interface DividendStatement {
+    'dividends'?: Array<Dividend>;
+    'metadata'?: DividendStatementMetadata;
+}
+export interface DividendStatementMetadata {
+    'broker'?: string;
+    'year'?: number;
 }
 export interface DividendStats {
     'totalReclaimed'?: number;
@@ -94,14 +102,6 @@ export interface GeneratedForm {
     'taxYear'?: number;
     'fileName'?: string;
     'generatedAt'?: string;
-}
-export interface ParseStatementResponse {
-    'dividends'?: Array<DividendData>;
-    'metadata'?: ParseStatementResponseMetadata;
-}
-export interface ParseStatementResponseMetadata {
-    'broker'?: string;
-    'year'?: number;
 }
 export interface RegisterRequest {
     'email'?: string;
@@ -510,7 +510,7 @@ export const DividendsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async parseDividendStatement(file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ParseStatementResponse>> {
+        async parseDividendStatement(file?: File, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DividendStatement>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.parseDividendStatement(file, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DividendsApi.parseDividendStatement']?.[localVarOperationServerIndex]?.url;
@@ -566,7 +566,7 @@ export const DividendsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        parseDividendStatement(file?: File, options?: RawAxiosRequestConfig): AxiosPromise<ParseStatementResponse> {
+        parseDividendStatement(file?: File, options?: RawAxiosRequestConfig): AxiosPromise<DividendStatement> {
             return localVarFp.parseDividendStatement(file, options).then((request) => request(axios, basePath));
         },
         /**

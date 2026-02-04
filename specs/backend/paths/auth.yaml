@@ -1,0 +1,41 @@
+/auth/register:
+  post:
+    tags:
+      - Auth
+    summary: Register a new user
+    operationId: registerUser
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/auth.yaml#/RegisterUserRequest'
+    responses:
+      '200':
+        description: Registration pending verification
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/UserRegistrationResponse'
+
+/auth/verify:
+  post:
+    tags:
+      - Auth
+    summary: Verify user email
+    operationId: verifyEmail
+    parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Email verified successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/auth.yaml#/VerifyEmailResponse'
+      '400':
+        description: Invalid token

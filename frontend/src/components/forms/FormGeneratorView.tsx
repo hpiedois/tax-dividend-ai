@@ -42,19 +42,19 @@ export function FormGeneratorView() {
       taxYear,
       dividends: scanResults.map((result) => ({
         securityName: result.securityName,
-        isin: result.isin,
-        paymentDate: result.paymentDate,
+        isin: result.isin ?? '',
+        paymentDate: result.paymentDate ?? '',
         grossAmount: result.grossAmount,
         currency: result.currency,
-        withholdingTax: result.withholdingTax,
+        withholdingTax: result.withholdingTax ?? 0,
         treatyAmount: result.grossAmount * 0.15, // Treaty rate
-        reclaimableAmount: result.reclaimableAmount,
-        appliedRate: result.appliedRate || 0,
+        reclaimableAmount: result.reclaimableAmount ?? 0,
+        appliedRate: 0, // Not used anymore, kept for backward compatibility
       })),
       totalGrossAmount: scanResults.reduce((sum, r) => sum + r.grossAmount, 0),
-      totalWithholdingTax: scanResults.reduce((sum, r) => sum + r.withholdingTax, 0),
+      totalWithholdingTax: scanResults.reduce((sum, r) => sum + (r.withholdingTax ?? 0), 0),
       totalTreatyAmount: scanResults.reduce((sum, r) => sum + r.grossAmount * 0.15, 0),
-      totalReclaimableAmount: scanResults.reduce((sum, r) => sum + r.reclaimableAmount, 0),
+      totalReclaimableAmount: scanResults.reduce((sum, r) => sum + (r.reclaimableAmount ?? 0), 0),
     };
 
     generateForm(

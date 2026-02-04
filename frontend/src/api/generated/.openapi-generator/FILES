@@ -1,15 +1,16 @@
 .gitignore
 .npmignore
-.openapi-generator-ignore
 README.md
 api.ts
 base.ts
 common.ts
 configuration.ts
 docs/AuthApi.md
+docs/Dividend.md
 docs/DividendCase.md
-docs/DividendData.md
 docs/DividendHistoryResponse.md
+docs/DividendStatement.md
+docs/DividendStatementMetadata.md
 docs/DividendStats.md
 docs/DividendsApi.md
 docs/FormDownloadUrlResponse.md
@@ -17,8 +18,6 @@ docs/FormsApi.md
 docs/GenerateTaxFormsRequest.md
 docs/GenerateTaxFormsResponse.md
 docs/GeneratedForm.md
-docs/ParseStatementResponse.md
-docs/ParseStatementResponseMetadata.md
 docs/RegisterRequest.md
 docs/UpdateDividendStatusRequest.md
 git_push.sh

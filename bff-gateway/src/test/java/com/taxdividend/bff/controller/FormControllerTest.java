@@ -1,9 +1,9 @@
 package com.taxdividend.bff.controller;
 
-import com.taxdividend.bff.model.FormDownloadUrlResponse;
-import com.taxdividend.bff.model.GenerateTaxFormsRequest;
-import com.taxdividend.bff.model.GenerateTaxFormsResponse;
-import com.taxdividend.bff.model.GeneratedForm;
+import com.taxdividend.bff.model.FormDownloadUrlResponseDto;
+import com.taxdividend.bff.model.GenerateTaxFormsRequestDto;
+import com.taxdividend.bff.model.GenerateTaxFormsResponseDto;
+import com.taxdividend.bff.model.GeneratedFormDto;
 import com.taxdividend.bff.service.FormService;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ class FormControllerTest {
     void generateTaxForms_ReturnsOk() {
         // Given
         when(formService.generateForms(any(), any()))
-                .thenReturn(Mono.just(new GenerateTaxFormsResponse()));
+                .thenReturn(Mono.just(new GenerateTaxFormsResponseDto()));
 
         // When & Then
         webTestClient.post()
@@ -63,7 +63,7 @@ class FormControllerTest {
     void getForm_ReturnsOk() {
         // Given
         when(formService.getForm(any(), any()))
-                .thenReturn(Mono.just(new GeneratedForm()));
+                .thenReturn(Mono.just(new GeneratedFormDto()));
 
         // When & Then
         webTestClient.get()

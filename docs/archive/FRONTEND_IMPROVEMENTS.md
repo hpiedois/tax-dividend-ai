@@ -162,7 +162,7 @@ logoutAtom            // () => void
 ```typescript
 // Atoms
 scanStepAtom          // 'upload' | 'scanning' | 'result'
-scanResultsAtom       // DividendData[]
+scanResultsAtom       // Dividend[]
 processingCountAtom   // { current, total }
 
 // Derived
@@ -451,11 +451,11 @@ public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
 
 // DividendController.java
 @PostMapping("/api/dividends/parse")
-public ResponseEntity<DividendData> parsePDF(@RequestParam MultipartFile file) {
+public ResponseEntity<Dividend> parsePDF(@RequestParam MultipartFile file) {
     // Parse PDF avec Apache PDFBox / pdfplumber
     // Extract data
     // Calculate tax avec même logique que tax-calculator.ts
-    // Return DividendData
+    // Return Dividend
 }
 ```
 

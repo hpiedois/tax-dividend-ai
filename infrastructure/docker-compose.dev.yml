@@ -17,6 +17,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      TAXDIVIDEND_DB_USER: ${TAXDIVIDEND_DB_USER:-taxdividend_user}
+      TAXDIVIDEND_DB_PASSWORD: ${TAXDIVIDEND_DB_PASSWORD:-dev_password_123}
       # Development-friendly settings (not for production!)
       POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-128MB}
       POSTGRES_EFFECTIVE_CACHE_SIZE: ${POSTGRES_EFFECTIVE_CACHE_SIZE:-512MB}
@@ -105,6 +107,132 @@ services:
       com.taxdividend.env: "development"
       com.taxdividend.service: "cache"
 
+  # ==========================================
+  # AUTHENTICATION
+  # ==========================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: tax-dividend-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-dev:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-postgres}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json:ro
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+    networks:
+      - tax-dividend-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080; echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; cat <&3 | grep -q 'HTTP/1.1 200 OK'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      com.taxdividend.env: "development"
+      com.taxdividend.service: "auth"
+
+  # ==========================================
+  # UTILITIES
+  # ==========================================
+  mailhog:
+    image: anatomicjc/mailhog:latest
+    container_name: tax-dividend-mailhog
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+    networks:
+      - tax-dividend-dev-network
+    labels:
+      com.taxdividend.env: "development"
+      com.taxdividend.service: "email-test"
+
+  # ==========================================
+  # OBSERVABILITY STACK
+  # ==========================================
+  blackbox:
+    image: prom/blackbox-exporter:master
+    container_name: tax-dividend-blackbox
+    ports:
+      - "9115:9115"
+    networks:
+      - tax-dividend-dev-network
+    labels:
+      com.taxdividend.env: "development"
+      com.taxdividend.service: "monitoring"
+
+  loki:
+    image: grafana/loki:3.2.0
+    container_name: tax-dividend-loki
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./observability/loki.yaml:/etc/loki/local-config.yaml:ro
+    ports:
+      - "3100:3100"
+    networks:
+      - tax-dividend-dev-network
+
+  promtail:
+    image: grafana/promtail:3.2.0
+    container_name: tax-dividend-promtail
+    command: -config.file=/etc/promtail/config.yaml
+    volumes:
+      - ./observability/promtail.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - tax-dividend-dev-network
+
+  tempo:
+    image: grafana/tempo:2.6.0
+    container_name: tax-dividend-tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+    ports:
+      - "3200:3200" # Jaeger UI / Query
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+      - "9411:9411" # Zipkin
+    networks:
+      - tax-dividend-dev-network
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: tax-dividend-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --enable-feature=exemplar-storage
+    volumes:
+      - ./observability/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - tax-dividend-dev-network
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: tax-dividend-grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_USERS_DEFAULT_THEME=server
+      - GF_LOG_MODE=console
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - tax-dividend-dev-network
+
 volumes:
   postgres_dev_data:
     driver: local
@@ -115,6 +243,10 @@ volumes:
     labels:
       com.taxdividend.env: "development"
   redis_dev_data:
+    driver: local
+    labels:
+      com.taxdividend.env: "development"
+  grafana_data:
     driver: local
     labels:
       com.taxdividend.env: "development"

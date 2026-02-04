@@ -1,0 +1,30 @@
+/auth/register:
+  post:
+    tags:
+      - Auth
+    summary: Register a new user
+    operationId: register
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/auth.yaml#/RegisterRequest'
+    responses:
+      '200':
+        description: Registration initiated
+
+/auth/verify:
+  post:
+    tags:
+      - Auth
+    summary: Verify email
+    operationId: verifyEmail
+    parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Verified

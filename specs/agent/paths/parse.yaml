@@ -1,0 +1,65 @@
+post:
+  tags:
+    - Parsing
+  summary: Parse a PDF or Image dividends statement
+  description: |
+    Extract dividend data from broker statements.
+    Supports PDF (with optional password) and images (JPEG, PNG).
+    Returns structured dividend data including security details, amounts, and tax information.
+  operationId: parseDocument
+  requestBody:
+    required: true
+    content:
+      multipart/form-data:
+        schema:
+          type: object
+          properties:
+            file:
+              type: string
+              format: binary
+              description: The dividends statement file (PDF, JPEG, PNG)
+            password:
+              type: string
+              description: Optional password for encrypted PDFs
+          required:
+            - file
+  responses:
+    '200':
+      description: Successful extraction
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/parse.yaml#/ParsedDividendStatement'
+    '400':
+      description: Invalid input or unreadable file
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: string
+    '422':
+      description: Password required but not provided
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+    '500':
+      description: Extraction failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: string

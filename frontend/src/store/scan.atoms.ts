@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import type { DividendData } from '../types/dividend.types';
+import type { Dividend } from '../types/dividend.types';
 
 // Types
 export type ScanStep = 'upload' | 'scanning' | 'result';
@@ -11,7 +11,7 @@ export interface ProcessingCount {
 
 // Atoms
 export const scanStepAtom = atom<ScanStep>('upload');
-export const scanResultsAtom = atom<DividendData[]>([]);
+export const scanResultsAtom = atom<Dividend[]>([]);
 export const processingCountAtom = atom<ProcessingCount>({ current: 0, total: 0 });
 
 // Derived atoms
@@ -22,7 +22,7 @@ export const totalGrossAmountAtom = atom((get) => {
 
 export const totalReclaimableAtom = atom((get) => {
   const results = get(scanResultsAtom);
-  return results.reduce((acc, curr) => acc + curr.reclaimableAmount, 0);
+  return results.reduce((acc, curr) => acc + (curr.reclaimableAmount ?? 0), 0);
 });
 
 export const processingProgressAtom = atom((get) => {
@@ -39,7 +39,7 @@ export const resetScanAtom = atom(null, (_get, set) => {
 
 export const addScanResultAtom = atom(
   null,
-  (get, set, result: DividendData) => {
+  (get, set, result: Dividend) => {
     set(scanResultsAtom, [...get(scanResultsAtom), result]);
   }
 );

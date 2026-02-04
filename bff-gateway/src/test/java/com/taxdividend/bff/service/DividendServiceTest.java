@@ -1,16 +1,19 @@
 package com.taxdividend.bff.service;
 
 import com.taxdividend.bff.agent.client.api.ParsingApi;
-import com.taxdividend.bff.agent.client.model.DividendData;
-import com.taxdividend.bff.agent.client.model.ParseResponse;
+import com.taxdividend.bff.agent.client.model.DocumentDividendData;
+import com.taxdividend.bff.agent.client.model.ParsedDividendStatement;
 import com.taxdividend.bff.client.api.DividendStatementsApi;
 import com.taxdividend.bff.client.api.DividendsApi;
-import com.taxdividend.bff.client.model.*;
+import com.taxdividend.bff.client.model.BulkImportDividendItem;
+import com.taxdividend.bff.client.model.BulkImportDividendsResponse;
+import com.taxdividend.bff.client.model.Dividend;
+import com.taxdividend.bff.client.model.DividendStatement;
+import com.taxdividend.bff.client.model.DividendStats;
+import com.taxdividend.bff.client.model.PaginatedDividendList;
 import com.taxdividend.bff.mapper.DividendMapper;
-import com.taxdividend.bff.model.DividendCase;
-import com.taxdividend.bff.model.DividendHistoryResponse;
-import com.taxdividend.bff.model.DividendStats;
-import com.taxdividend.bff.model.ParseStatementResponse;
+import com.taxdividend.bff.model.DividendCaseDto;
+import com.taxdividend.bff.model.DividendStatsDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -71,13 +74,13 @@ class DividendServiceTest {
     void getDividendStats_Success() {
         // Arrange
         Integer taxYear = 2024;
-        DividendStatsDTO statsDTO = new DividendStatsDTO();
-        statsDTO.setTotalReclaimed(new BigDecimal("150.00"));
-        statsDTO.setPendingAmount(new BigDecimal("50.00"));
-        statsDTO.setCasesCount(5);
+        DividendStats backendStats = new DividendStats();
+        backendStats.setTotalReclaimed(new BigDecimal("150.00"));
+        backendStats.setPendingAmount(new BigDecimal("50.00"));
+        backendStats.setCasesCount(5);
 
         when(dividendsApi.getDividendStats(testUserId, taxYear))
-                .thenReturn(Mono.just(statsDTO));
+                .thenReturn(Mono.just(backendStats));
 
         // Act & Assert
         StepVerifier.create(dividendService.getDividendStats(testUserId, taxYear))
@@ -121,13 +124,13 @@ class DividendServiceTest {
         dividend2.setId(UUID.randomUUID());
         dividend2.setSecurityName("Test Security 2");
 
-        ListDividends200Response response = new ListDividends200Response();
+        PaginatedDividendList response = new PaginatedDividendList();
         response.setContent(List.of(dividend1, dividend2));
 
-        DividendCase case1 = new DividendCase();
+        DividendCaseDto case1 = new DividendCaseDto();
         case1.setId(dividend1.getId().toString());
 
-        DividendCase case2 = new DividendCase();
+        DividendCaseDto case2 = new DividendCaseDto();
         case2.setId(dividend2.getId().toString());
 
         when(dividendsApi.listDividends(eq(testUserId), eq(0), eq(10), any(), any(), any()))
@@ -150,7 +153,7 @@ class DividendServiceTest {
     @DisplayName("Should return empty history when no dividends found")
     void getDividendHistory_EmptyResult() {
         // Arrange
-        ListDividends200Response response = new ListDividends200Response();
+        PaginatedDividendList response = new PaginatedDividendList();
         response.setContent(List.of());
 
         when(dividendsApi.listDividends(eq(testUserId), eq(0), eq(10), any(), any(), any()))
@@ -235,7 +238,7 @@ class DividendServiceTest {
         when(filePart.transferTo(any(Path.class))).thenReturn(Mono.empty());
 
         // Mock Agent response
-        DividendData agentDividend = new DividendData();
+        DocumentDividendData agentDividend = new DocumentDividendData();
         agentDividend.setSecurityName("Test Security");
         agentDividend.setIsin("FR0000120271");
         agentDividend.setGrossAmount(new BigDecimal("100.00"));
@@ -244,7 +247,7 @@ class DividendServiceTest {
         agentDividend.setCountry("FR");
         agentDividend.setWithholdingTax(new BigDecimal("30.00"));
 
-        ParseResponse agentResponse = new ParseResponse();
+        ParsedDividendStatement agentResponse = new ParsedDividendStatement();
         agentResponse.setData(List.of(agentDividend));
 
         when(parsingApi.parseDocument(any(), any())).thenReturn(Mono.just(agentResponse));
@@ -311,8 +314,8 @@ class DividendServiceTest {
         when(filePart.filename()).thenReturn("statement.pdf");
         when(filePart.transferTo(any(Path.class))).thenReturn(Mono.empty());
 
-        ParseResponse agentResponse = new ParseResponse();
-        DividendData dividend = new DividendData();
+        ParsedDividendStatement agentResponse = new ParsedDividendStatement();
+        DocumentDividendData dividend = new DocumentDividendData();
         dividend.setPaymentDate(LocalDate.of(2024, 6, 15));
         agentResponse.setData(List.of(dividend));
 
@@ -341,12 +344,12 @@ class DividendServiceTest {
         when(filePart.filename()).thenReturn("statement.pdf");
         when(filePart.transferTo(any(Path.class))).thenReturn(Mono.empty());
 
-        DividendData agentDividend = new DividendData();
+        DocumentDividendData agentDividend = new DocumentDividendData();
         agentDividend.setPaymentDate(LocalDate.of(2024, 6, 15));
         agentDividend.setGrossAmount(new BigDecimal("100.00"));
         agentDividend.setWithholdingTax(new BigDecimal("30.00"));
 
-        ParseResponse agentResponse = new ParseResponse();
+        ParsedDividendStatement agentResponse = new ParsedDividendStatement();
         agentResponse.setData(List.of(agentDividend));
 
         when(parsingApi.parseDocument(any(), any())).thenReturn(Mono.just(agentResponse));
@@ -380,7 +383,7 @@ class DividendServiceTest {
         when(filePart.filename()).thenReturn("statement.pdf");
         when(filePart.transferTo(any(Path.class))).thenReturn(Mono.empty());
 
-        ParseResponse agentResponse = new ParseResponse();
+        ParsedDividendStatement agentResponse = new ParsedDividendStatement();
         agentResponse.setData(List.of()); // Empty list
 
         when(parsingApi.parseDocument(any(), any())).thenReturn(Mono.just(agentResponse));
@@ -416,22 +419,22 @@ class DividendServiceTest {
         when(filePart.transferTo(any(Path.class))).thenReturn(Mono.empty());
 
         // Multiple dividends with different dates
-        DividendData dividend1 = new DividendData();
+        DocumentDividendData dividend1 = new DocumentDividendData();
         dividend1.setPaymentDate(LocalDate.of(2024, 3, 15));
         dividend1.setGrossAmount(new BigDecimal("100.00"));
         dividend1.setWithholdingTax(new BigDecimal("30.00"));
 
-        DividendData dividend2 = new DividendData();
+        DocumentDividendData dividend2 = new DocumentDividendData();
         dividend2.setPaymentDate(LocalDate.of(2024, 6, 20));
         dividend2.setGrossAmount(new BigDecimal("100.00"));
         dividend2.setWithholdingTax(new BigDecimal("30.00"));
 
-        DividendData dividend3 = new DividendData();
+        DocumentDividendData dividend3 = new DocumentDividendData();
         dividend3.setPaymentDate(LocalDate.of(2024, 9, 10));
         dividend3.setGrossAmount(new BigDecimal("100.00"));
         dividend3.setWithholdingTax(new BigDecimal("30.00"));
 
-        ParseResponse agentResponse = new ParseResponse();
+        ParsedDividendStatement agentResponse = new ParsedDividendStatement();
         agentResponse.setData(List.of(dividend1, dividend2, dividend3));
 
         when(parsingApi.parseDocument(any(), any())).thenReturn(Mono.just(agentResponse));
@@ -479,13 +482,13 @@ class DividendServiceTest {
         when(filePart.filename()).thenReturn("statement.pdf");
         when(filePart.transferTo(any(Path.class))).thenReturn(Mono.empty());
 
-        DividendData agentDividend = new DividendData();
+        DocumentDividendData agentDividend = new DocumentDividendData();
         agentDividend.setSecurityName("Test Security");
         agentDividend.setGrossAmount(new BigDecimal("100.00"));
         agentDividend.setWithholdingTax(new BigDecimal("30.00"));
         agentDividend.setPaymentDate(LocalDate.of(2024, 6, 15));
 
-        ParseResponse agentResponse = new ParseResponse();
+        ParsedDividendStatement agentResponse = new ParsedDividendStatement();
         agentResponse.setData(List.of(agentDividend));
 
         when(parsingApi.parseDocument(any(), any())).thenReturn(Mono.just(agentResponse));

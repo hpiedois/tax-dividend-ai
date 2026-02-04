@@ -53,10 +53,13 @@
         "login_success": "Successfully logged in"
     },
     "dashboard": {
+        "loading": "Loading dashboard...",
         "total_reclaimed": "Total Reclaimed",
         "pending": "Pending",
         "cases_processed": "Cases Processed",
         "recent_activity": "Recent Activity",
+        "no_activity": "No recent activity",
+        "status": "Status",
         "scan_imported": "Scan Imported",
         "refund_received": "Refund Received"
     },

@@ -1,0 +1,96 @@
+Dividend:
+  type: object
+  properties:
+    securityName:
+      type: string
+    isin:
+      type: string
+    grossAmount:
+      type: number
+    currency:
+      type: string
+    paymentDate:
+      type: string
+      format: date
+    withholdingTax:
+      type: number
+    reclaimableAmount:
+      type: number
+    sourceCountry:
+      type: string
+    appliedRateType:
+      type: string
+      description: Tracks which rate was applied (e.g. PFU, PROGRESSIVE, TREATY)
+  required:
+    - securityName
+    - grossAmount
+    - currency
+
+DividendStatement:
+  type: object
+  properties:
+    dividends:
+      type: array
+      items:
+        $ref: '#/Dividend'
+    metadata:
+      type: object
+      properties:
+        broker:
+          type: string
+        year:
+          type: integer
+
+DividendCase:
+  type: object
+  properties:
+    id:
+      type: string
+    date:
+      type: string
+      format: date
+    security:
+      type: string
+    grossAmount:
+      type: number
+    reclaimedAmount:
+      type: number
+    status:
+      type: string
+      enum: [OPEN, SENT, PAID]
+
+DividendHistoryResponse:
+  type: object
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/DividendCase'
+    total:
+      type: integer
+    page:
+      type: integer
+    pageSize:
+      type: integer
+
+DividendStats:
+  type: object
+  properties:
+    totalReclaimed:
+      type: number
+    pendingAmount:
+      type: number
+    casesCount:
+      type: integer
+
+UpdateDividendStatusRequest:
+  type: object
+  properties:
+    ids:
+      type: array
+      items:
+        type: string
+        format: uuid
+    status:
+      type: string
+      enum: [OPEN, SENT, PAID]

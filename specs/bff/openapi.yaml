@@ -5,222 +5,72 @@ info:
   description: Backend for Frontend API for Tax Dividend AI
 servers:
   - url: http://localhost:8080/api
+    description: Local development server
+
+paths:
+  # Auth
+  /auth/register:
+    $ref: './paths/auth.yaml#/~1auth~1register'
+  /auth/verify:
+    $ref: './paths/auth.yaml#/~1auth~1verify'
+
+  # Dividends
+  /dividends/parse-statement:
+    $ref: './paths/dividends.yaml#/~1dividends~1parse-statement'
+  /dividends/history:
+    $ref: './paths/dividends.yaml#/~1dividends~1history'
+  /dividends/stats:
+    $ref: './paths/dividends.yaml#/~1dividends~1stats'
+  /dividends/status:
+    $ref: './paths/dividends.yaml#/~1dividends~1status'
+
+  # Forms
+  /forms/generate:
+    $ref: './paths/forms.yaml#/~1forms~1generate'
+  /forms:
+    $ref: './paths/forms.yaml#/~1forms'
+  /forms/{id}:
+    $ref: './paths/forms.yaml#/~1forms~1{id}'
+  /forms/{id}/download:
+    $ref: './paths/forms.yaml#/~1forms~1{id}~1download'
+  /forms/{id}/download-url:
+    $ref: './paths/forms.yaml#/~1forms~1{id}~1download-url'
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
+    # Auth
+    RegisterRequest:
+      $ref: './schemas/auth.yaml#/RegisterRequest'
+
+    # Dividends
+    Dividend:
+      $ref: './schemas/dividends.yaml#/Dividend'
+    DividendStatement:
+      $ref: './schemas/dividends.yaml#/DividendStatement'
+    DividendCase:
+      $ref: './schemas/dividends.yaml#/DividendCase'
+    DividendHistoryResponse:
+      $ref: './schemas/dividends.yaml#/DividendHistoryResponse'
+    DividendStats:
+      $ref: './schemas/dividends.yaml#/DividendStats'
+    UpdateDividendStatusRequest:
+      $ref: './schemas/dividends.yaml#/UpdateDividendStatusRequest'
+
+    # Forms
     GeneratedForm:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        formType:
-          type: string
-        taxYear:
-          type: integer
-        fileName:
-          type: string
-        generatedAt:
-          type: string
-          format: date-time
+      $ref: './schemas/forms.yaml#/GeneratedForm'
     FormDownloadUrlResponse:
-      type: object
-      properties:
-        url:
-          type: string
-          format: uri
-        expiresAt:
-          type: string
-          format: date-time
+      $ref: './schemas/forms.yaml#/FormDownloadUrlResponse'
+    GenerateTaxFormsRequest:
+      $ref: './schemas/forms.yaml#/GenerateTaxFormsRequest'
+    GenerateTaxFormsResponse:
+      $ref: './schemas/forms.yaml#/GenerateTaxFormsResponse'
 
 security:
   - bearerAuth: []
-paths:
-  /dividends/parse-statement:
-    $ref: './paths/statements-parse.yaml'
-  /dividends/history:
-    $ref: './paths/dividends-history.yaml'
-  /dividends/status:
-    patch:
-      tags:
-        - Dividends
-      summary: Update status for multiple dividends
-      operationId: updateDividendStatus
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                ids:
-                  type: array
-                  items:
-                    type: string
-                    format: uuid
-                status:
-                  type: string
-                  enum: [OPEN, SENT, PAID]
-      responses:
-        '204':
-          description: Status updated
-
-  /dividends/stats:
-    $ref: './paths/dividends-stats.yaml'
-  /forms/generate:
-    $ref: './paths/forms-generate.yaml'
-  /forms:
-    get:
-      tags:
-        - Forms
-      summary: List user's forms
-      operationId: listForms
-      parameters:
-        - name: taxYear
-          in: query
-          schema:
-            type: integer
-        - name: formType
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          description: List of forms
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/GeneratedForm'
-  /forms/{id}:
-    get:
-      tags:
-        - Forms
-      summary: Get form metadata
-      operationId: getForm
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Form metadata
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneratedForm'
-        '404':
-          description: Not found
-    delete:
-      tags:
-        - Forms
-      summary: Delete form
-      operationId: deleteForm
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Deleted
-  /forms/{id}/download:
-    get:
-      tags:
-        - Forms
-      summary: Download form
-      operationId: downloadForm
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Form file
-          content:
-            application/pdf:
-              schema:
-                type: string
-                format: binary
-            application/zip:
-              schema:
-                type: string
-                format: binary
-  /forms/{id}/download-url:
-    get:
-      tags:
-        - Forms
-      summary: Get pre-signed download URL for form
-      operationId: getFormDownloadUrl
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: expiresIn
-          in: query
-          schema:
-            type: integer
-            default: 3600
-      responses:
-        '200':
-          description: Pre-signed download URL
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FormDownloadUrlResponse'
-        '404':
-          description: Form not found
-
-  /auth/register:
-    post:
-      tags:
-        - Auth
-      summary: Register a new user
-      operationId: register
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                password:
-                  type: string
-                fullName:
-                  type: string
-      responses:
-        '200':
-          description: Registration initiated
-  
-  /auth/verify:
-    post:
-      tags:
-        - Auth
-      summary: Verify email
-      operationId: verifyEmail
-      parameters:
-        - name: token
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Verified

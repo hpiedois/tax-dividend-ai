@@ -1,4 +1,4 @@
-# DividendData
+# 
 
 
 ## Properties
@@ -18,9 +18,9 @@ Name | Type | Description | Notes
 ## Example
 
 ```typescript
-import { DividendData } from 'tax-dividend-api';
+import {  } from 'tax-dividend-api';
 
-const instance: DividendData = {
+const instance:  = {
     securityName,
     isin,
     grossAmount,

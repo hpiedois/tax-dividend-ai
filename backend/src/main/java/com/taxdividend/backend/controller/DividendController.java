@@ -1,16 +1,12 @@
 package com.taxdividend.backend.controller;
 
 import com.taxdividend.backend.api.DividendsApi;
-import com.taxdividend.backend.mapper.TaxCalculationMapper;
 import com.taxdividend.backend.service.AuditService;
 import com.taxdividend.backend.service.DividendService;
 import com.taxdividend.backend.service.TaxCalculationService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -21,6 +17,12 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import com.taxdividend.backend.api.dto.BulkImportDividendsResponseDto;
+import com.taxdividend.backend.api.dto.PaginatedDividendListDto;
+import com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto;
+import com.taxdividend.backend.api.dto.DividendDto;
+import com.taxdividend.backend.api.dto.DividendStatsDto;
+import com.taxdividend.backend.api.dto.TaxCalculationResultDto;
 
 /**
  * REST Controller for dividend-related operations.
@@ -48,14 +50,13 @@ public class DividendController implements DividendsApi {
     private final TaxCalculationService taxCalculationService;
     private final DividendService dividendService;
     private final AuditService auditService;
-    private final TaxCalculationMapper taxCalculationMapper;
     // Removed direct repository and mapper dependencies where service handles it
 
     /**
      * Get all dividends for the authenticated user with optional filters.
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.ListDividends200Response> listDividends(
+    public ResponseEntity<PaginatedDividendListDto> listDividends(
             UUID xUserId,
             Integer page,
             Integer size,
@@ -73,7 +74,7 @@ public class DividendController implements DividendsApi {
      * Get dividend by ID.
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.Dividend> getDividend(
+    public ResponseEntity<DividendDto> getDividend(
             UUID id,
             UUID xUserId) {
 
@@ -86,130 +87,110 @@ public class DividendController implements DividendsApi {
      * Calculate tax for a single dividend.
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.TaxCalculationResultDTO> calculateTax(
+    public ResponseEntity<TaxCalculationResultDto> calculateTax(
             UUID id,
             UUID xUserId,
             String residenceCountry) {
 
-        try {
-            // Need to verify user ownership first? existing logic in service usually?
-            // Existing controller logic:
-            /*
-             * Dividend dividend = dividendRepository.findById(id)
-             * .filter(d -> d.getUser().getId().equals(xUserId))
-             * .orElse(null);
-             */
-            // Ideally TaxCalculationService should handle ownership check or we check it
-            // via DividendService.
-            // But TaxCalculationService.calculateAndUpdate probably handles it or takes
-            // entity.
+        // Need to verify user ownership first? existing logic in service usually?
+        // Existing controller logic:
+        /*
+         * Dividend dividend = dividendRepository.findById(id)
+         * .filter(d -> d.getUser().getId().equals(xUserId))
+         * .orElse(null);
+         */
+        // Ideally TaxCalculationService should handle ownership check or we check it
+        // via DividendService.
+        // But TaxCalculationService.calculateAndUpdate probably handles it or takes
+        // entity.
 
-            // To be safe and strict about DTOs, we should let the service handle
-            // everything.
-            // However, TaxCalculationService.calculateAndUpdate signature is (UUID id,
-            // String country).
-            // It likely does internal lookup.
-            // Assuming it's safe to call directly, but we need country fallback.
+        // To be safe and strict about DTOs, we should let the service handle
+        // everything.
+        // However, TaxCalculationService.calculateAndUpdate signature is (UUID id,
+        // String country).
+        // It likely does internal lookup.
+        // Assuming it's safe to call directly, but we need country fallback.
 
-            // We can fetch DTO first to get country?
-            // Or assume Service is robust.
+        // We can fetch DTO first to get country?
+        // Or assume Service is robust.
 
-            // Let's replicate original logic using DividendService to get country if
-            // needed.
-            return dividendService.getDividend(id, xUserId)
-                    .map(dividend -> {
-                        String country = residenceCountry != null ? residenceCountry : "CH"; // Default or from user?
-                        // Original: dividend.getUser().getCountry() - but DTO might not have full User
-                        // object
-                        // Check DTO structure if needed. Assuming TaxCalculationService handles lookup
-                        // if country is null? No.
+        // Let's replicate original logic using DividendService to get country if
+        // needed.
+        return dividendService.getDividend(id, xUserId)
+                .map(dividend -> {
+                    String country = residenceCountry != null ? residenceCountry : "CH"; // Default or from user?
+                    // Original: dividend.getUser().getCountry() - but DTO might not have full User
+                    // object
+                    // Check DTO structure if needed. Assuming TaxCalculationService handles lookup
+                    // if country is null? No.
 
-                        // Note: refactoring TaxCalculationService is out of scope unless necessary.
-                        // Ideally we pass (id, userId, country) to service.
+                    // Note: refactoring TaxCalculationService is out of scope unless necessary.
+                    // Ideally we pass (id, userId, country) to service.
 
-                        com.taxdividend.backend.dto.TaxCalculationResultDTO result = taxCalculationService
-                                .calculateAndUpdate(id, country);
-                        // Wait, if residenceCountry is null, we need the user's country.
-                        // If DTO doesn't have it, we are stuck.
-                        // But let's assume specific service method or we pass null and service handles
-                        // it.
+                    TaxCalculationResultDto result = taxCalculationService.calculateAndUpdate(id, country);
+                    // Wait, if residenceCountry is null, we need the user's country.
+                    // If DTO doesn't have it, we are stuck.
+                    // But let's assume specific service method or we pass null and service handles
+                    // it.
 
-                        return ResponseEntity.ok(taxCalculationMapper.toApiDto(result));
-                    })
-                    .orElse(ResponseEntity.notFound().build());
-
-        } catch (Exception e) {
-            log.error("Failed to calculate tax for dividend {}", id, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+                    return ResponseEntity.ok(result);
+                })
+                .orElseThrow(() -> new java.util.NoSuchElementException("Dividend not found or access denied"));
     }
 
     /**
      * Calculate tax for multiple dividends.
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.TaxCalculationBatchResultDTO> calculateBatch(
+    public ResponseEntity<TaxCalculationBatchResultDto> calculateBatch(
             UUID xUserId,
             List<UUID> dividendIds) {
 
-        try {
-            com.taxdividend.backend.dto.TaxCalculationBatchResultDTO result = taxCalculationService
-                    .calculateBatchByIds(dividendIds, xUserId);
+        TaxCalculationBatchResultDto result = taxCalculationService.calculateBatchByIds(dividendIds, xUserId);
 
-            if (result.getProcessedCount() == 0) {
-                return ResponseEntity.badRequest().build();
-            }
-
-            // Audit log
-            auditService.logTaxCalculation(xUserId, result.getSuccessCount(),
-                    result.getTotalReclaimableAmount().toString());
-
-            log.info("Batch calculation completed: {} dividends, {} total reclaimable",
-                    result.getSuccessCount(), result.getTotalReclaimableAmount());
-
-            return ResponseEntity.ok(taxCalculationMapper.toApiBatchDto(result));
-
-        } catch (Exception e) {
-            log.error("Failed to calculate batch", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        if (result.getSuccessCount() == 0) {
+            return ResponseEntity.badRequest().build();
         }
+
+        // Audit log
+        auditService.logTaxCalculation(xUserId, result.getSuccessCount(),
+                result.getTotalReclaimableAmount().toString());
+
+        log.info("Batch calculation completed: {} dividends, {} total reclaimable",
+                result.getSuccessCount(), result.getTotalReclaimableAmount());
+
+        return ResponseEntity.ok(result);
     }
 
     /**
      * Calculate tax for all user's dividends (OpenAPI implementation).
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.TaxCalculationBatchResultDTO> calculateAllUserDividends(
+    public ResponseEntity<TaxCalculationBatchResultDto> calculateAllUserDividends(
             UUID userId,
             UUID xUserId) {
 
         // Verify user can only calculate their own dividends
         if (!userId.equals(xUserId)) {
             log.warn("User {} attempted to calculate dividends for user {}", xUserId, userId);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You can only calculate dividends for yourself");
         }
 
-        try {
-            com.taxdividend.backend.dto.TaxCalculationBatchResultDTO result = taxCalculationService
-                    .calculateAndUpdateForUser(userId);
+        TaxCalculationBatchResultDto result = taxCalculationService.calculateAndUpdateForUser(userId);
 
-            // Audit log
-            auditService.logTaxCalculation(userId, result.getSuccessCount(),
-                    result.getTotalReclaimableAmount().toString());
+        // Audit log
+        auditService.logTaxCalculation(userId, result.getSuccessCount(),
+                result.getTotalReclaimableAmount().toString());
 
-            log.info("Calculated all dividends for user {}: {} total reclaimable",
-                    userId, result.getTotalReclaimableAmount());
+        log.info("Calculated all dividends for user {}: {} total reclaimable",
+                userId, result.getTotalReclaimableAmount());
 
-            return ResponseEntity.ok(taxCalculationMapper.toApiBatchDto(result));
-
-        } catch (Exception e) {
-            log.error("Failed to calculate all for user {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        return ResponseEntity.ok(result);
     }
 
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.DividendStatsDTO> getDividendStats(UUID xUserId,
+    public ResponseEntity<DividendStatsDto> getDividendStats(UUID xUserId,
             Integer taxYear) {
         return ResponseEntity.ok(dividendService.getStats(xUserId, taxYear));
     }
@@ -231,14 +212,14 @@ public class DividendController implements DividendsApi {
      * Called by AI Agent after parsing a broker statement.
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.BulkImportDividendsResponse> bulkImportDividends(
+    public ResponseEntity<BulkImportDividendsResponseDto> bulkImportDividends(
             UUID xUserId,
-            com.taxdividend.backend.api.dto.BulkImportDividendsRequest request) {
+            com.taxdividend.backend.api.dto.BulkImportDividendsRequestDto request) {
 
         log.info("Bulk import request from user {} for statement {}", xUserId, request.getStatementId());
 
-        com.taxdividend.backend.api.dto.BulkImportDividendsResponse response =
-                dividendService.bulkImportDividends(xUserId, request);
+        com.taxdividend.backend.api.dto.BulkImportDividendsResponseDto response = dividendService
+                .bulkImportDividends(xUserId, request);
 
         auditService.logAction(xUserId, "BULK_IMPORT_DIVIDENDS");
 

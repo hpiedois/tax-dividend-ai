@@ -1,0 +1,135 @@
+/forms/generate:
+  post:
+    tags:
+      - Forms
+    summary: Generate tax forms
+    operationId: generateTaxForms
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/forms.yaml#/GenerateTaxFormsRequest'
+    responses:
+      '200':
+        description: Forms generated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/forms.yaml#/GenerateTaxFormsResponse'
+
+/forms:
+  get:
+    tags:
+      - Forms
+    summary: List user's forms
+    operationId: listForms
+    parameters:
+      - name: taxYear
+        in: query
+        schema:
+          type: integer
+      - name: formType
+        in: query
+        schema:
+          type: string
+    responses:
+      '200':
+        description: List of forms
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/forms.yaml#/GeneratedForm'
+
+/forms/{id}:
+  get:
+    tags:
+      - Forms
+    summary: Get form metadata
+    operationId: getForm
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Form metadata
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/forms.yaml#/GeneratedForm'
+      '404':
+        description: Not found
+  delete:
+    tags:
+      - Forms
+    summary: Delete form
+    operationId: deleteForm
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Deleted
+
+/forms/{id}/download:
+  get:
+    tags:
+      - Forms
+    summary: Download form
+    operationId: downloadForm
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Form file
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+          application/zip:
+            schema:
+              type: string
+              format: binary
+
+/forms/{id}/download-url:
+  get:
+    tags:
+      - Forms
+    summary: Get pre-signed download URL for form
+    operationId: getFormDownloadUrl
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: expiresIn
+        in: query
+        schema:
+          type: integer
+          default: 3600
+    responses:
+      '200':
+        description: Pre-signed download URL
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/forms.yaml#/FormDownloadUrlResponse'
+      '404':
+        description: Form not found

@@ -1,9 +1,11 @@
 package com.taxdividend.backend.controller;
 
+import com.taxdividend.backend.api.dto.GeneratedFormDto;
+
 import com.taxdividend.backend.api.FormsApi;
-import com.taxdividend.backend.api.dto.FormGenerationRequest;
-import com.taxdividend.backend.api.dto.GenerateFormResultDTO; // API DTO
-import com.taxdividend.backend.mapper.FormMapper;
+import com.taxdividend.backend.api.dto.FormGenerationRequestDto;
+import com.taxdividend.backend.api.dto.FormDownloadUrlResponseDto;
+import com.taxdividend.backend.api.dto.GenerateFormResultDto;
 import com.taxdividend.backend.service.AuditService;
 import com.taxdividend.backend.service.FormService;
 import com.taxdividend.backend.service.PdfGenerationService;
@@ -48,16 +50,15 @@ public class FormController implements FormsApi {
     // GeneratedFormRepository removed
     // StorageService removed (handled in service)
     private final AuditService auditService; // Used for generation log
-    private final FormMapper formMapper;
     private final FormService formService;
 
     /**
      * Generate tax forms (5000, 5001, or BUNDLE).
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.GenerateFormResultDTO> generateForms(
+    public ResponseEntity<GenerateFormResultDto> generateForms(
             UUID xUserId,
-            FormGenerationRequest request) {
+            FormGenerationRequestDto request) {
 
         request.setUserId(xUserId);
 
@@ -66,7 +67,7 @@ public class FormController implements FormsApi {
                 request.getDividendIds() != null ? request.getDividendIds().size() : 0);
 
         try {
-            com.taxdividend.backend.dto.GenerateFormResultDTO result = pdfGenerationService.generateForms(request);
+            GenerateFormResultDto result = pdfGenerationService.generateForms(request);
 
             if (result.getSuccess()) {
                 // Audit log
@@ -76,12 +77,12 @@ public class FormController implements FormsApi {
                 log.info("Form generated successfully: {} ({})", result.getFormId(), result.getFormType());
             }
 
-            return ResponseEntity.ok(formMapper.toApiResultDto(result));
+            return ResponseEntity.ok(result);
 
         } catch (Exception e) {
             log.error("Failed to generate forms", e);
 
-            com.taxdividend.backend.api.dto.GenerateFormResultDTO errorResult = new com.taxdividend.backend.api.dto.GenerateFormResultDTO();
+            GenerateFormResultDto errorResult = new GenerateFormResultDto();
             errorResult.setSuccess(false);
             errorResult.setErrors(List.of("Generation failed: " + e.getMessage()));
 
@@ -94,12 +95,12 @@ public class FormController implements FormsApi {
      * List all forms for a user.
      */
     @Override
-    public ResponseEntity<List<com.taxdividend.backend.api.dto.GeneratedForm>> listForms(
+    public ResponseEntity<List<GeneratedFormDto>> listForms(
             UUID xUserId,
             Integer taxYear,
             String formType) {
 
-        List<com.taxdividend.backend.api.dto.GeneratedForm> forms = formService.listForms(xUserId, taxYear, formType);
+        List<GeneratedFormDto> forms = formService.listForms(xUserId, taxYear, formType);
         log.info("Retrieved {} forms for user {}", forms.size(), xUserId);
 
         return ResponseEntity.ok(forms);
@@ -109,7 +110,7 @@ public class FormController implements FormsApi {
      * Get form metadata by ID.
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.GeneratedForm> getForm(
+    public ResponseEntity<GeneratedFormDto> getForm(
             UUID id,
             UUID xUserId) {
 
@@ -133,13 +134,13 @@ public class FormController implements FormsApi {
      * Get pre-signed download URL (OpenAPI implementation).
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.FormDownloadUrlResponse> getFormDownloadUrl(
+    public ResponseEntity<FormDownloadUrlResponseDto> getFormDownloadUrl(
             UUID id,
             UUID xUserId,
             Integer expiresIn) {
 
         // Verify form exists and user has access
-        Optional<com.taxdividend.backend.api.dto.GeneratedForm> formOpt = formService.getForm(id, xUserId);
+        Optional<GeneratedFormDto> formOpt = formService.getForm(id, xUserId);
         if (formOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -149,8 +150,7 @@ public class FormController implements FormsApi {
 
         return formService.getDownloadUrl(id, xUserId, expirationHours)
                 .map(url -> {
-                    com.taxdividend.backend.api.dto.FormDownloadUrlResponse response =
-                        new com.taxdividend.backend.api.dto.FormDownloadUrlResponse();
+                    FormDownloadUrlResponseDto response = new FormDownloadUrlResponseDto();
                     try {
                         response.setUrl(new java.net.URI(url));
                         // Calculate expiration timestamp
@@ -160,7 +160,7 @@ public class FormController implements FormsApi {
                     } catch (java.net.URISyntaxException e) {
                         log.error("Invalid URL generated: {}", url, e);
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .<com.taxdividend.backend.api.dto.FormDownloadUrlResponse>build()
+                                .<FormDownloadUrlResponseDto>build()
                                 .getBody();
                     }
                     return response;
@@ -173,23 +173,23 @@ public class FormController implements FormsApi {
      * Regenerate an expired or lost form (OpenAPI implementation).
      */
     @Override
-    public ResponseEntity<com.taxdividend.backend.api.dto.GeneratedForm> regenerateForm(
+    public ResponseEntity<GeneratedFormDto> regenerateForm(
             UUID id,
             UUID xUserId) {
 
         // Verify form exists and user has access
-        Optional<com.taxdividend.backend.api.dto.GeneratedForm> formOpt = formService.getForm(id, xUserId);
+        Optional<GeneratedFormDto> formOpt = formService.getForm(id, xUserId);
         if (formOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        com.taxdividend.backend.api.dto.GeneratedForm existingForm = formOpt.get();
+        GeneratedFormDto existingForm = formOpt.get();
 
         // Check if form is expired (optional business logic - could be in service)
         // For now, allow regeneration regardless of expiration
 
         try {
-            com.taxdividend.backend.dto.GenerateFormResultDTO result = pdfGenerationService.regenerateForm(id);
+            GenerateFormResultDto result = pdfGenerationService.regenerateForm(id);
 
             if (result.getSuccess()) {
                 // Audit log

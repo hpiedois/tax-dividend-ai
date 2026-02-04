@@ -1,8 +1,8 @@
 package com.taxdividend.bff.controller;
 
-import com.taxdividend.bff.model.DividendStats;
-import com.taxdividend.bff.model.DividendHistoryResponse;
-import com.taxdividend.bff.model.ParseStatementResponse;
+import com.taxdividend.bff.model.DividendStatsDto;
+import com.taxdividend.bff.model.DividendHistoryResponseDto;
+import com.taxdividend.bff.model.DividendStatementDto;
 import com.taxdividend.bff.service.DividendService;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class DividendControllerTest {
     void getDividendStats_ReturnsOk() {
         // Given
         when(dividendService.getDividendStats(any(), any()))
-                .thenReturn(Mono.just(new DividendStats()));
+                .thenReturn(Mono.just(new DividendStatsDto()));
 
         // When & Then
         // Note: Requires security configuration
@@ -51,7 +51,7 @@ class DividendControllerTest {
     void getDividendHistory_ReturnsOk() {
         // Given
         when(dividendService.getDividendHistory(any(), any(), any()))
-                .thenReturn(Mono.just(new DividendHistoryResponse()));
+                .thenReturn(Mono.just(new DividendHistoryResponseDto()));
 
         // When & Then
         webTestClient.get()
@@ -63,7 +63,7 @@ class DividendControllerTest {
     void parseDividendStatement_ReturnsOk() {
         // Given
         when(dividendService.parseDividendStatement(any()))
-                .thenReturn(Mono.just(new ParseStatementResponse()));
+                .thenReturn(Mono.just(new DividendStatementDto()));
 
         // When & Then
         webTestClient.post()

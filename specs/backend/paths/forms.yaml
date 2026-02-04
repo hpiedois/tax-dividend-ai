@@ -1,0 +1,216 @@
+/forms/generate:
+  post:
+    tags:
+      - Forms
+    summary: Generate tax forms
+    operationId: generateForms
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/forms.yaml#/FormGenerationRequest'
+    responses:
+      '200':
+        description: Form generated
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/forms.yaml#/GenerateFormResult'
+
+/forms:
+  get:
+    tags:
+      - Forms
+    summary: List user's forms
+    operationId: listForms
+    parameters:
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: taxYear
+        in: query
+        schema:
+          type: integer
+      - name: formType
+        in: query
+        schema:
+          type: string
+    responses:
+      '200':
+        description: List of forms
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/forms.yaml#/GeneratedForm'
+
+/forms/{id}:
+  get:
+    tags:
+      - Forms
+    summary: Get form metadata
+    operationId: getForm
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Form metadata
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/forms.yaml#/GeneratedForm'
+      '404':
+        description: Not found
+
+  delete:
+    tags:
+      - Forms
+    summary: Delete form
+    operationId: deleteForm
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Deleted
+
+/forms/{id}/download:
+  get:
+    tags:
+      - Forms
+    summary: Download form
+    operationId: downloadForm
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Form file
+        content:
+          application/pdf:
+            schema:
+              type: string
+              format: binary
+          application/zip:
+            schema:
+              type: string
+              format: binary
+
+/forms/{id}/download-url:
+  get:
+    tags:
+      - Forms
+    summary: Get pre-signed download URL for form
+    description: Returns a temporary pre-signed URL to download the form from storage (MinIO/S3). URL expires after specified duration.
+    operationId: getFormDownloadUrl
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Form ID
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: expiresIn
+        in: query
+        description: URL expiration time in seconds
+        schema:
+          type: integer
+          default: 3600
+          minimum: 60
+          maximum: 86400
+    responses:
+      '200':
+        description: Pre-signed download URL
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/forms.yaml#/FormDownloadUrlResponse'
+      '404':
+        description: Form not found
+      '403':
+        description: Forbidden - user does not own this form
+
+/forms/{id}/regenerate:
+  post:
+    tags:
+      - Forms
+    summary: Regenerate expired form
+    description: Regenerates a form that has expired (after 30 days). The new form will have updated data and a new expiration date.
+    operationId: regenerateForm
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Form ID to regenerate
+        schema:
+          type: string
+          format: uuid
+      - name: X-User-Id
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Form regenerated successfully
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/forms.yaml#/GeneratedForm'
+      '404':
+        description: Form not found
+      '403':
+        description: Forbidden - user does not own this form
+      '400':
+        description: Bad request - form is not expired yet

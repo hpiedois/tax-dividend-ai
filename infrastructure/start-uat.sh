@@ -21,11 +21,13 @@ fi
 
 # Pull latest images
 echo "📥 Pulling latest Docker images..."
-docker-compose -f docker-compose.uat.yml pull
+# Pull latest images
+echo "📥 Pulling latest Docker images..."
+docker-compose -p tax-dividend-infra -f docker-compose.uat.yml pull
 
 # Start services
 echo "🏗️  Starting services..."
-docker-compose -f docker-compose.uat.yml --env-file .env.uat up -d
+docker-compose -p tax-dividend-infra -f docker-compose.uat.yml --env-file .env.uat up -d
 
 # Wait for services to be healthy
 echo "⏳ Waiting for services to be healthy..."
@@ -33,7 +35,7 @@ sleep 5
 
 # Check health
 echo "🏥 Health check..."
-docker-compose -f docker-compose.uat.yml --env-file .env.uat ps
+docker-compose -p tax-dividend-infra -f docker-compose.uat.yml --env-file .env.uat ps
 
 echo ""
 echo "✅ UAT environment started successfully!"

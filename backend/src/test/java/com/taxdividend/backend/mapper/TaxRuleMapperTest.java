@@ -3,6 +3,7 @@ package com.taxdividend.backend.mapper;
 import com.taxdividend.backend.model.TaxRule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,7 +21,7 @@ class TaxRuleMapperTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new TaxRuleMapper();
+        mapper = Mappers.getMapper(TaxRuleMapper.class);
     }
 
     @Test
@@ -29,7 +30,7 @@ class TaxRuleMapperTest {
         TaxRule entity = createTestTaxRule();
 
         // When
-        com.taxdividend.backend.api.dto.TaxRule dto = mapper.toApiDto(entity);
+        com.taxdividend.backend.api.dto.TaxRuleDto dto = mapper.toApiDto(entity);
 
         // Then
         assertThat(dto).isNotNull();
@@ -49,7 +50,7 @@ class TaxRuleMapperTest {
     @Test
     void toApiDto_NullEntity_ReturnsNull() {
         // When
-        com.taxdividend.backend.api.dto.TaxRule dto = mapper.toApiDto(null);
+        com.taxdividend.backend.api.dto.TaxRuleDto dto = mapper.toApiDto(null);
 
         // Then
         assertThat(dto).isNull();
@@ -68,7 +69,7 @@ class TaxRuleMapperTest {
         // effectiveTo and notes are null
 
         // When
-        com.taxdividend.backend.api.dto.TaxRule dto = mapper.toApiDto(entity);
+        com.taxdividend.backend.api.dto.TaxRuleDto dto = mapper.toApiDto(entity);
 
         // Then
         assertThat(dto).isNotNull();
@@ -85,7 +86,7 @@ class TaxRuleMapperTest {
         );
 
         // When
-        List<com.taxdividend.backend.api.dto.TaxRule> dtos = mapper.toApiDtoList(entities);
+        List<com.taxdividend.backend.api.dto.TaxRuleDto> dtos = mapper.toApiDtoList(entities);
 
         // Then
         assertThat(dtos).hasSize(2);
@@ -96,7 +97,7 @@ class TaxRuleMapperTest {
     @Test
     void toApiDtoList_NullList_ReturnsNull() {
         // When
-        List<com.taxdividend.backend.api.dto.TaxRule> dtos = mapper.toApiDtoList(null);
+        List<com.taxdividend.backend.api.dto.TaxRuleDto> dtos = mapper.toApiDtoList(null);
 
         // Then
         assertThat(dtos).isNull();
@@ -105,7 +106,7 @@ class TaxRuleMapperTest {
     @Test
     void toApiDtoList_EmptyList_ReturnsEmptyList() {
         // When
-        List<com.taxdividend.backend.api.dto.TaxRule> dtos = mapper.toApiDtoList(List.of());
+        List<com.taxdividend.backend.api.dto.TaxRuleDto> dtos = mapper.toApiDtoList(List.of());
 
         // Then
         assertThat(dtos).isEmpty();
@@ -117,7 +118,7 @@ class TaxRuleMapperTest {
         TaxRule entity = createTestTaxRule();
 
         // When
-        com.taxdividend.backend.api.dto.TreatyRateResponse response = mapper.toTreatyRateResponse(entity);
+        com.taxdividend.backend.api.dto.TreatyRateResponseDto response = mapper.toTreatyRateResponse(entity);
 
         // Then
         assertThat(response).isNotNull();
@@ -131,7 +132,7 @@ class TaxRuleMapperTest {
     @Test
     void toTreatyRateResponse_NullEntity_ReturnsNull() {
         // When
-        com.taxdividend.backend.api.dto.TreatyRateResponse response = mapper.toTreatyRateResponse(null);
+        com.taxdividend.backend.api.dto.TreatyRateResponseDto response = mapper.toTreatyRateResponse(null);
 
         // Then
         assertThat(response).isNull();

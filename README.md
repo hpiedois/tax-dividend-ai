@@ -139,6 +139,8 @@ npm run preview  # Preview production build locally
 - **Database**: PostgreSQL 16 with Flyway migrations
 - **Storage**: MinIO (S3-compatible)
 - **Cache**: Redis
+- **Auth**: Keycloak (OIDC)
+- **Observability**: Loki, Tempo, Prometheus, Grafana
 - **PDF**: Apache PDFBox for parsing and generation
 - **Infrastructure**: Docker Compose (multi-environment)
 

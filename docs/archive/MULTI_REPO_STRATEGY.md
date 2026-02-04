@@ -361,7 +361,7 @@ tax-dividend-contracts/
 │   ├── bff-api.yaml              # BFF public API
 │   ├── backend-api.yaml          # Backend internal API
 │   └── schemas/
-│       ├── DividendData.yaml
+│       ├── Dividend.yaml
 │       ├── TaxRule.yaml
 │       └── User.yaml
 ├── typescript/

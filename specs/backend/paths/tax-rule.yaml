@@ -1,0 +1,143 @@
+/tax-rules:
+  get:
+    tags:
+      - TaxRules
+    summary: List tax rules with optional filters
+    description: Retrieve tax rules with optional filtering by countries, active status, and procedure availability
+    operationId: getAllTaxRules
+    parameters:
+      - name: sourceCountry
+        in: query
+        description: Filter by source country (ISO 3166-1 alpha-2 code)
+        schema:
+          type: string
+          pattern: '^[A-Z]{2}$'
+        example: FR
+      - name: residenceCountry
+        in: query
+        description: Filter by residence country (ISO 3166-1 alpha-2 code)
+        schema:
+          type: string
+          pattern: '^[A-Z]{2}$'
+        example: CH
+      - name: active
+        in: query
+        description: Filter by active status (rules effective as of today)
+        schema:
+          type: boolean
+      - name: reliefAtSource
+        in: query
+        description: Filter by relief at source availability
+        schema:
+          type: boolean
+      - name: refundProcedure
+        in: query
+        description: Filter by refund procedure availability
+        schema:
+          type: boolean
+    responses:
+      '200':
+        description: List of tax rules
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../schemas/tax-rule.yaml#/TaxRule'
+
+/tax-rules/{id}:
+  get:
+    tags:
+      - TaxRules
+    summary: Get tax rule by ID
+    operationId: getTaxRule
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Tax rule details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/tax-rule.yaml#/TaxRule'
+      '404':
+        description: Not found
+
+/tax-rules/applicable:
+  get:
+    tags:
+      - TaxRules
+    summary: Find applicable tax rule
+    operationId: findApplicableRule
+    parameters:
+      - name: sourceCountry
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: residenceCountry
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: securityType
+        in: query
+        schema:
+          type: string
+          default: EQUITY
+      - name: date
+        in: query
+        schema:
+          type: string
+          format: date
+    responses:
+      '200':
+        description: Applicable rule
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/tax-rule.yaml#/TaxRule'
+      '404':
+        description: No rule found
+
+/tax-rules/treaty-rate:
+  get:
+    tags:
+      - TaxRules
+    summary: Get treaty rate
+    operationId: getTreatyRate
+    parameters:
+      - name: sourceCountry
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: residenceCountry
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: securityType
+        in: query
+        schema:
+          type: string
+          default: EQUITY
+      - name: date
+        in: query
+        schema:
+          type: string
+          format: date
+    responses:
+      '200':
+        description: Treaty rate details
+        content:
+          application/json:
+            schema:
+              $ref: '../schemas/tax-rule.yaml#/TreatyRateResponse'
+      '404':
+        description: No treaty found

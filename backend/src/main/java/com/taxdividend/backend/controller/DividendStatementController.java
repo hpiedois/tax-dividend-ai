@@ -1,11 +1,11 @@
 package com.taxdividend.backend.controller;
 
 import com.taxdividend.backend.api.DividendStatementsApi;
-import com.taxdividend.backend.api.dto.DividendStatement;
-import com.taxdividend.backend.api.dto.DividendStatementStatus;
-import com.taxdividend.backend.api.dto.DividendStatementUpdateDTO;
-import com.taxdividend.backend.api.dto.ListDividendStatements200Response;
-import com.taxdividend.backend.mapper.DividendStatementMapper;
+import com.taxdividend.backend.api.dto.DividendStatementDto;
+import com.taxdividend.backend.api.dto.DividendStatementStatusDto;
+import com.taxdividend.backend.api.dto.DividendStatementUpdateDto;
+import com.taxdividend.backend.api.dto.PaginatedDividendStatementsDto;
+import com.taxdividend.backend.model.DividendStatementStatus;
 import com.taxdividend.backend.service.DividendStatementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,121 +31,104 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DividendStatementController implements DividendStatementsApi {
 
-    private final DividendStatementService statementService;
-    private final DividendStatementMapper mapper;
+        private final DividendStatementService statementService;
 
-    @Override
-    public ResponseEntity<DividendStatement> uploadDividendStatement(
-            UUID xUserId,
-            String broker,
-            LocalDate periodStart,
-            LocalDate periodEnd,
-            MultipartFile file) {
+        @Override
+        public ResponseEntity<DividendStatementDto> uploadDividendStatement(
+                        UUID xUserId,
+                        String broker,
+                        LocalDate periodStart,
+                        LocalDate periodEnd,
+                        MultipartFile file) {
 
-        log.info("Uploading statement for user {}, broker {}, period {}-{}",
-                xUserId, broker, periodStart, periodEnd);
+                log.info("Uploading statement for user {}, broker {}, period {}-{}",
+                                xUserId, broker, periodStart, periodEnd);
 
-        com.taxdividend.backend.dto.DividendStatementDTO statement =
-                statementService.uploadStatement(file, xUserId, broker, periodStart, periodEnd);
+                DividendStatementDto statement = statementService.uploadStatement(file, xUserId, broker, periodStart,
+                                periodEnd);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toApiDto(statement));
-    }
+                return ResponseEntity.status(HttpStatus.CREATED).body(statement);
+        }
 
-    @Override
-    public ResponseEntity<DividendStatement> getDividendStatement(UUID id, UUID xUserId) {
-        log.debug("Getting statement {} for user {}", id, xUserId);
+        @Override
+        public ResponseEntity<DividendStatementDto> getDividendStatement(UUID id, UUID xUserId) {
+                log.debug("Getting statement {} for user {}", id, xUserId);
 
-        return statementService.getStatement(id, xUserId)
-                .map(mapper::toApiDto)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+                return statementService.getStatement(id, xUserId)
+                                .map(ResponseEntity::ok)
+                                .orElse(ResponseEntity.notFound().build());
+        }
 
-    @Override
-    public ResponseEntity<ListDividendStatements200Response> listDividendStatements(
-            UUID xUserId,
-            DividendStatementStatus status,
-            Integer page,
-            Integer size) {
+        @Override
+        public ResponseEntity<PaginatedDividendStatementsDto> listDividendStatements(
+                        UUID xUserId,
+                        DividendStatementStatusDto status,
+                        Integer page,
+                        Integer size) {
 
-        log.debug("Listing statements for user {} with status filter: {}", xUserId, status);
+                log.debug("Listing statements for user {} with status filter: {}", xUserId, status);
 
-        // Convert API enum to internal enum
-        com.taxdividend.backend.model.DividendStatementStatus internalStatus =
-                status != null ? com.taxdividend.backend.model.DividendStatementStatus.valueOf(status.name()) : null;
+                // Convert API enum (DTO) to internal enum (Model)
+                // If status is null, pass null. If not null, convert name.
+                DividendStatementStatus internalStatus = status != null ? DividendStatementStatus.valueOf(status.name())
+                                : null;
 
-        Page<com.taxdividend.backend.dto.DividendStatementDTO> statementsPage =
-                statementService.listStatements(xUserId, internalStatus, PageRequest.of(page, size));
+                Page<DividendStatementDto> statementsPage = statementService.listStatements(xUserId, internalStatus,
+                                PageRequest.of(page, size));
 
-        // Convert to API response
-        List<DividendStatement> apiStatements = statementsPage.getContent().stream()
-                .map(mapper::toApiDto)
-                .toList();
+                PaginatedDividendStatementsDto response = new PaginatedDividendStatementsDto()
+                                .content(statementsPage.getContent())
+                                .totalElements((int) statementsPage.getTotalElements())
+                                .totalPages(statementsPage.getTotalPages())
+                                .size(statementsPage.getSize())
+                                .number(statementsPage.getNumber());
 
-        ListDividendStatements200Response response = new ListDividendStatements200Response()
-                .content(apiStatements)
-                .totalElements((int) statementsPage.getTotalElements())
-                .totalPages(statementsPage.getTotalPages())
-                .size(statementsPage.getSize())
-                .number(statementsPage.getNumber());
+                return ResponseEntity.ok(response);
+        }
 
-        return ResponseEntity.ok(response);
-    }
+        @Override
+        public ResponseEntity<DividendStatementDto> updateDividendStatementStatus(
+                        UUID id,
+                        UUID xUserId,
+                        DividendStatementUpdateDto updateDTO) {
 
-    @Override
-    public ResponseEntity<DividendStatement> updateDividendStatementStatus(
-            UUID id,
-            UUID xUserId,
-            DividendStatementUpdateDTO updateDTO) {
+                log.info("Updating statement {} status to {} for user {}",
+                                id, updateDTO.getStatus(), xUserId);
 
-        log.info("Updating statement {} status to {} for user {}",
-                id, updateDTO.getStatus(), xUserId);
+                DividendStatementDto updated = statementService.updateStatus(id, xUserId, updateDTO);
 
-        // Convert API DTO to internal DTO
-        com.taxdividend.backend.dto.DividendStatementUpdateDTO internalUpdateDTO =
-                mapper.toInternalUpdateDto(updateDTO);
+                return ResponseEntity.ok(updated);
+        }
 
-        com.taxdividend.backend.dto.DividendStatementDTO updated =
-                statementService.updateStatus(id, xUserId, internalUpdateDTO);
+        @Override
+        public ResponseEntity<Void> deleteDividendStatement(UUID id, UUID xUserId) {
+                log.info("Deleting statement {} for user {}", id, xUserId);
 
-        return ResponseEntity.ok(mapper.toApiDto(updated));
-    }
+                statementService.deleteStatement(id, xUserId);
+                return ResponseEntity.noContent().build();
+        }
 
-    @Override
-    public ResponseEntity<Void> deleteDividendStatement(UUID id, UUID xUserId) {
-        log.info("Deleting statement {} for user {}", id, xUserId);
+        @Override
+        public ResponseEntity<List<DividendStatementDto>> getDividendStatementsByDateRange(
+                        UUID xUserId,
+                        LocalDate startDate,
+                        LocalDate endDate) {
 
-        statementService.deleteStatement(id, xUserId);
-        return ResponseEntity.noContent().build();
-    }
+                log.debug("Finding statements for user {} in date range {}-{}", xUserId, startDate, endDate);
 
-    @Override
-    public ResponseEntity<List<DividendStatement>> getDividendStatementsByDateRange(
-            UUID xUserId,
-            LocalDate startDate,
-            LocalDate endDate) {
+                List<DividendStatementDto> statements = statementService.findByDateRange(xUserId, startDate, endDate);
 
-        log.debug("Finding statements for user {} in date range {}-{}", xUserId, startDate, endDate);
+                return ResponseEntity.ok(statements);
+        }
 
-        List<com.taxdividend.backend.dto.DividendStatementDTO> statements =
-                statementService.findByDateRange(xUserId, startDate, endDate);
+        @Override
+        public ResponseEntity<Long> countDividendStatementsByStatus(UUID xUserId, DividendStatementStatusDto status) {
+                log.debug("Counting statements with status {} for user {}", status, xUserId);
 
-        List<DividendStatement> apiStatements = statements.stream()
-                .map(mapper::toApiDto)
-                .toList();
+                // Convert API enum to internal enum
+                DividendStatementStatus internalStatus = DividendStatementStatus.valueOf(status.name());
 
-        return ResponseEntity.ok(apiStatements);
-    }
-
-    @Override
-    public ResponseEntity<Long> countDividendStatementsByStatus(UUID xUserId, DividendStatementStatus status) {
-        log.debug("Counting statements with status {} for user {}", status, xUserId);
-
-        // Convert API enum to internal enum
-        com.taxdividend.backend.model.DividendStatementStatus internalStatus =
-                com.taxdividend.backend.model.DividendStatementStatus.valueOf(status.name());
-
-        long count = statementService.countByStatus(xUserId, internalStatus);
-        return ResponseEntity.ok(count);
-    }
+                long count = statementService.countByStatus(xUserId, internalStatus);
+                return ResponseEntity.ok(count);
+        }
 }

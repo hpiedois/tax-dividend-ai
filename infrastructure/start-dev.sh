@@ -21,11 +21,11 @@ fi
 
 # Pull latest images
 echo "📥 Pulling latest Docker images..."
-docker-compose -f docker-compose.dev.yml pull
+docker-compose -p tax-dividend-infra -f docker-compose.dev.yml pull
 
 # Start services
 echo "🏗️  Starting services..."
-docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
+docker-compose -p tax-dividend-infra -f docker-compose.dev.yml --env-file .env.dev up -d
 
 # Wait for services to be healthy
 echo "⏳ Waiting for services to be healthy..."
@@ -33,7 +33,7 @@ sleep 5
 
 # Check health
 echo "🏥 Health check..."
-docker-compose -f docker-compose.dev.yml --env-file .env.dev ps
+docker-compose -p tax-dividend-infra -f docker-compose.dev.yml --env-file .env.dev ps
 
 echo ""
 echo "✅ Development environment started successfully!"

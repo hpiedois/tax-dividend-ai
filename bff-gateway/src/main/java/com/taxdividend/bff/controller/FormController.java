@@ -1,33 +1,34 @@
 package com.taxdividend.bff.controller;
 
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.taxdividend.bff.client.api.FormsApi;
-import com.taxdividend.bff.client.api.PdfApi;
-import com.taxdividend.bff.client.model.FormGenerationRequest;
-import com.taxdividend.bff.model.GenerateTaxFormsRequest;
-import com.taxdividend.bff.model.GenerateTaxFormsResponse;
+import com.taxdividend.bff.api.FormsApi;
+import com.taxdividend.bff.model.GenerateTaxFormsRequestDto;
+import com.taxdividend.bff.model.GenerateTaxFormsResponseDto;
+import com.taxdividend.bff.model.GeneratedFormDto;
+import com.taxdividend.bff.service.FormService;
+import com.taxdividend.bff.model.FormDownloadUrlResponseDto;
 
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
+import org.springframework.core.io.Resource;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-public class FormController implements com.taxdividend.bff.api.FormsApi {
+public class FormController implements FormsApi {
 
-        private final com.taxdividend.bff.service.FormService formService;
+        private final FormService formService;
 
         @Override
-        public Mono<ResponseEntity<GenerateTaxFormsResponse>> generateTaxForms(
-                        Mono<GenerateTaxFormsRequest> generateTaxFormsRequest,
+        public Mono<ResponseEntity<GenerateTaxFormsResponseDto>> generateTaxForms(
+                        Mono<GenerateTaxFormsRequestDto> generateTaxFormsRequest,
                         ServerWebExchange exchange) {
 
                 return ReactiveSecurityContextHolder.getContext()
@@ -38,7 +39,7 @@ public class FormController implements com.taxdividend.bff.api.FormsApi {
         }
 
         @Override
-        public Mono<ResponseEntity<reactor.core.publisher.Flux<com.taxdividend.bff.model.GeneratedForm>>> listForms(
+        public Mono<ResponseEntity<Flux<GeneratedFormDto>>> listForms(
                         Integer taxYear,
                         String formType,
                         ServerWebExchange exchange) {
@@ -49,7 +50,7 @@ public class FormController implements com.taxdividend.bff.api.FormsApi {
         }
 
         @Override
-        public Mono<ResponseEntity<com.taxdividend.bff.model.GeneratedForm>> getForm(
+        public Mono<ResponseEntity<GeneratedFormDto>> getForm(
                         UUID id,
                         ServerWebExchange exchange) {
 
@@ -61,7 +62,7 @@ public class FormController implements com.taxdividend.bff.api.FormsApi {
         }
 
         @Override
-        public Mono<ResponseEntity<org.springframework.core.io.Resource>> downloadForm(
+        public Mono<ResponseEntity<Resource>> downloadForm(
                         UUID id,
                         ServerWebExchange exchange) {
 
@@ -71,7 +72,7 @@ public class FormController implements com.taxdividend.bff.api.FormsApi {
         }
 
         @Override
-        public Mono<ResponseEntity<com.taxdividend.bff.model.FormDownloadUrlResponse>> getFormDownloadUrl(
+        public Mono<ResponseEntity<FormDownloadUrlResponseDto>> getFormDownloadUrl(
                         UUID id,
                         Integer expiresIn,
                         ServerWebExchange exchange) {

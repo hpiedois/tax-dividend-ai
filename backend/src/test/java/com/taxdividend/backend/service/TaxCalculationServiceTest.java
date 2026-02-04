@@ -1,7 +1,7 @@
 package com.taxdividend.backend.service;
 
-import com.taxdividend.backend.dto.TaxCalculationBatchResultDTO;
-import com.taxdividend.backend.dto.TaxCalculationResultDTO;
+import com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto;
+import com.taxdividend.backend.api.dto.TaxCalculationResultDto;
 import com.taxdividend.backend.exception.TaxCalculationException;
 import com.taxdividend.backend.model.Dividend;
 import com.taxdividend.backend.model.TaxRule;
@@ -9,7 +9,7 @@ import com.taxdividend.backend.model.User;
 import com.taxdividend.backend.repository.DividendRepository;
 import com.taxdividend.backend.repository.TaxRuleRepository;
 import com.taxdividend.backend.repository.UserRepository;
-import com.taxdividend.backend.service.impl.TaxCalculationServiceImpl;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,7 +47,7 @@ class TaxCalculationServiceTest {
         private UserRepository userRepository;
 
         @InjectMocks
-        private TaxCalculationServiceImpl taxCalculationService;
+        private TaxCalculationService taxCalculationService;
 
         private User testUser;
         private TaxRule testTaxRule;
@@ -98,18 +98,19 @@ class TaxCalculationServiceTest {
                                 .thenReturn(Optional.of(testTaxRule));
 
                 // When
-                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                TaxCalculationResultDto result = taxCalculationService.calculateForDividend(
                                 testDividend, "CH");
 
                 // Then
                 assertThat(result).isNotNull();
-                assertThat(result.getTreatyApplied()).isTrue();
+                assertThat(result.getSuccess()).isTrue();
 
                 // Expected calculation:
+                // Withheld amount = 30.00 (actual withholding)
                 // Treaty withholding = 100 * 15% = 15.00
                 // Reclaimable = 30.00 - 15.00 = 15.00
-                assertThat(result.getTreatyWithholdingTax())
-                                .isEqualByComparingTo(new BigDecimal("15.00"));
+                assertThat(result.getWithheldAmount())
+                                .isEqualByComparingTo(new BigDecimal("30.00"));
                 assertThat(result.getReclaimableAmount())
                                 .isEqualByComparingTo(new BigDecimal("15.00"));
 
@@ -126,12 +127,12 @@ class TaxCalculationServiceTest {
                                 .thenReturn(Optional.empty());
 
                 // When
-                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                TaxCalculationResultDto result = taxCalculationService.calculateForDividend(
                                 testDividend, "CH");
 
                 // Then
                 assertThat(result).isNotNull();
-                assertThat(result.getTreatyApplied()).isFalse();
+                assertThat(result.getSuccess()).isFalse();
                 assertThat(result.getReclaimableAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         }
 
@@ -149,7 +150,7 @@ class TaxCalculationServiceTest {
                                 .thenReturn(testDividend);
 
                 // When
-                TaxCalculationResultDTO result = taxCalculationService.calculateAndUpdate(
+                TaxCalculationResultDto result = taxCalculationService.calculateAndUpdate(
                                 dividendId, "CH");
 
                 // Then
@@ -199,7 +200,7 @@ class TaxCalculationServiceTest {
                                 .thenReturn(Optional.of(testTaxRule));
 
                 // When
-                TaxCalculationBatchResultDTO result = taxCalculationService.calculateBatch(
+                TaxCalculationBatchResultDto result = taxCalculationService.calculateBatch(
                                 dividends, "CH");
 
                 // Then
@@ -210,11 +211,7 @@ class TaxCalculationServiceTest {
                 // Expected totals:
                 // Dividend 1: gross=100, withholding=30, reclaimable=15
                 // Dividend 2: gross=50, withholding=15, reclaimable=7.50
-                // Total: gross=150, withholding=45, reclaimable=22.50
-                assertThat(result.getTotalGrossAmount())
-                                .isEqualByComparingTo(new BigDecimal("150.00"));
-                assertThat(result.getTotalWithholdingTax())
-                                .isEqualByComparingTo(new BigDecimal("45.00"));
+                // Total: reclaimable=22.50
                 assertThat(result.getTotalReclaimableAmount())
                                 .isEqualByComparingTo(new BigDecimal("22.50"));
 
@@ -248,7 +245,7 @@ class TaxCalculationServiceTest {
                                 .thenThrow(new RuntimeException("DB Error"));
 
                 // When
-                TaxCalculationBatchResultDTO result = taxCalculationService.calculateBatch(
+                TaxCalculationBatchResultDto result = taxCalculationService.calculateBatch(
                                 dividends, "CH");
 
                 // Then
@@ -276,7 +273,7 @@ class TaxCalculationServiceTest {
                                 .thenReturn(Optional.of(testTaxRule));
 
                 // When
-                TaxCalculationBatchResultDTO result = taxCalculationService.calculateForUser(userId);
+                TaxCalculationBatchResultDto result = taxCalculationService.calculateForUser(userId);
 
                 // Then
                 assertThat(result).isNotNull();
@@ -309,15 +306,13 @@ class TaxCalculationServiceTest {
                 List<Dividend> emptyList = Arrays.asList();
 
                 // When
-                TaxCalculationBatchResultDTO result = taxCalculationService.calculateBatch(
+                TaxCalculationBatchResultDto result = taxCalculationService.calculateBatch(
                                 emptyList, "CH");
 
                 // Then
                 assertThat(result).isNotNull();
                 assertThat(result.getSuccessCount()).isEqualTo(0);
                 assertThat(result.getFailureCount()).isEqualTo(0);
-                assertThat(result.getTotalGrossAmount())
-                                .isEqualByComparingTo(BigDecimal.ZERO);
                 assertThat(result.getTotalReclaimableAmount())
                                 .isEqualByComparingTo(BigDecimal.ZERO);
         }
@@ -349,7 +344,7 @@ class TaxCalculationServiceTest {
                                 .thenReturn(Optional.of(testTaxRule));
 
                 // When
-                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                TaxCalculationResultDto result = taxCalculationService.calculateForDividend(
                                 testDividend, "CH");
 
                 // Then
@@ -368,7 +363,7 @@ class TaxCalculationServiceTest {
                                 .thenReturn(Optional.of(testTaxRule));
 
                 // When
-                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                TaxCalculationResultDto result = taxCalculationService.calculateForDividend(
                                 testDividend, "CH");
 
                 // Then
@@ -388,12 +383,12 @@ class TaxCalculationServiceTest {
                                 .thenReturn(Optional.of(testTaxRule));
 
                 // When
-                TaxCalculationResultDTO result = taxCalculationService.calculateForDividend(
+                TaxCalculationResultDto result = taxCalculationService.calculateForDividend(
                                 testDividend, "CH");
 
                 // Then
                 assertThat(result).isNotNull();
-                assertThat(result.getTreatyWithholdingTax().scale()).isEqualTo(2);
+                assertThat(result.getWithheldAmount().scale()).isEqualTo(2);
                 assertThat(result.getReclaimableAmount().scale()).isEqualTo(2);
         }
 }

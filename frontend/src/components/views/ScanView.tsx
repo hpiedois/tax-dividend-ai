@@ -157,12 +157,12 @@ export function ScanView() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">{t('result.withholding_tax')}</span>
-                        <p className="font-semibold">{result.withholdingTax.toFixed(2)} {result.currency}</p>
+                        <p className="font-semibold">{(result.withholdingTax ?? 0).toFixed(2)} {result.currency}</p>
                       </div>
                       <div>
                         <span className="text-muted-foreground">{t('result.reclaimable_est')}</span>
                         <p className="font-semibold text-brand-600">
-                          {result.reclaimableAmount.toFixed(2)} {result.currency}
+                          {(result.reclaimableAmount ?? 0).toFixed(2)} {result.currency}
                         </p>
                       </div>
                     </div>

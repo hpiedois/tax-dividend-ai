@@ -1,8 +1,8 @@
 package com.taxdividend.backend.service;
 
 import com.taxdividend.backend.dto.FileUploadResultDTO;
-import com.taxdividend.backend.api.dto.FormGenerationRequest;
-import com.taxdividend.backend.dto.GenerateFormResultDTO;
+import com.taxdividend.backend.api.dto.FormGenerationRequestDto;
+import com.taxdividend.backend.api.dto.GenerateFormResultDto;
 import com.taxdividend.backend.exception.PdfGenerationException;
 import com.taxdividend.backend.model.Dividend;
 import com.taxdividend.backend.model.GeneratedForm;
@@ -10,7 +10,7 @@ import com.taxdividend.backend.model.User;
 import com.taxdividend.backend.repository.DividendRepository;
 import com.taxdividend.backend.repository.GeneratedFormRepository;
 import com.taxdividend.backend.repository.UserRepository;
-import com.taxdividend.backend.service.impl.PdfGenerationServiceImpl;
+
 import com.taxdividend.backend.service.pdf.PdfFormFiller;
 import com.taxdividend.backend.service.pdf.Form5000FieldMapper;
 import com.taxdividend.backend.service.pdf.Form5001FieldMapper;
@@ -69,7 +69,7 @@ class PdfGenerationServiceTest {
         private Form5001FieldMapper form5001Mapper;
 
         @InjectMocks
-        private PdfGenerationServiceImpl pdfGenerationService;
+        private PdfGenerationService pdfGenerationService;
 
         private User testUser;
         private List<Dividend> testDividends;
@@ -95,7 +95,8 @@ class PdfGenerationServiceTest {
                                 createTestDividend("FR0000120271", "Total Energies", "100.00", "30.00", "15.00"),
                                 createTestDividend("FR0000120644", "Danone", "50.00", "15.00", "7.50"));
 
-                // Mock PDF form filling components (lenient to avoid UnnecessaryStubbingException)
+                // Mock PDF form filling components (lenient to avoid
+                // UnnecessaryStubbingException)
                 Map<String, String> mockFieldValues = new HashMap<>();
                 mockFieldValues.put("test", "value");
 
@@ -130,7 +131,7 @@ class PdfGenerationServiceTest {
                                 });
 
                 // When
-                GenerateFormResultDTO result = pdfGenerationService.generateForm5000(testUser, taxYear);
+                GenerateFormResultDto result = pdfGenerationService.generateForm5000(testUser, taxYear);
 
                 // Then
                 assertThat(result).isNotNull();
@@ -164,7 +165,7 @@ class PdfGenerationServiceTest {
                                 .thenAnswer(invocation -> invocation.getArgument(0));
 
                 // When
-                GenerateFormResultDTO result = pdfGenerationService.generateForm5001(
+                GenerateFormResultDto result = pdfGenerationService.generateForm5001(
                                 testUser, testDividends, taxYear);
 
                 // Then
@@ -200,7 +201,7 @@ class PdfGenerationServiceTest {
                                 .thenAnswer(invocation -> invocation.getArgument(0));
 
                 // When
-                GenerateFormResultDTO result = pdfGenerationService.generateBundle(
+                GenerateFormResultDto result = pdfGenerationService.generateBundle(
                                 testUser, testDividends, taxYear);
 
                 // Then
@@ -247,9 +248,9 @@ class PdfGenerationServiceTest {
         @DisplayName("Should generate forms from request")
         void shouldGenerateFormsFromRequest() {
                 // Given
-                FormGenerationRequest request = new FormGenerationRequest()
+                FormGenerationRequestDto request = new FormGenerationRequestDto()
                                 .userId(testUser.getId())
-                                .formType(FormGenerationRequest.FormTypeEnum._5001)
+                                .formType(FormGenerationRequestDto.FormTypeEnum._5001)
                                 .taxYear(2024)
                                 .dividendIds(Arrays.asList(
                                                 testDividends.get(0).getId(),
@@ -272,7 +273,7 @@ class PdfGenerationServiceTest {
                                 .thenAnswer(invocation -> invocation.getArgument(0));
 
                 // When
-                GenerateFormResultDTO result = pdfGenerationService.generateForms(request);
+                GenerateFormResultDto result = pdfGenerationService.generateForms(request);
 
                 // Then
                 assertThat(result).isNotNull();
@@ -288,9 +289,9 @@ class PdfGenerationServiceTest {
         void shouldThrowExceptionWhenUserNotFound() {
                 // Given
                 UUID nonExistentUserId = UUID.randomUUID();
-                FormGenerationRequest request = new FormGenerationRequest()
+                FormGenerationRequestDto request = new FormGenerationRequestDto()
                                 .userId(nonExistentUserId)
-                                .formType(FormGenerationRequest.FormTypeEnum._5000)
+                                .formType(FormGenerationRequestDto.FormTypeEnum._5000)
                                 .taxYear(2024);
 
                 when(userRepository.findById(nonExistentUserId))
@@ -330,7 +331,7 @@ class PdfGenerationServiceTest {
                                 .thenAnswer(invocation -> invocation.getArgument(0));
 
                 // When
-                GenerateFormResultDTO result = pdfGenerationService.regenerateForm(formId);
+                GenerateFormResultDto result = pdfGenerationService.regenerateForm(formId);
 
                 // Then
                 assertThat(result).isNotNull();

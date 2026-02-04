@@ -7,7 +7,7 @@ import { HistoryView } from './components/views/HistoryView';
 import { SettingsView } from './components/views/SettingsView';
 import { DropZone } from './components/upload/DropZone';
 import { ScanningOverlay } from './components/upload/ScanningOverlay';
-import { parseDividendPDF, type DividendData } from './lib/mock-parser';
+import { parseDividendPDF, type Dividend } from './lib/mock-parser';
 import { Button } from './components/ui/Button';
 import { Card } from './components/ui/Card';
 import { ArrowRight, CheckCircle, RefreshCcw, FileText, Wallet } from 'lucide-react';
@@ -22,13 +22,13 @@ function App() {
 
   // Scan State
   const [scanStep, setScanStep] = useState<'upload' | 'scanning' | 'result'>('upload');
-  const [scanResults, setScanResults] = useState<DividendData[]>([]);
+  const [scanResults, setScanResults] = useState<Dividend[]>([]);
   const [processingCount, setProcessingCount] = useState({ current: 0, total: 0 });
 
   const handleFilesSelect = async (files: File[]) => {
     setScanStep('scanning');
     setProcessingCount({ current: 0, total: files.length });
-    const results: DividendData[] = [];
+    const results: Dividend[] = [];
 
     for (let i = 0; i < files.length; i++) {
       setProcessingCount(prev => ({ ...prev, current: i + 1 }));

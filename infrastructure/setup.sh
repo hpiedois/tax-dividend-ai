@@ -125,6 +125,7 @@ chmod +x start-dev.sh stop-dev.sh
 chmod +x start-uat.sh stop-uat.sh
 chmod +x backup-db.sh restore-db.sh
 chmod +x setup.sh
+chmod +x migrations/init-keycloak-db.sh
 
 echo "✅ All scripts are executable"
 echo ""

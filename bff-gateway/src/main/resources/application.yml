@@ -16,6 +16,7 @@ security:
     refresh-token-name: REFRESH_TOKEN
     access-token-duration: 900 # 15 minutes
     refresh-token-duration: 604800 # 7 days
+    internal-api-key: ${INTERNAL_API_KEY:changeme-internal-api-key-min-32-chars}
 app:
   # app.security.user properties removed as we use Keycloak
   cors:

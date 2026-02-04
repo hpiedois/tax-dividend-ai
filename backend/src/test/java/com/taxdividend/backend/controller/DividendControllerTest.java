@@ -2,9 +2,6 @@ package com.taxdividend.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taxdividend.backend.config.TestSecurityConfig;
-import com.taxdividend.backend.dto.TaxCalculationBatchResultDTO;
-import com.taxdividend.backend.dto.TaxCalculationResultDTO;
-import com.taxdividend.backend.mapper.TaxCalculationMapper;
 import com.taxdividend.backend.model.Dividend;
 import com.taxdividend.backend.model.User;
 import com.taxdividend.backend.service.AuditService;
@@ -55,9 +52,6 @@ class DividendControllerTest {
     @MockitoBean
     private AuditService auditService;
 
-    @MockitoBean
-    private TaxCalculationMapper taxCalculationMapper;
-
     private UUID testUserId;
     private User testUser;
     private Dividend testDividend;
@@ -89,8 +83,8 @@ class DividendControllerTest {
     @DisplayName("Should list user's dividends")
     void shouldListUserDividends() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.ListDividends200Response response =
-                new com.taxdividend.backend.api.dto.ListDividends200Response();
+        com.taxdividend.backend.api.dto.PaginatedDividendListDto response =
+                new com.taxdividend.backend.api.dto.PaginatedDividendListDto();
         when(dividendService.listDividends(eq(testUserId), any(), isNull(), isNull(), isNull()))
                 .thenReturn(response);
 
@@ -109,8 +103,8 @@ class DividendControllerTest {
     void shouldGetDividendById() throws Exception {
         // Given
         UUID dividendId = testDividend.getId();
-        com.taxdividend.backend.api.dto.Dividend dividendDto =
-                new com.taxdividend.backend.api.dto.Dividend();
+        com.taxdividend.backend.api.dto.DividendDto dividendDto =
+                new com.taxdividend.backend.api.dto.DividendDto();
         dividendDto.setId(dividendId);
         dividendDto.setIsin("FR0000120271");
         dividendDto.setSecurityName("Total Energies");
@@ -147,26 +141,20 @@ class DividendControllerTest {
     void shouldCalculateTaxForDividend() throws Exception {
         // Given
         UUID dividendId = testDividend.getId();
-        com.taxdividend.backend.api.dto.Dividend dividendDto =
-                new com.taxdividend.backend.api.dto.Dividend();
+        com.taxdividend.backend.api.dto.DividendDto dividendDto =
+                new com.taxdividend.backend.api.dto.DividendDto();
         dividendDto.setId(dividendId);
 
-        TaxCalculationResultDTO internalResult = TaxCalculationResultDTO.builder()
-                .dividendId(dividendId)
-                .reclaimableAmount(new BigDecimal("15.00"))
-                .treatyApplied(true)
-                .build();
-
-        com.taxdividend.backend.api.dto.TaxCalculationResultDTO apiResult =
-                new com.taxdividend.backend.api.dto.TaxCalculationResultDTO();
-        apiResult.setReclaimableAmount(new BigDecimal("15.00"));
+        com.taxdividend.backend.api.dto.TaxCalculationResultDto calculationResult =
+                new com.taxdividend.backend.api.dto.TaxCalculationResultDto();
+        calculationResult.setDividendId(dividendId);
+        calculationResult.setReclaimableAmount(new BigDecimal("15.00"));
+        calculationResult.setSuccess(true);
 
         when(dividendService.getDividend(dividendId, testUserId))
                 .thenReturn(Optional.of(dividendDto));
         when(taxCalculationService.calculateAndUpdate(eq(dividendId), anyString()))
-                .thenReturn(internalResult);
-        when(taxCalculationMapper.toApiDto(internalResult))
-                .thenReturn(apiResult);
+                .thenReturn(calculationResult);
 
         // When/Then
         mockMvc.perform(post("/internal/dividends/{id}/calculate", dividendId)
@@ -187,22 +175,14 @@ class DividendControllerTest {
                 UUID.randomUUID()
         );
 
-        TaxCalculationBatchResultDTO internalResult = TaxCalculationBatchResultDTO.builder()
-                .successCount(2)
-                .failureCount(0)
-                .processedCount(2)
-                .totalReclaimableAmount(new BigDecimal("25.00"))
-                .build();
-
-        com.taxdividend.backend.api.dto.TaxCalculationBatchResultDTO apiResult =
-                new com.taxdividend.backend.api.dto.TaxCalculationBatchResultDTO();
-        apiResult.setSuccessCount(2);
-        apiResult.setTotalReclaimableAmount(new BigDecimal("25.00"));
+        com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto batchResult =
+                new com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto();
+        batchResult.setSuccessCount(2);
+        batchResult.setFailureCount(0);
+        batchResult.setTotalReclaimableAmount(new BigDecimal("25.00"));
 
         when(taxCalculationService.calculateBatchByIds(dividendIds, testUserId))
-                .thenReturn(internalResult);
-        when(taxCalculationMapper.toApiBatchDto(internalResult))
-                .thenReturn(apiResult);
+                .thenReturn(batchResult);
 
         // When/Then
         mockMvc.perform(post("/internal/dividends/calculate-batch")
@@ -222,11 +202,11 @@ class DividendControllerTest {
     @DisplayName("Should calculate all user's dividends")
     void shouldCalculateAllUserDividends() throws Exception {
         // Given
-        TaxCalculationBatchResultDTO result = TaxCalculationBatchResultDTO.builder()
-                .successCount(5)
-                .failureCount(0)
-                .totalReclaimableAmount(new BigDecimal("100.00"))
-                .build();
+        com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto result =
+                new com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto();
+        result.setSuccessCount(5);
+        result.setFailureCount(0);
+        result.setTotalReclaimableAmount(new BigDecimal("100.00"));
 
         when(taxCalculationService.calculateAndUpdateForUser(testUserId))
                 .thenReturn(result);
@@ -250,8 +230,8 @@ class DividendControllerTest {
         LocalDate startDate = LocalDate.of(2024, 1, 1);
         LocalDate endDate = LocalDate.of(2024, 12, 31);
 
-        com.taxdividend.backend.api.dto.Dividend dividendDto =
-                new com.taxdividend.backend.api.dto.Dividend();
+        com.taxdividend.backend.api.dto.DividendDto dividendDto =
+                new com.taxdividend.backend.api.dto.DividendDto();
         dividendDto.setId(testDividend.getId());
 
         when(dividendService.getDividendsByDateRange(testUserId, startDate, endDate))
@@ -272,8 +252,8 @@ class DividendControllerTest {
     @DisplayName("Should get unsubmitted dividends")
     void shouldGetUnsubmittedDividends() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.Dividend dividendDto =
-                new com.taxdividend.backend.api.dto.Dividend();
+        com.taxdividend.backend.api.dto.DividendDto dividendDto =
+                new com.taxdividend.backend.api.dto.DividendDto();
         dividendDto.setId(testDividend.getId());
 
         when(dividendService.getUnsubmittedDividends(testUserId))

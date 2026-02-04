@@ -34,7 +34,7 @@ Tax Dividend AI est un MVP frontend prometteur avec une architecture propre mais
 **TypeScript & Typage**
 - Configuration stricte activée (`strict: true`)
 - Pas de `any` explicite détecté
-- Interfaces bien définies (`DividendData`, `MockCase`)
+- Interfaces bien définies (`Dividend`, `MockCase`)
 - Types génériques utilisés correctement (`HTMLMotionProps`)
 
 **Organisation du Code**
@@ -121,7 +121,7 @@ frontend/
 const [isLoggedIn, setIsLoggedIn] = useState(false);
 const [currentView, setCurrentView] = useState<ViewState>('dashboard');
 const [scanStep, setScanStep] = useState<'upload' | 'scanning' | 'result'>('upload');
-const [scanResults, setScanResults] = useState<DividendData[]>([]);
+const [scanResults, setScanResults] = useState<Dividend[]>([]);
 ```
 → **Problème**: Difficile à scaler, re-renders excessifs
 → **Solution**: State management (voir section 3)
@@ -424,10 +424,10 @@ export const useAuthStore = create<AuthState>()(
 // src/stores/scanStore.ts
 interface ScanState {
   step: 'upload' | 'scanning' | 'result';
-  results: DividendData[];
+  results: Dividend[];
   processingCount: { current: number; total: number };
   setStep: (step: ScanState['step']) => void;
-  addResult: (result: DividendData) => void;
+  addResult: (result: Dividend) => void;
   reset: () => void;
 }
 
@@ -476,7 +476,7 @@ apiClient.interceptors.request.use((config) => {
 
 // src/lib/api/dividends.ts
 export const dividendsAPI = {
-  parsePDF: async (file: File): Promise<DividendData> => {
+  parsePDF: async (file: File): Promise<Dividend> => {
     const formData = new FormData();
     formData.append('file', file);
     const { data } = await apiClient.post('/dividends/parse', formData, {

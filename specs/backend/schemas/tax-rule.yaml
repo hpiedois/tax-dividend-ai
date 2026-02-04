@@ -1,0 +1,77 @@
+TaxRule:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+    sourceCountry:
+      type: string
+    residenceCountry:
+      type: string
+    securityType:
+      type: string
+    standardWithholdingRate:
+      type: number
+    treatyRate:
+      type: number
+    reliefAtSourceAvailable:
+      type: boolean
+    refundProcedureAvailable:
+      type: boolean
+    effectiveFrom:
+      type: string
+      format: date
+    effectiveTo:
+      type: string
+      format: date
+    notes:
+      type: string
+
+TreatyRateResponse:
+  type: object
+  properties:
+    standardRate:
+      type: number
+    treatyRate:
+      type: number
+    reliefAtSourceAvailable:
+      type: boolean
+    refundProcedureAvailable:
+      type: boolean
+    notes:
+      type: string
+
+TaxCalculationResult:
+  type: object
+  properties:
+    dividendId:
+      type: string
+      format: uuid
+    success:
+      type: boolean
+    reclaimableAmount:
+      type: number
+    standardRate:
+      type: number
+    treatyRate:
+      type: number
+    withheldAmount:
+      type: number
+    errors:
+      type: array
+      items:
+        type: string
+
+TaxCalculationBatchResult:
+  type: object
+  properties:
+    successCount:
+      type: integer
+    failureCount:
+      type: integer
+    totalReclaimableAmount:
+      type: number
+    results:
+      type: array
+      items:
+        $ref: '#/TaxCalculationResult'

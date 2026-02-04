@@ -15,7 +15,7 @@
 5. ✅ Gestion du userId via SecurityContext
 
 ### ❌ Points à Corriger
-1. ❌ **Import en double** de `DividendData` (lignes 7 et 11)
+1. ❌ **Import en double** de `Dividend` (lignes 7 et 11)
 2. ❌ **Callback hell** - Imbrication excessive (7 niveaux)
 3. ❌ **Gestion d'erreurs manquante** - Pas de `.onErrorResume()`
 4. ❌ **Données manquantes** - broker, periodStart, periodEnd à null
@@ -37,10 +37,10 @@
 
 ```java
 // Ligne 7
-import com.taxdividend.bff.model.DividendData;
+import com.taxdividend.bff.model.Dividend;
 
 // Ligne 11
-import com.taxdividend.bff.model.DividendData;
+import com.taxdividend.bff.model.Dividend;
 ```
 
 **Impact**: Compilation warning
@@ -126,12 +126,12 @@ periodEnd = null;   // ❌
 
 ```java
 LocalDate periodStart = agentResponse.getData().stream()
-    .map(DividendData::getPaymentDate)
+    .map(Dividend::getPaymentDate)
     .min(Comparator.naturalOrder())
     .orElse(null);
 
 LocalDate periodEnd = agentResponse.getData().stream()
-    .map(DividendData::getPaymentDate)
+    .map(Dividend::getPaymentDate)
     .max(Comparator.naturalOrder())
     .orElse(null);
 ```
@@ -196,7 +196,7 @@ item.setWithholdingRate(
 **Problème**: `reclaimableAmount` absent de la réponse
 
 ```java
-DividendData dd = new DividendData();
+Dividend dd = new Dividend();
 dd.setSecurityName(i.getSecurityName());
 dd.setIsin(i.getIsin());
 dd.setGrossAmount(i.getGrossAmount());
@@ -252,7 +252,7 @@ public class DividendService {
 
     // ... dépendances
 
-    public Mono<ParseStatementResponse> parseDividendStatement(Part file) {
+    public Mono<DividendStatement> parseDividendStatement(Part file) {
         log.info("Parsing dividend statement");
 
         return validateFile(file)
@@ -285,7 +285,7 @@ public class DividendService {
         );
     }
 
-    private Mono<ParseStatementResponse> processStatement(File tempFile, FilePart filePart) {
+    private Mono<DividendStatement> processStatement(File tempFile, FilePart filePart) {
         return filePart.transferTo(tempFile.toPath())
             .then(parseWithAgent(tempFile))
             .flatMap(agentResponse -> createStatementInBackend(tempFile, agentResponse))
@@ -338,11 +338,11 @@ public class DividendService {
             });
     }
 
-    private ParseStatementResponse buildResponse(ImportResult result) {
-        ParseStatementResponse response = new ParseStatementResponse();
+    private DividendStatement buildResponse(ImportResult result) {
+        DividendStatement response = new DividendStatement();
 
         if (result.importResponse != null) {
-            List<DividendData> dividends = result.data.agentResponse.getData().stream()
+            List<Dividend> dividends = result.data.agentResponse.getData().stream()
                 .map(this::mapToDividendData)
                 .collect(Collectors.toList());
             response.setDividends(dividends);
@@ -351,7 +351,7 @@ public class DividendService {
         return response;
     }
 
-    private Mono<ParseStatementResponse> handleError(Throwable e) {
+    private Mono<DividendStatement> handleError(Throwable e) {
         if (e instanceof ParseException || e instanceof StorageException || e instanceof ImportException) {
             return Mono.error(e); // Already wrapped
         }
@@ -426,8 +426,8 @@ public class DividendService {
         return item;
     }
 
-    private DividendData mapToDividendData(AgentDividendData d) {
-        DividendData dd = new DividendData();
+    private Dividend mapToDividendData(AgentDividendData d) {
+        Dividend dd = new Dividend();
         dd.setSecurityName(d.getSecurityName());
         dd.setIsin(d.getIsin());
         dd.setGrossAmount(d.getGrossAmount());

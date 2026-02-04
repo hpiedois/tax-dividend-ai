@@ -1,5 +1,6 @@
 package com.taxdividend.backend.controller;
 
+import com.taxdividend.backend.api.dto.TaxRuleDto;
 import com.taxdividend.backend.config.TestSecurityConfig;
 import com.taxdividend.backend.model.TaxRule;
 import com.taxdividend.backend.service.TaxRuleService;
@@ -76,11 +77,11 @@ class TaxRuleControllerTest {
     @DisplayName("Should list all tax rules")
     void shouldListAllTaxRules() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto1 = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto1 = new TaxRuleDto();
         dto1.setId(frChRule.getId());
         dto1.setSourceCountry("FR");
 
-        com.taxdividend.backend.api.dto.TaxRule dto2 = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto2 = new TaxRuleDto();
         dto2.setId(usChRule.getId());
         dto2.setSourceCountry("US");
 
@@ -100,7 +101,7 @@ class TaxRuleControllerTest {
     void shouldGetTaxRuleById() throws Exception {
         // Given
         UUID ruleId = frChRule.getId();
-        com.taxdividend.backend.api.dto.TaxRule dto = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto = new TaxRuleDto();
         dto.setId(ruleId);
         dto.setSourceCountry("FR");
         dto.setResidenceCountry("CH");
@@ -137,7 +138,7 @@ class TaxRuleControllerTest {
     @DisplayName("Should find applicable tax rule")
     void shouldFindApplicableRule() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto = new TaxRuleDto();
         dto.setSourceCountry("FR");
         dto.setResidenceCountry("CH");
         dto.setTreatyRate(new BigDecimal("15.00"));
@@ -180,7 +181,7 @@ class TaxRuleControllerTest {
     @DisplayName("Should find rules between two countries")
     void shouldFindRulesBetweenCountries() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto = new TaxRuleDto();
         dto.setSourceCountry("FR");
         dto.setResidenceCountry("CH");
 
@@ -203,10 +204,10 @@ class TaxRuleControllerTest {
     @DisplayName("Should get active tax rules")
     void shouldGetActiveRules() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto1 = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto1 = new TaxRuleDto();
         dto1.setSourceCountry("FR");
 
-        com.taxdividend.backend.api.dto.TaxRule dto2 = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto2 = new TaxRuleDto();
         dto2.setSourceCountry("US");
 
         when(taxRuleService.getActiveRules())
@@ -225,7 +226,7 @@ class TaxRuleControllerTest {
     @DisplayName("Should get expired tax rules")
     void shouldGetExpiredRules() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto = new TaxRuleDto();
         dto.setId(UUID.randomUUID());
         dto.setSourceCountry("DE");
         dto.setResidenceCountry("CH");
@@ -283,7 +284,7 @@ class TaxRuleControllerTest {
     @DisplayName("Should get rules by source country")
     void shouldGetRulesBySourceCountry() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto = new TaxRuleDto();
         dto.setSourceCountry("FR");
 
         when(taxRuleService.getRulesBySourceCountry("FR"))
@@ -303,10 +304,10 @@ class TaxRuleControllerTest {
     @DisplayName("Should get rules by residence country")
     void shouldGetRulesByResidenceCountry() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto1 = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto1 = new TaxRuleDto();
         dto1.setResidenceCountry("CH");
 
-        com.taxdividend.backend.api.dto.TaxRule dto2 = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto2 = new TaxRuleDto();
         dto2.setResidenceCountry("CH");
 
         when(taxRuleService.getRulesByResidenceCountry("CH"))
@@ -325,7 +326,7 @@ class TaxRuleControllerTest {
     @DisplayName("Should get rules with relief at source")
     void shouldGetRulesWithReliefAtSource() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto = new TaxRuleDto();
         dto.setReliefAtSourceAvailable(true);
 
         when(taxRuleService.getRulesWithReliefAtSource())
@@ -345,10 +346,10 @@ class TaxRuleControllerTest {
     @DisplayName("Should get rules with refund procedure")
     void shouldGetRulesWithRefundProcedure() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto1 = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto1 = new TaxRuleDto();
         dto1.setRefundProcedureAvailable(true);
 
-        com.taxdividend.backend.api.dto.TaxRule dto2 = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto2 = new TaxRuleDto();
         dto2.setRefundProcedureAvailable(true);
 
         when(taxRuleService.getRulesWithRefundProcedure())
@@ -367,7 +368,7 @@ class TaxRuleControllerTest {
     @DisplayName("Should get treaty rate details")
     void shouldGetTreatyRateDetails() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto = new TaxRuleDto();
         dto.setStandardWithholdingRate(new BigDecimal("30.00"));
         dto.setTreatyRate(new BigDecimal("15.00"));
         dto.setReliefAtSourceAvailable(true);
@@ -412,7 +413,7 @@ class TaxRuleControllerTest {
     @DisplayName("Should handle uppercase conversion for country codes")
     void shouldHandleUppercaseConversion() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto = new TaxRuleDto();
         dto.setSourceCountry("FR");
 
         when(taxRuleService.findApplicableRule(
@@ -435,7 +436,7 @@ class TaxRuleControllerTest {
     @DisplayName("Should use current date when date parameter not provided")
     void shouldUseCurrentDateWhenNotProvided() throws Exception {
         // Given
-        com.taxdividend.backend.api.dto.TaxRule dto = new com.taxdividend.backend.api.dto.TaxRule();
+        TaxRuleDto dto = new TaxRuleDto();
         dto.setSourceCountry("FR");
 
         when(taxRuleService.findApplicableRule(

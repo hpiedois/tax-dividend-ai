@@ -6,11 +6,11 @@ Multi-environment Docker infrastructure for local development, UAT testing, and 
 
 This infrastructure provides three separate environments:
 
-| Environment | Purpose | Database | Ports | Admin UI |
+| **Environment** | **Purpose** | **Database** | **Ports** | **Services** |
 |------------|---------|----------|-------|----------|
-| **Development** | Local dev with hot-reload | `taxdividend_dev` | 5432, 9000-9001, 6379 | MinIO Console |
-| **UAT** | User acceptance testing | `taxdividend_uat` | 5433, 9002-9003, 6380 | MinIO Console |
-| **Production** | Production deployment | `taxdividend` | Localhost only | ❌ Not recommended |
+| **Development** | Local dev with hot-reload | `taxdividend_dev` | 5432, 9000-9001, 6379, 8080, 8025, 3000 | Postgres, MinIO, Redis, Keycloak, Mailhog, Observability Stack |
+| **UAT** | User acceptance testing | `taxdividend_uat` | 5433, 9002-9003, 6380 | Postgres, MinIO, Redis (Keycloak/Obs optional) |
+| **Production** | Production deployment | `taxdividend` | Localhost only | Managed Services Recommended |
 
 ## ⚠️ Important: Infrastructure vs Application
 
@@ -48,9 +48,13 @@ docker exec -it tax-dividend-postgres-dev psql -U postgres -d taxdividend_dev
 ```
 
 **Access points:**
-- PostgreSQL: `localhost:5432` (postgres / dev_password_123)
-- MinIO Console: http://localhost:9001 (minioadmin / minioadmin123)
-- Redis: `localhost:6379`
+- **Stack Name**: `tax-dividend-infra` (in Docker Desktop)
+- **PostgreSQL**: `localhost:5432` (postgres / dev_password_123)
+- **Keycloak**: http://localhost:8080 (admin / admin)
+- **MinIO Console**: http://localhost:9001 (minioadmin / minioadmin123)
+- **Mailhog UI**: http://localhost:8025
+- **Grafana**: http://localhost:3000 (admin / admin)
+- **Redis**: `localhost:6379`
 
 **Database console:**
 ```bash
@@ -139,7 +143,27 @@ docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
 - **UAT**: 512MB limit with LRU eviction, 6380
 - **Prod**: Password-protected, 2GB limit, 6379 (localhost only)
 
+### Authentication (Keycloak)
+- **Dev**: Runs locally on port 8080.
+- **Database**: Uses `keycloak` database within the Postgres container.
+- **Init**: Realm configuration imported automatically from `keycloak/realm-export.json`.
+
+### Email Testing (Mailhog)
+- **Image**: `anatomicjc/mailhog` (Native ARM64/AMD64 support).
+- **SMTP**: `localhost:1025`
+- **UI**: `http://localhost:8025`
+
+### Observability Stack
+Full stack configured in `infrastructure/observability/`:
+- **Loki**: Log aggregation (Port 3100).
+- **Promtail**: Scrapes Docker logs and sends to Loki.
+- **Tempo**: Distributed tracing (Zipkin compatible on Port 9411).
+- **Prometheus**: Metrics collection (Port 9090).
+- **Grafana**: Visualization dashboard (Port 3000). Data sources pre-linked (Logs <-> Traces).
+
 ### Database Management
+
+**Dynamic Initialization**: The application user is created via `migrations/02_init_roles.sh` using `TAXDIVIDEND_DB_USER` and `TAXDIVIDEND_DB_PASSWORD` from `.env` files.
 
 Use `psql` directly via Docker exec:
 

@@ -241,7 +241,7 @@
   // ⚠️ TEMPORAIRE - Mock seulement
   // En production, le BACKEND calculera ces valeurs
 
-  export const parseDividendPDF = async (file: File): Promise<DividendData> => {
+  export const parseDividendPDF = async (file: File): Promise<Dividend> => {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     const grossAmount = parseFloat((Math.random() * 500 + 100).toFixed(2));

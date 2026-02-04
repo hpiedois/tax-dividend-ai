@@ -66,7 +66,7 @@ All application state lives in `App.tsx` using React hooks:
 2. **View Routing**: `currentView` (`'dashboard' | 'history' | 'settings' | 'scan'`)
 3. **Scan Workflow**:
    - `scanStep` (`'upload' | 'scanning' | 'result'`)
-   - `scanResults` (array of DividendData)
+   - `scanResults` (array of Dividend)
    - `processingCount` (progress tracking)
 
 Global concerns use Context API:
@@ -97,7 +97,7 @@ src/components/
 1. User drops PDF files in DropZone
 2. `App.handleFilesSelect` sets `scanStep = 'scanning'`
 3. For each file: `parseDividendPDF()` from `lib/mock-parser.ts` (1.5-2.5s delay)
-4. Mock parser returns simulated `DividendData` (French ISINs and company names)
+4. Mock parser returns simulated `Dividend` (French ISINs and company names)
 5. Results aggregated, `scanStep = 'result'`
 6. Display summary card and individual result cards
 
@@ -108,7 +108,7 @@ src/components/
 ### Key Interfaces
 
 ```typescript
-interface DividendData {
+interface Dividend {
   securityName: string;
   isin: string;
   grossAmount: number;

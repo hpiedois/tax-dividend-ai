@@ -1,15 +1,18 @@
 package com.taxdividend.bff.service;
 
+import com.taxdividend.bff.agent.client.model.DocumentDividendData;
+import com.taxdividend.bff.agent.client.model.ParsedDividendStatement;
 import com.taxdividend.bff.client.api.DividendsApi;
 import com.taxdividend.bff.client.model.BulkImportDividendItem;
 import com.taxdividend.bff.client.model.BulkImportDividendsRequest;
-import com.taxdividend.bff.client.model.Dividend;
+import com.taxdividend.bff.client.model.BulkImportDividendsResponse;
+import com.taxdividend.bff.client.model.DividendStatement;
 import com.taxdividend.bff.mapper.DividendMapper;
-import com.taxdividend.bff.model.DividendCase;
-import com.taxdividend.bff.model.DividendData;
-import com.taxdividend.bff.model.DividendHistoryResponse;
-import com.taxdividend.bff.model.DividendStats;
-import com.taxdividend.bff.model.ParseStatementResponse;
+import com.taxdividend.bff.model.DividendCaseDto;
+import com.taxdividend.bff.model.DividendDto;
+import com.taxdividend.bff.model.DividendHistoryResponseDto;
+import com.taxdividend.bff.model.DividendStatsDto;
+import com.taxdividend.bff.model.DividendStatementDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.multipart.FilePart;
@@ -38,11 +41,11 @@ public class DividendService {
 
     // ==================== Public API ====================
 
-    public Mono<DividendStats> getDividendStats(UUID userId, Integer taxYear) {
+    public Mono<DividendStatsDto> getDividendStats(UUID userId, Integer taxYear) {
         log.debug("Fetching dividend stats for user {}", userId);
         return dividendsApi.getDividendStats(userId, taxYear)
                 .map(statsDTO -> {
-                    DividendStats stats = new DividendStats();
+                    DividendStatsDto stats = new DividendStatsDto();
                     stats.setTotalReclaimed(statsDTO.getTotalReclaimed());
                     stats.setPendingAmount(statsDTO.getPendingAmount());
                     stats.setCasesCount(statsDTO.getCasesCount());
@@ -50,14 +53,14 @@ public class DividendService {
                 });
     }
 
-    public Mono<DividendHistoryResponse> getDividendHistory(UUID userId, Integer page, Integer pageSize) {
+    public Mono<DividendHistoryResponseDto> getDividendHistory(UUID userId, Integer page, Integer pageSize) {
         return dividendsApi.listDividends(userId, page, pageSize, null, null, null)
                 .map(response -> {
-                    List<DividendCase> cases = response.getContent().stream()
+                    List<DividendCaseDto> cases = response.getContent().stream()
                             .map(dividendMapper::toDividendCase)
                             .collect(Collectors.toList());
 
-                    DividendHistoryResponse history = new DividendHistoryResponse();
+                    DividendHistoryResponseDto history = new DividendHistoryResponseDto();
                     history.setData(cases);
                     history.setPage(page);
                     history.setPageSize(pageSize);
@@ -66,14 +69,13 @@ public class DividendService {
                 });
     }
 
-    public Mono<ParseStatementResponse> parseDividendStatement(Part file) {
+    public Mono<DividendStatementDto> parseDividendStatement(UUID userId, Part file) {
         log.info("Parsing dividend statement via Agent");
 
         return validateFile(file)
                 .flatMap(this::createTempFile)
-                .flatMap(tempFile -> processStatement(tempFile, (FilePart) file)
-                        .doFinally(signal -> cleanupTempFile(tempFile))
-                );
+                .flatMap(tempFile -> processStatement(userId, tempFile, (FilePart) file)
+                        .doFinally(signal -> cleanupTempFile(tempFile)));
     }
 
     // ==================== Validation ====================
@@ -98,9 +100,7 @@ public class DividendService {
     // ==================== File Handling ====================
 
     private Mono<File> createTempFile(FilePart filePart) {
-        return Mono.fromCallable(() ->
-                File.createTempFile("upload_", "_" + filePart.filename())
-        ).onErrorResume(e -> {
+        return Mono.fromCallable(() -> File.createTempFile("upload_", "_" + filePart.filename())).onErrorResume(e -> {
             log.error("Failed to create temp file", e);
             return Mono.error(new RuntimeException("Failed to create temp file", e));
         });
@@ -117,10 +117,10 @@ public class DividendService {
 
     // ==================== Main Processing Pipeline ====================
 
-    private Mono<ParseStatementResponse> processStatement(File tempFile, FilePart filePart) {
+    private Mono<DividendStatementDto> processStatement(UUID userId, File tempFile, FilePart filePart) {
         return filePart.transferTo(tempFile.toPath())
                 .then(parseWithAgent(tempFile))
-                .flatMap(agentResponse -> createStatementInBackend(tempFile, agentResponse))
+                .flatMap(agentResponse -> createStatementInBackend(userId, tempFile, agentResponse))
                 .flatMap(this::importDividendsToBackend)
                 .map(this::buildResponse)
                 .onErrorResume(this::handleError);
@@ -128,7 +128,7 @@ public class DividendService {
 
     // ==================== Agent Parsing ====================
 
-    private Mono<com.taxdividend.bff.agent.client.model.ParseResponse> parseWithAgent(File tempFile) {
+    private Mono<com.taxdividend.bff.agent.client.model.ParsedDividendStatement> parseWithAgent(File tempFile) {
         return parsingApi.parseDocument(tempFile, null)
                 .doOnSuccess(response -> {
                     int count = response.getData() != null ? response.getData().size() : 0;
@@ -143,25 +143,25 @@ public class DividendService {
     // ==================== Backend Statement Creation ====================
 
     private Mono<StatementWithDividends> createStatementInBackend(
+            UUID userId,
             File tempFile,
-            com.taxdividend.bff.agent.client.model.ParseResponse agentResponse) {
+            com.taxdividend.bff.agent.client.model.ParsedDividendStatement agentResponse) {
 
-        return getUserId().flatMap(userId -> {
-            // Extract metadata from agent response
-            LocalDate periodStart = extractPeriodStart(agentResponse);
-            LocalDate periodEnd = extractPeriodEnd(agentResponse);
-            String broker = extractBroker(agentResponse);
+        // Extract metadata from agent response
+        LocalDate periodStart = extractPeriodStart(agentResponse);
+        LocalDate periodEnd = extractPeriodEnd(agentResponse);
+        String broker = extractBroker(agentResponse);
 
-            log.debug("Creating statement in backend: broker={}, period={} to {}", 
-                    broker, periodStart, periodEnd);
+        log.debug("Creating statement in backend: broker={}, period={} to {}",
+                broker, periodStart, periodEnd);
 
-            return dividendStatementsApi.uploadDividendStatement(
-                    userId, broker, periodStart, periodEnd, tempFile
-            ).map(statement -> new StatementWithDividends(statement, agentResponse, userId));
-        }).onErrorResume(e -> {
-            log.error("Failed to create statement in backend", e);
-            return Mono.error(new RuntimeException("Failed to store dividend statement", e));
-        });
+        return dividendStatementsApi.uploadDividendStatement(
+                userId, broker, periodStart, periodEnd, tempFile)
+                .map(statement -> new StatementWithDividends(statement, agentResponse, userId))
+                .onErrorResume(e -> {
+                    log.error("Failed to create statement in backend", e);
+                    return Mono.error(new RuntimeException("Failed to store dividend statement", e));
+                });
     }
 
     // ==================== Backend Dividend Import ====================
@@ -174,7 +174,7 @@ public class DividendService {
 
         BulkImportDividendsRequest bulkRequest = buildBulkImportRequest(data);
 
-        log.debug("Importing {} dividends for statement {}", 
+        log.debug("Importing {} dividends for statement {}",
                 bulkRequest.getDividends().size(), data.statement.getId());
 
         return dividendsApi.bulkImportDividends(data.userId, bulkRequest)
@@ -187,17 +187,17 @@ public class DividendService {
 
     // ==================== Response Building ====================
 
-    private ParseStatementResponse buildResponse(ImportResult result) {
-        ParseStatementResponse response = new ParseStatementResponse();
+    private DividendStatementDto buildResponse(ImportResult result) {
+        DividendStatementDto response = new DividendStatementDto();
 
         if (result.agentResponse().getData() != null && !result.agentResponse().getData().isEmpty()) {
-            List<DividendData> dividends = result.agentResponse().getData().stream()
+            List<DividendDto> dividends = result.agentResponse().getData().stream()
                     .map(this::mapToDividendData)
                     .collect(Collectors.toList());
             response.setDividends(dividends);
         }
 
-        log.info("Statement processing completed: {} dividends returned", 
+        log.info("Statement processing completed: {} dividends returned",
                 response.getDividends() != null ? response.getDividends().size() : 0);
 
         return response;
@@ -205,28 +205,22 @@ public class DividendService {
 
     // ==================== Error Handling ====================
 
-    private Mono<ParseStatementResponse> handleError(Throwable e) {
+    private Mono<DividendStatementDto> handleError(Throwable e) {
         // Don't wrap already meaningful RuntimeExceptions
-        if (e instanceof RuntimeException && e.getMessage() != null && 
-            (e.getMessage().contains("Failed to parse PDF") ||
-             e.getMessage().contains("Failed to store dividend statement") ||
-             e.getMessage().contains("Failed to import dividends"))) {
+        if (e instanceof RuntimeException && e.getMessage() != null &&
+                (e.getMessage().contains("Failed to parse PDF") ||
+                        e.getMessage().contains("Failed to store dividend statement") ||
+                        e.getMessage().contains("Failed to import dividends"))) {
             return Mono.error(e);
         }
-        
+
         log.error("Unexpected error during statement processing", e);
         return Mono.error(new RuntimeException("Failed to process dividend statement", e));
     }
 
     // ==================== Helper Methods ====================
 
-    private Mono<UUID> getUserId() {
-        return org.springframework.security.core.context.ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
-                .switchIfEmpty(Mono.error(new SecurityException("User not authenticated")));
-    }
-
-    private LocalDate extractPeriodStart(com.taxdividend.bff.agent.client.model.ParseResponse response) {
+    private LocalDate extractPeriodStart(com.taxdividend.bff.agent.client.model.ParsedDividendStatement response) {
         if (response.getData() == null || response.getData().isEmpty()) {
             return null;
         }
@@ -237,7 +231,7 @@ public class DividendService {
                 .orElse(null);
     }
 
-    private LocalDate extractPeriodEnd(com.taxdividend.bff.agent.client.model.ParseResponse response) {
+    private LocalDate extractPeriodEnd(com.taxdividend.bff.agent.client.model.ParsedDividendStatement response) {
         if (response.getData() == null || response.getData().isEmpty()) {
             return null;
         }
@@ -248,7 +242,7 @@ public class DividendService {
                 .orElse(null);
     }
 
-    private String extractBroker(com.taxdividend.bff.agent.client.model.ParseResponse response) {
+    private String extractBroker(ParsedDividendStatement response) {
         // TODO: Agent should provide broker in future version
         // For now, use default value
         return "Unknown";
@@ -268,7 +262,7 @@ public class DividendService {
         return request;
     }
 
-    private BulkImportDividendItem mapToBulkImportItem(com.taxdividend.bff.agent.client.model.DividendData d) {
+    private BulkImportDividendItem mapToBulkImportItem(DocumentDividendData d) {
         BulkImportDividendItem item = new BulkImportDividendItem();
         item.setSecurityName(d.getSecurityName());
         item.setIsin(d.getIsin());
@@ -276,23 +270,23 @@ public class DividendService {
         item.setCurrency(d.getCurrency());
         item.setPaymentDate(d.getPaymentDate());
         item.setWithholdingTax(d.getWithholdingTax());
-        
+
         // TODO: Update Agent spec to include withholdingRate
         // For now, calculate it from withholdingTax / grossAmount
-        if (d.getWithholdingTax() != null && d.getGrossAmount() != null 
+        if (d.getWithholdingTax() != null && d.getGrossAmount() != null
                 && d.getGrossAmount().compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal rate = d.getWithholdingTax()
                     .divide(d.getGrossAmount(), 4, java.math.RoundingMode.HALF_UP)
                     .multiply(new BigDecimal(100));
             item.setWithholdingRate(rate);
         }
-        
+
         item.setSourceCountry(d.getCountry());
         return item;
     }
 
-    private DividendData mapToDividendData(com.taxdividend.bff.agent.client.model.DividendData d) {
-        DividendData dd = new DividendData();
+    private DividendDto mapToDividendData(com.taxdividend.bff.agent.client.model.DocumentDividendData d) {
+        DividendDto dd = new DividendDto();
         dd.setSecurityName(d.getSecurityName());
         dd.setIsin(d.getIsin());
         dd.setGrossAmount(d.getGrossAmount());
@@ -300,10 +294,10 @@ public class DividendService {
         dd.setPaymentDate(d.getPaymentDate());
         dd.setWithholdingTax(d.getWithholdingTax());
         dd.setSourceCountry(d.getCountry());
-        
+
         // ReclaimableAmount calculated by backend and returned after import
         // Could be retrieved from backend response if needed
-        
+
         return dd;
     }
 
@@ -313,19 +307,18 @@ public class DividendService {
      * Internal record to carry statement with agent response through the pipeline
      */
     private record StatementWithDividends(
-            com.taxdividend.bff.client.model.DividendStatement statement,
-            com.taxdividend.bff.agent.client.model.ParseResponse agentResponse,
-            UUID userId
-    ) {}
+            DividendStatement statement,
+            ParsedDividendStatement agentResponse,
+            UUID userId) {
+    }
 
     /**
      * Internal record to carry import result through the pipeline
      */
     private record ImportResult(
             StatementWithDividends data,
-            com.taxdividend.bff.client.model.BulkImportDividendsResponse importResponse
-    ) {
-        public com.taxdividend.bff.agent.client.model.ParseResponse agentResponse() {
+            BulkImportDividendsResponse importResponse) {
+        public ParsedDividendStatement agentResponse() {
             return data.agentResponse;
         }
     }

@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { TrendingUp, DollarSign, Receipt, ArrowDownCircle } from 'lucide-react';
 import { Card } from '../ui/Card';
-import type { DividendData } from '../../types/dividend.types';
+import type { Dividend } from '../../types/dividend.types';
 
 interface FormDataSummaryProps {
-  dividends: DividendData[];
+  dividends: Dividend[];
   taxYear: number;
 }
 
@@ -12,8 +12,8 @@ export function FormDataSummary({ dividends, taxYear }: FormDataSummaryProps) {
   const { t } = useTranslation();
 
   const totalGross = dividends.reduce((sum, d) => sum + d.grossAmount, 0);
-  const totalWithholding = dividends.reduce((sum, d) => sum + d.withholdingTax, 0);
-  const totalReclaimable = dividends.reduce((sum, d) => sum + d.reclaimableAmount, 0);
+  const totalWithholding = dividends.reduce((sum, d) => sum + (d.withholdingTax ?? 0), 0);
+  const totalReclaimable = dividends.reduce((sum, d) => sum + (d.reclaimableAmount ?? 0), 0);
   const totalTreaty = dividends.reduce((sum, d) => sum + d.grossAmount * 0.15, 0);
 
   return (
@@ -80,13 +80,13 @@ export function FormDataSummary({ dividends, taxYear }: FormDataSummaryProps) {
               <div>
                 <p className="font-semibold text-sm">{dividend.securityName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {dividend.isin} • {dividend.paymentDate}
+                  {dividend.isin ?? 'N/A'} • {dividend.paymentDate ?? 'N/A'}
                 </p>
               </div>
               <div className="text-right">
                 <p className="font-semibold">{dividend.grossAmount.toFixed(2)} {dividend.currency}</p>
                 <p className="text-xs text-green-600">
-                  +{dividend.reclaimableAmount.toFixed(2)} {dividend.currency}
+                  +{(dividend.reclaimableAmount ?? 0).toFixed(2)} {dividend.currency}
                 </p>
               </div>
             </div>
