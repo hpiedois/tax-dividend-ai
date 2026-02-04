@@ -9,8 +9,8 @@
 -- EXTENSIONS
 -- ============================================================================
 
--- Enable UUID generation functions (uuid_generate_v4)
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Note: Using gen_random_uuid() (built-in since PostgreSQL 13)
+-- No extension needed!
 
 -- ============================================================================
 -- FUNCTIONS
@@ -33,7 +33,7 @@ $$ language 'plpgsql';
 -- Users Table
 -- ----------------------------------------------------------------------------
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(255),
@@ -69,7 +69,7 @@ COMMENT ON COLUMN users.status IS 'User status: ACTIVE, PENDING, SUSPENDED, DELE
 -- Generated Forms Table
 -- ----------------------------------------------------------------------------
 CREATE TABLE generated_forms (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     s3_key VARCHAR(500) NOT NULL,
     file_name VARCHAR(255) NOT NULL,
@@ -96,7 +96,7 @@ COMMENT ON COLUMN generated_forms.metadata IS 'Additional metadata (JSON): gener
 -- Dividends Table
 -- ----------------------------------------------------------------------------
 CREATE TABLE dividends (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     form_id UUID REFERENCES generated_forms(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     security_name VARCHAR(255) NOT NULL,
@@ -142,7 +142,7 @@ CREATE TYPE dividend_statement_status AS ENUM (
 );
 
 CREATE TABLE dividend_statements (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
     -- Fichier source (PDF/CSV du broker)
@@ -203,7 +203,7 @@ COMMENT ON COLUMN dividends.statement_id IS 'Link to source broker statement (if
 -- Audit Logs Table
 -- ----------------------------------------------------------------------------
 CREATE TABLE audit_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE SET NULL,
     action VARCHAR(100) NOT NULL,
     entity_type VARCHAR(50),
@@ -229,7 +229,7 @@ COMMENT ON COLUMN audit_logs.ip_address IS 'Client IP address (for security trac
 -- Tax Rules Table
 -- ----------------------------------------------------------------------------
 CREATE TABLE tax_rules (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     source_country VARCHAR(2) NOT NULL,
     residence_country VARCHAR(2) NOT NULL,
     security_type VARCHAR(50) DEFAULT 'EQUITY',
