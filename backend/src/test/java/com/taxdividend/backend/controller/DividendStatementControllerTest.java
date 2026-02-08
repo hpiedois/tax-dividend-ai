@@ -74,6 +74,19 @@ class DividendStatementControllerTest {
                 testStatementDTO.setStatus(DividendStatementStatusDto.UPLOADED);
         }
 
+        private String getUserContextHeader(UUID userId) {
+                try {
+                        com.taxdividend.backend.security.UserContext context = new com.taxdividend.backend.security.UserContext(
+                                        userId,
+                                        "test@example.com",
+                                        new String[] { "USER" },
+                                        "keycloak");
+                        return java.util.Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(context));
+                } catch (Exception e) {
+                        throw new RuntimeException(e);
+                }
+        }
+
         @Nested
         @DisplayName("Upload Statement Tests")
         class UploadStatementTests {
@@ -95,7 +108,7 @@ class DividendStatementControllerTest {
                         // When/Then
                         mockMvc.perform(multipart("/internal/dividend-statements")
                                         .file(file)
-                                        .header("X-User-Id", testUserId.toString())
+                                        .header("X-User-Context", getUserContextHeader(testUserId))
                                         .param("broker", "Interactive Brokers")
                                         .param("periodStart", "2024-01-01")
                                         .param("periodEnd", "2024-12-31"))
@@ -137,7 +150,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(get("/internal/dividend-statements")
-                                        .header("X-User-Id", testUserId.toString())
+                                        .header("X-User-Context", getUserContextHeader(testUserId))
                                         .param("page", "0")
                                         .param("size", "20"))
                                         .andExpect(status().isOk())
@@ -165,7 +178,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(get("/internal/dividend-statements")
-                                        .header("X-User-Id", testUserId.toString())
+                                        .header("X-User-Context", getUserContextHeader(testUserId))
                                         .param("status", "UPLOADED")
                                         .param("page", "0")
                                         .param("size", "20"))
@@ -192,7 +205,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(get("/internal/dividend-statements")
-                                        .header("X-User-Id", testUserId.toString())
+                                        .header("X-User-Context", getUserContextHeader(testUserId))
                                         .param("page", "0")
                                         .param("size", "20"))
                                         .andExpect(status().isOk())
@@ -214,7 +227,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(get("/internal/dividend-statements/{id}", statementId)
-                                        .header("X-User-Id", testUserId.toString()))
+                                        .header("X-User-Context", getUserContextHeader(testUserId)))
                                         .andExpect(status().isOk())
                                         .andExpect(jsonPath("$.id").value(statementId.toString()))
                                         .andExpect(jsonPath("$.broker").value("Interactive Brokers"))
@@ -232,7 +245,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(get("/internal/dividend-statements/{id}", statementId)
-                                        .header("X-User-Id", testUserId.toString()))
+                                        .header("X-User-Context", getUserContextHeader(testUserId)))
                                         .andExpect(status().isNotFound());
 
                         verify(statementService).getStatement(statementId, testUserId);
@@ -259,7 +272,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(patch("/internal/dividend-statements/{id}", statementId)
-                                        .header("X-User-Id", testUserId.toString())
+                                        .header("X-User-Context", getUserContextHeader(testUserId))
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(updateRequest)))
                                         .andExpect(status().isOk())
@@ -287,7 +300,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(delete("/internal/dividend-statements/{id}", statementId)
-                                        .header("X-User-Id", testUserId.toString()))
+                                        .header("X-User-Context", getUserContextHeader(testUserId)))
                                         .andExpect(status().isNoContent());
 
                         verify(statementService).deleteStatement(statementId, testUserId);
@@ -301,7 +314,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(delete("/internal/dividend-statements/{id}", statementId)
-                                        .header("X-User-Id", testUserId.toString()))
+                                        .header("X-User-Context", getUserContextHeader(testUserId)))
                                         .andExpect(status().isNoContent());
                 }
         }
@@ -322,7 +335,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(get("/internal/dividend-statements/by-date-range")
-                                        .header("X-User-Id", testUserId.toString())
+                                        .header("X-User-Context", getUserContextHeader(testUserId))
                                         .param("startDate", "2024-01-01")
                                         .param("endDate", "2024-12-31"))
                                         .andExpect(status().isOk())
@@ -344,7 +357,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(get("/internal/dividend-statements/by-date-range")
-                                        .header("X-User-Id", testUserId.toString())
+                                        .header("X-User-Context", getUserContextHeader(testUserId))
                                         .param("startDate", "2024-01-01")
                                         .param("endDate", "2024-12-31"))
                                         .andExpect(status().isOk())
@@ -367,7 +380,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(get("/internal/dividend-statements/count-by-status")
-                                        .header("X-User-Id", testUserId.toString())
+                                        .header("X-User-Context", getUserContextHeader(testUserId))
                                         .param("status", "UPLOADED"))
                                         .andExpect(status().isOk())
                                         .andExpect(content().string("5"));
@@ -388,7 +401,7 @@ class DividendStatementControllerTest {
 
                         // When/Then
                         mockMvc.perform(get("/internal/dividend-statements/count-by-status")
-                                        .header("X-User-Id", testUserId.toString())
+                                        .header("X-User-Context", getUserContextHeader(testUserId))
                                         .param("status", "PAID"))
                                         .andExpect(status().isOk())
                                         .andExpect(content().string("0"));

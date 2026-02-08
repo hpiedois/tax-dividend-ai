@@ -26,7 +26,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -41,9 +41,9 @@ public class DividendService {
 
     // ==================== Public API ====================
 
-    public Mono<DividendStatsDto> getDividendStats(UUID userId, Integer taxYear) {
-        log.debug("Fetching dividend stats for user {}", userId);
-        return dividendsApi.getDividendStats(userId, taxYear)
+    public Mono<DividendStatsDto> getDividendStats(Integer taxYear) {
+        log.debug("Fetching dividend stats");
+        return dividendsApi.getDividendStats(taxYear)
                 .map(statsDTO -> {
                     DividendStatsDto stats = new DividendStatsDto();
                     stats.setTotalReclaimed(statsDTO.getTotalReclaimed());
@@ -53,8 +53,8 @@ public class DividendService {
                 });
     }
 
-    public Mono<DividendHistoryResponseDto> getDividendHistory(UUID userId, Integer page, Integer pageSize) {
-        return dividendsApi.listDividends(userId, page, pageSize, null, null, null)
+    public Mono<DividendHistoryResponseDto> getDividendHistory(Integer page, Integer pageSize) {
+        return dividendsApi.listDividends(page, pageSize, null, null, null)
                 .map(response -> {
                     List<DividendCaseDto> cases = response.getContent().stream()
                             .map(dividendMapper::toDividendCase)
@@ -69,12 +69,12 @@ public class DividendService {
                 });
     }
 
-    public Mono<DividendStatementDto> parseDividendStatement(UUID userId, Part file) {
+    public Mono<DividendStatementDto> parseDividendStatement(Part file) {
         log.info("Parsing dividend statement via Agent");
 
         return validateFile(file)
                 .flatMap(this::createTempFile)
-                .flatMap(tempFile -> processStatement(userId, tempFile, (FilePart) file)
+                .flatMap(tempFile -> processStatement(tempFile, (FilePart) file)
                         .doFinally(signal -> cleanupTempFile(tempFile)));
     }
 
@@ -117,10 +117,10 @@ public class DividendService {
 
     // ==================== Main Processing Pipeline ====================
 
-    private Mono<DividendStatementDto> processStatement(UUID userId, File tempFile, FilePart filePart) {
+    private Mono<DividendStatementDto> processStatement(File tempFile, FilePart filePart) {
         return filePart.transferTo(tempFile.toPath())
                 .then(parseWithAgent(tempFile))
-                .flatMap(agentResponse -> createStatementInBackend(userId, tempFile, agentResponse))
+                .flatMap(agentResponse -> createStatementInBackend(tempFile, agentResponse))
                 .flatMap(this::importDividendsToBackend)
                 .map(this::buildResponse)
                 .onErrorResume(this::handleError);
@@ -143,7 +143,6 @@ public class DividendService {
     // ==================== Backend Statement Creation ====================
 
     private Mono<StatementWithDividends> createStatementInBackend(
-            UUID userId,
             File tempFile,
             com.taxdividend.bff.agent.client.model.ParsedDividendStatement agentResponse) {
 
@@ -156,8 +155,8 @@ public class DividendService {
                 broker, periodStart, periodEnd);
 
         return dividendStatementsApi.uploadDividendStatement(
-                userId, broker, periodStart, periodEnd, tempFile)
-                .map(statement -> new StatementWithDividends(statement, agentResponse, userId))
+                broker, periodStart, periodEnd, tempFile)
+                .map(statement -> new StatementWithDividends(statement, agentResponse))
                 .onErrorResume(e -> {
                     log.error("Failed to create statement in backend", e);
                     return Mono.error(new RuntimeException("Failed to store dividend statement", e));
@@ -177,7 +176,7 @@ public class DividendService {
         log.debug("Importing {} dividends for statement {}",
                 bulkRequest.getDividends().size(), data.statement.getId());
 
-        return dividendsApi.bulkImportDividends(data.userId, bulkRequest)
+        return dividendsApi.bulkImportDividends(bulkRequest)
                 .map(importResponse -> new ImportResult(data, importResponse))
                 .onErrorResume(e -> {
                     log.error("Failed to import dividends for statement {}", data.statement.getId(), e);
@@ -308,8 +307,7 @@ public class DividendService {
      */
     private record StatementWithDividends(
             DividendStatement statement,
-            ParsedDividendStatement agentResponse,
-            UUID userId) {
+            ParsedDividendStatement agentResponse) {
     }
 
     /**

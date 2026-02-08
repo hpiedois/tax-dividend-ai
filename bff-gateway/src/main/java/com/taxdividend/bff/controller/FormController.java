@@ -3,7 +3,6 @@ package com.taxdividend.bff.controller;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -31,11 +30,9 @@ public class FormController implements FormsApi {
                         Mono<GenerateTaxFormsRequestDto> generateTaxFormsRequest,
                         ServerWebExchange exchange) {
 
-                return ReactiveSecurityContextHolder.getContext()
-                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
-                                .flatMap(userId -> generateTaxFormsRequest
-                                                .flatMap(request -> formService.generateForms(userId, request)
-                                                                .map(ResponseEntity::ok)));
+                return generateTaxFormsRequest
+                                .flatMap(request -> formService.generateForms(request)
+                                                .map(ResponseEntity::ok));
         }
 
         @Override
@@ -44,9 +41,7 @@ public class FormController implements FormsApi {
                         String formType,
                         ServerWebExchange exchange) {
 
-                return ReactiveSecurityContextHolder.getContext()
-                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
-                                .map(userId -> ResponseEntity.ok(formService.listForms(userId, taxYear, formType)));
+                return Mono.just(ResponseEntity.ok(formService.listForms(taxYear, formType)));
         }
 
         @Override
@@ -54,9 +49,7 @@ public class FormController implements FormsApi {
                         UUID id,
                         ServerWebExchange exchange) {
 
-                return ReactiveSecurityContextHolder.getContext()
-                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
-                                .flatMap(userId -> formService.getForm(id, userId))
+                return formService.getForm(id)
                                 .map(ResponseEntity::ok)
                                 .defaultIfEmpty(ResponseEntity.notFound().build());
         }
@@ -66,9 +59,7 @@ public class FormController implements FormsApi {
                         UUID id,
                         ServerWebExchange exchange) {
 
-                return ReactiveSecurityContextHolder.getContext()
-                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
-                                .flatMap(userId -> formService.downloadForm(id, userId));
+                return formService.downloadForm(id);
         }
 
         @Override
@@ -77,9 +68,7 @@ public class FormController implements FormsApi {
                         Integer expiresIn,
                         ServerWebExchange exchange) {
 
-                return ReactiveSecurityContextHolder.getContext()
-                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
-                                .flatMap(userId -> formService.getDownloadUrl(id, userId, expiresIn))
+                return formService.getDownloadUrl(id, expiresIn)
                                 .map(ResponseEntity::ok)
                                 .defaultIfEmpty(ResponseEntity.notFound().build());
         }
@@ -89,9 +78,7 @@ public class FormController implements FormsApi {
                         UUID id,
                         ServerWebExchange exchange) {
 
-                return ReactiveSecurityContextHolder.getContext()
-                                .map(ctx -> UUID.fromString(ctx.getAuthentication().getName()))
-                                .flatMap(userId -> formService.deleteForm(id, userId))
+                return formService.deleteForm(id)
                                 .then(Mono.just(ResponseEntity.noContent().build()));
         }
 }

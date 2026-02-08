@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth';
 import { Layout } from './components/Layout';
 import { AuthLayout } from './components/layout/AuthLayout';
 import { Login } from './pages/Login';
+import { LoginCallback } from './components/auth/LoginCallback';
 import { Register } from './pages/Register';
 import { VerifyEmail } from './pages/VerifyEmail';
 import { Dashboard } from './pages/Dashboard';
@@ -29,6 +30,7 @@ function App() {
                     <Route path="register" element={<Register />} />
                     <Route path="verify" element={<VerifyEmail />} />
                     <Route path="auth/verify" element={<VerifyEmail />} />
+                    <Route path="auth/callback" element={<LoginCallback />} />
                 </Route>
 
                 {/* Main App Routes */}

@@ -2,6 +2,7 @@ package com.taxdividend.backend.service;
 
 import com.taxdividend.backend.model.User;
 import com.taxdividend.backend.repository.UserRepository;
+import com.taxdividend.backend.security.UserContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,15 +12,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Service for managing users in the application database.
+ * Service for user management and auto-provisioning.
  *
- * This service handles:
- * - User metadata storage (tax info, address, etc.)
- * - User profile management
- * - User lookup operations
- *
- * Authentication is handled by Keycloak. This service only stores
- * application-specific metadata that Keycloak doesn't manage.
+ * Handles two user creation flows:
+ * 1. Classic registration (/auth/register endpoint) - creates user with verified=false
+ * 2. SSO auto-provisioning (first login via Google/GitHub/etc.) - creates user with verified=true
  */
 @Service
 @RequiredArgsConstructor
@@ -29,136 +26,133 @@ public class UserService {
     private final UserRepository userRepository;
 
     /**
-     * Creates a new user in the application database.
+     * Find user by ID or auto-provision for SSO users.
      *
-     * This is called after successfully creating the user in Keycloak.
-     * Stores application-specific metadata (tax info, canton, etc.)
+     * This method is called by InternalApiKeyFilter on every authenticated request.
      *
-     * @param keycloakUserId Keycloak user ID (UUID)
-     * @param email User email
-     * @param fullName User full name
-     * @param canton Swiss canton code (optional)
-     * @param taxId Swiss tax ID (optional)
-     * @param address User address (optional)
-     * @return Created User entity
+     * Flow:
+     * - If user exists → return it
+     * - If user doesn't exist and is SSO login → auto-provision (create user)
+     * - If user doesn't exist and is classic login → throw exception (user must register first)
+     *
+     * @param userContext User context from BFF Gateway (extracted from Keycloak JWT)
+     * @return User entity
+     * @throws UserNotRegisteredException if classic login but user not registered
      */
     @Transactional
-    public User createUser(
-        UUID keycloakUserId,
-        String email,
-        String fullName,
-        String canton,
-        String taxId,
-        String address
-    ) {
-        // Check if user already exists
-        if (userRepository.findById(keycloakUserId).isPresent()) {
-            throw new UserAlreadyExistsException("User with ID " + keycloakUserId + " already exists");
-        }
-
-        User user = User.builder()
-            .id(keycloakUserId)  // Use Keycloak user ID as primary key
-            .email(email)
-            .passwordHash("")  // Not used (Keycloak handles authentication)
-            .fullName(fullName)
-            .canton(canton)
-            .taxId(taxId)
-            .address(address)
-            .country("CH")  // Default to Switzerland
-            .status("ACTIVE")
-            .isActive(true)
-            .isVerified(false)  // Will be updated when Keycloak email is verified
-            .build();
-
-        User savedUser = userRepository.save(user);
-        log.info("Created user metadata in database: {} ({})", email, keycloakUserId);
-
-        return savedUser;
+    public User findOrCreateFromSso(UserContext userContext) {
+        return userRepository.findById(userContext.userId())
+                .orElseGet(() -> {
+                    if (userContext.isSsoLogin()) {
+                        log.info("Auto-provisioning SSO user: {} (provider: {})",
+                                userContext.email(), userContext.identityProvider());
+                        return createSsoUser(userContext);
+                    } else {
+                        log.warn("User not registered: {} (classic login requires /auth/register)",
+                                userContext.userId());
+                        throw new UserNotRegisteredException(
+                                "User must complete registration via /auth/register endpoint");
+                    }
+                });
     }
 
     /**
-     * Gets user by Keycloak user ID.
+     * Create user from SSO login (Google, GitHub, etc.)
      *
-     * @param userId Keycloak user ID
-     * @return User entity
+     * SSO users are automatically created on first login with:
+     * - verified=true (email already verified by SSO provider)
+     * - passwordHash="SSO" (no password needed)
+     * - isActive=true
+     * - status=ACTIVE
+     *
+     * @param userContext User context from SSO provider
+     * @return Created user entity
      */
-    public Optional<User> getUserById(UUID userId) {
+    private User createSsoUser(UserContext userContext) {
+        User user = User.builder()
+                .id(userContext.userId())
+                .email(userContext.email())
+                .passwordHash("SSO")  // No password for SSO users
+                .isVerified(true)     // Email verified by SSO provider
+                .isActive(true)
+                .status("ACTIVE")
+                .country("CH")        // Default to Switzerland
+                .registrationSource(userContext.getRegistrationSource())
+                .build();
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Create user from classic registration (/auth/register endpoint).
+     *
+     * Classic users are created with:
+     * - verified=false (must verify email)
+     * - passwordHash from Keycloak (managed separately)
+     * - isActive=true
+     * - status=ACTIVE
+     *
+     * @param userId User ID from Keycloak
+     * @param email User email
+     * @param fullName Full name
+     * @param canton Swiss canton (optional)
+     * @param taxId Tax ID (optional)
+     * @param address Address (optional)
+     * @return Created user entity
+     * @throws UserAlreadyExistsException if user with this ID or email already exists
+     */
+    @Transactional
+    public User createUser(UUID userId, String email, String fullName,
+                          String canton, String taxId, String address) {
+        // Check if user already exists
+        if (userRepository.findById(userId).isPresent()) {
+            throw new UserAlreadyExistsException("User with ID " + userId + " already exists");
+        }
+
+        log.info("Creating classic user: {} (ID: {})", email, userId);
+
+        User user = User.builder()
+                .id(userId)
+                .email(email)
+                .fullName(fullName)
+                .canton(canton)
+                .taxId(taxId)
+                .address(address)
+                .passwordHash("KEYCLOAK_MANAGED")  // Password managed by Keycloak
+                .isVerified(false)                 // Must verify email
+                .isActive(true)
+                .status("ACTIVE")
+                .country("CH")
+                .registrationSource("CLASSIC")
+                .build();
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Find user by ID.
+     *
+     * @param userId User ID
+     * @return Optional containing user if found
+     */
+    public Optional<User> findById(UUID userId) {
         return userRepository.findById(userId);
     }
 
     /**
-     * Gets user by email.
-     *
-     * @param email User email
-     * @return User entity
+     * Exception thrown when user attempts to access API without completing registration.
      */
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    /**
-     * Updates user verification status.
-     *
-     * Called when Keycloak confirms email verification.
-     *
-     * @param userId Keycloak user ID
-     * @param verified Verification status
-     */
-    @Transactional
-    public void updateVerificationStatus(UUID userId, boolean verified) {
-        userRepository.findById(userId).ifPresent(user -> {
-            user.setIsVerified(verified);
-            userRepository.save(user);
-            log.info("Updated verification status for user {}: {}", userId, verified);
-        });
-    }
-
-    /**
-     * Updates user profile information.
-     *
-     * @param userId Keycloak user ID
-     * @param fullName User full name (optional)
-     * @param canton Swiss canton (optional)
-     * @param taxId Swiss tax ID (optional)
-     * @param address User address (optional)
-     * @return Updated User entity
-     */
-    @Transactional
-    public User updateUserProfile(
-        UUID userId,
-        String fullName,
-        String canton,
-        String taxId,
-        String address
-    ) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
-
-        if (fullName != null) user.setFullName(fullName);
-        if (canton != null) user.setCanton(canton);
-        if (taxId != null) user.setTaxId(taxId);
-        if (address != null) user.setAddress(address);
-
-        User updatedUser = userRepository.save(user);
-        log.info("Updated profile for user: {}", userId);
-
-        return updatedUser;
-    }
-
-    /**
-     * Exception thrown when user already exists.
-     */
-    public static class UserAlreadyExistsException extends RuntimeException {
-        public UserAlreadyExistsException(String message) {
+    public static class UserNotRegisteredException extends RuntimeException {
+        public UserNotRegisteredException(String message) {
             super(message);
         }
     }
 
     /**
-     * Exception thrown when user is not found.
+     * Exception thrown when attempting to create a user that already exists.
      */
-    public static class UserNotFoundException extends RuntimeException {
-        public UserNotFoundException(String message) {
+    public static class UserAlreadyExistsException extends RuntimeException {
+        public UserAlreadyExistsException(String message) {
             super(message);
         }
     }

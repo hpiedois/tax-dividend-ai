@@ -37,7 +37,7 @@ export function applyMockAdapter(axiosInstance: AxiosInstance) {
             const mockHistory = {
                 data: scenario.recentActivity.map(act => ({
                     id: act.id,
-                    securityName: act.name,
+                    security: act.name,
                     grossAmount: act.details?.grossAmount || 0,
                     reclaimedAmount: act.details?.reclaimableAmount || 0,
                     status: 'OPEN',

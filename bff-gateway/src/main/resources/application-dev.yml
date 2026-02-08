@@ -1,0 +1,52 @@
+# ============================================================================
+# Tax Dividend AI - BFF Gateway Development Profile
+# ============================================================================
+# This profile provides safe defaults for local development only.
+# It assumes infrastructure services (Keycloak, Tempo/Zipkin) are running in Docker
+# and exposed on localhost ports.
+# ============================================================================
+
+logging:
+  level:
+    root: INFO
+    com.taxdividend: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+
+spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            loggerLevel: FULL
+  
+  # Override Keycloak URLs for local development (talking to Docker on localhost)
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Assumes Keycloak is exposed on localhost:8180 (defined in .env.dev)
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8180/realms/tax-dividend/protocol/openid-connect/certs}
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8180/realms/tax-dividend}
+
+app:
+  # Unrestricted CORS for local development
+  cors:
+    allowed-origins: "*"
+    
+  security:
+    # Fixed key for dev convenience - matches backend dev key
+    internal-api-key: dev-internal-api-key-for-local-testing-only-min-32-chars
+
+# Disable OpenTelemetry SDK in dev by default to reduce noise/errors
+# If you want to test tracing locally with Tempo, set otel.sdk.disabled=false
+otel:
+  sdk:
+    disabled: true
+
+management:
+  zipkin:
+    tracing:
+      # If tracing is enabled, point to localhost Tempo
+      endpoint: http://localhost:9411/api/v2/spans

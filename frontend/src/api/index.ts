@@ -21,11 +21,11 @@ api.interceptors.request.use(async (config) => {
 // Optional: Add interceptor for 401 to redirect to login
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
         if (error.response?.status === 401) {
-            // Redirect to login or clear auth state
-            // Use userManager to signout which clears storage and redirects
-            userManager.signoutRedirect();
+            // Clear user session and redirect to login
+            await userManager.removeUser();
+            await userManager.signinRedirect();
         }
         return Promise.reject(error);
     }

@@ -25,49 +25,49 @@ import static org.mockito.Mockito.when;
 @Disabled("TODO: Configure security for tests or use WebFluxTest")
 class DividendControllerTest {
 
-    @Autowired
-    private WebTestClient webTestClient;
+        @Autowired
+        private WebTestClient webTestClient;
 
-    @MockitoBean
-    private DividendService dividendService;
+        @MockitoBean
+        private DividendService dividendService;
 
-    private static final UUID TEST_USER_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        private static final UUID TEST_USER_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
 
-    @Test
-    void getDividendStats_ReturnsOk() {
-        // Given
-        when(dividendService.getDividendStats(any(), any()))
-                .thenReturn(Mono.just(new DividendStatsDto()));
+        @Test
+        void getDividendStats_ReturnsOk() {
+                // Given
+                when(dividendService.getDividendStats(any()))
+                                .thenReturn(Mono.just(new DividendStatsDto()));
 
-        // When & Then
-        // Note: Requires security configuration
-        webTestClient.get()
-                .uri("/api/dividends/stats?taxYear=2024")
-                .exchange();
+                // When & Then
+                // Note: Requires security configuration
+                webTestClient.get()
+                                .uri("/api/dividends/stats?taxYear=2024")
+                                .exchange();
                 // Would check .expectStatus().isOk() with proper security setup
-    }
+        }
 
-    @Test
-    void getDividendHistory_ReturnsOk() {
-        // Given
-        when(dividendService.getDividendHistory(any(), any(), any()))
-                .thenReturn(Mono.just(new DividendHistoryResponseDto()));
+        @Test
+        void getDividendHistory_ReturnsOk() {
+                // Given
+                when(dividendService.getDividendHistory(any(), any()))
+                                .thenReturn(Mono.just(new DividendHistoryResponseDto()));
 
-        // When & Then
-        webTestClient.get()
-                .uri("/api/dividends/history")
-                .exchange();
-    }
+                // When & Then
+                webTestClient.get()
+                                .uri("/api/dividends/history")
+                                .exchange();
+        }
 
-    @Test
-    void parseDividendStatement_ReturnsOk() {
-        // Given
-        when(dividendService.parseDividendStatement(any()))
-                .thenReturn(Mono.just(new DividendStatementDto()));
+        @Test
+        void parseDividendStatement_ReturnsOk() {
+                // Given
+                when(dividendService.parseDividendStatement(any()))
+                                .thenReturn(Mono.just(new DividendStatementDto()));
 
-        // When & Then
-        webTestClient.post()
-                .uri("/api/dividends/parse")
-                .exchange();
-    }
+                // When & Then
+                webTestClient.post()
+                                .uri("/api/dividends/parse")
+                                .exchange();
+        }
 }

@@ -5,7 +5,7 @@ import { HistoryView } from '../components/views/HistoryView';
 import { SettingsView } from '../components/views/SettingsView';
 import { ScanView } from '../components/views/ScanView';
 import { FormGeneratorView } from '../components/forms/FormGeneratorView';
-import { Shell } from '../components/layout/Shell';
+import { Layout } from '../components/Layout';
 import { PrivateRoute } from './PrivateRoute';
 
 export const router = createBrowserRouter([
@@ -18,7 +18,7 @@ export const router = createBrowserRouter([
     element: <PrivateRoute />,
     children: [
       {
-        element: <Shell />,
+        element: <Layout />,
         children: [
           {
             index: true,

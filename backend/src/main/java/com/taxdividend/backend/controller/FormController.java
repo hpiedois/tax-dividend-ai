@@ -1,6 +1,7 @@
 package com.taxdividend.backend.controller;
 
 import com.taxdividend.backend.api.dto.GeneratedFormDto;
+import com.taxdividend.backend.security.SecurityHelper;
 
 import com.taxdividend.backend.api.FormsApi;
 import com.taxdividend.backend.api.dto.FormGenerationRequestDto;
@@ -57,13 +58,13 @@ public class FormController implements FormsApi {
      */
     @Override
     public ResponseEntity<GenerateFormResultDto> generateForms(
-            UUID xUserId,
             FormGenerationRequestDto request) {
+        UUID userId = SecurityHelper.getCurrentUserId();
 
-        request.setUserId(xUserId);
+        request.setUserId(userId);
 
         log.info("Generating forms for user {}: type={}, year={}, dividends={}",
-                xUserId, request.getFormType(), request.getTaxYear(),
+                userId, request.getFormType(), request.getTaxYear(),
                 request.getDividendIds() != null ? request.getDividendIds().size() : 0);
 
         try {
@@ -71,7 +72,7 @@ public class FormController implements FormsApi {
 
             if (result.getSuccess()) {
                 // Audit log
-                auditService.logFormGeneration(xUserId, result.getFormId(),
+                auditService.logFormGeneration(userId, result.getFormId(),
                         result.getFormType(), result.getDividendCount());
 
                 log.info("Form generated successfully: {} ({})", result.getFormId(), result.getFormType());
@@ -96,12 +97,12 @@ public class FormController implements FormsApi {
      */
     @Override
     public ResponseEntity<List<GeneratedFormDto>> listForms(
-            UUID xUserId,
             Integer taxYear,
             String formType) {
+        UUID userId = SecurityHelper.getCurrentUserId();
 
-        List<GeneratedFormDto> forms = formService.listForms(xUserId, taxYear, formType);
-        log.info("Retrieved {} forms for user {}", forms.size(), xUserId);
+        List<GeneratedFormDto> forms = formService.listForms(userId, taxYear, formType);
+        log.info("Retrieved {} forms for user {}", forms.size(), userId);
 
         return ResponseEntity.ok(forms);
     }
@@ -111,10 +112,10 @@ public class FormController implements FormsApi {
      */
     @Override
     public ResponseEntity<GeneratedFormDto> getForm(
-            UUID id,
-            UUID xUserId) {
+            UUID id) {
+        UUID userId = SecurityHelper.getCurrentUserId();
 
-        return formService.getForm(id, xUserId)
+        return formService.getForm(id, userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -124,10 +125,10 @@ public class FormController implements FormsApi {
      */
     @Override
     public ResponseEntity<Resource> downloadForm(
-            UUID id,
-            UUID xUserId) {
+            UUID id) {
+        UUID userId = SecurityHelper.getCurrentUserId();
 
-        return formService.downloadForm(id, xUserId);
+        return formService.downloadForm(id, userId);
     }
 
     /**
@@ -136,11 +137,11 @@ public class FormController implements FormsApi {
     @Override
     public ResponseEntity<FormDownloadUrlResponseDto> getFormDownloadUrl(
             UUID id,
-            UUID xUserId,
             Integer expiresIn) {
+        UUID userId = SecurityHelper.getCurrentUserId();
 
         // Verify form exists and user has access
-        Optional<GeneratedFormDto> formOpt = formService.getForm(id, xUserId);
+        Optional<GeneratedFormDto> formOpt = formService.getForm(id, userId);
         if (formOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -148,7 +149,7 @@ public class FormController implements FormsApi {
         // Convert seconds to hours for service call (service expects hours)
         int expirationHours = expiresIn != null ? expiresIn / 3600 : 1;
 
-        return formService.getDownloadUrl(id, xUserId, expirationHours)
+        return formService.getDownloadUrl(id, userId, expirationHours)
                 .map(url -> {
                     FormDownloadUrlResponseDto response = new FormDownloadUrlResponseDto();
                     try {
@@ -174,11 +175,11 @@ public class FormController implements FormsApi {
      */
     @Override
     public ResponseEntity<GeneratedFormDto> regenerateForm(
-            UUID id,
-            UUID xUserId) {
+            UUID id) {
+        UUID userId = SecurityHelper.getCurrentUserId();
 
         // Verify form exists and user has access
-        Optional<GeneratedFormDto> formOpt = formService.getForm(id, xUserId);
+        Optional<GeneratedFormDto> formOpt = formService.getForm(id, userId);
         if (formOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -193,12 +194,12 @@ public class FormController implements FormsApi {
 
             if (result.getSuccess()) {
                 // Audit log
-                auditService.logAction(xUserId, "FORM_REGENERATED", "FORM", id, null, null, null);
+                auditService.logAction(userId, "FORM_REGENERATED", "FORM", id, null, null, null);
 
-                log.info("Form {} regenerated successfully for user {}", id, xUserId);
+                log.info("Form {} regenerated successfully for user {}", id, userId);
 
                 // Return the regenerated form metadata
-                return formService.getForm(result.getFormId(), xUserId)
+                return formService.getForm(result.getFormId(), userId)
                         .map(ResponseEntity::ok)
                         .orElse(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
             } else {
@@ -217,11 +218,11 @@ public class FormController implements FormsApi {
      */
     @Override
     public ResponseEntity<Void> deleteForm(
-            UUID id,
-            UUID xUserId) {
+            UUID id) {
+        UUID userId = SecurityHelper.getCurrentUserId();
 
         try {
-            formService.deleteForm(id, xUserId);
+            formService.deleteForm(id, userId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

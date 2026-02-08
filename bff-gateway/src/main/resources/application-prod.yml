@@ -1,0 +1,19 @@
+# ============================================================================
+# Tax Dividend AI - BFF Gateway Production Profile
+# ============================================================================
+
+logging:
+  level:
+    root: INFO
+    # Restrict application logging in prod
+    com.taxdividend: INFO
+
+app:
+  cors:
+    # Strict CORS for production
+    allowed-origins: "https://app.taxdividend.ai"
+
+# Enable OpenTelemetry for Production
+otel:
+  sdk:
+    disabled: false

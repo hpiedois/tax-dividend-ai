@@ -57,6 +57,13 @@ public class User {
     private String country = "CH";
 
     /**
+     * Registration source: CLASSIC, GOOGLE_SSO, GITHUB_SSO, MICROSOFT_SSO, etc.
+     */
+    @Column(name = "registration_source", length = 50)
+    @Builder.Default
+    private String registrationSource = "CLASSIC";
+
+    /**
      * User status: ACTIVE, PENDING, SUSPENDED, DELETED
      */
     @Column(length = 50)

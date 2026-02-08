@@ -26,14 +26,14 @@ public class FormService {
     private final FormsApi formsApi;
     private final FormMapper formMapper;
 
-    public Mono<GenerateTaxFormsResponseDto> generateForms(UUID userId, GenerateTaxFormsRequestDto request) {
-        log.info("Generating forms for user {}", userId);
+    public Mono<GenerateTaxFormsResponseDto> generateForms(GenerateTaxFormsRequestDto request) {
+        log.info("Generating forms");
 
         FormGenerationRequest backendRequest = new FormGenerationRequest();
         if (request.getFormType() != null) {
             backendRequest.setFormType(FormGenerationRequest.FormTypeEnum.fromValue(request.getFormType().getValue()));
         }
-        backendRequest.setUserId(userId); // Use authenticated User ID
+        // backendRequest.setUserId(userId); // Handled by X-User-Context
         backendRequest.setTaxYear(request.getTaxYear());
         if (request.getDividendIds() != null) {
             backendRequest.setDividendIds(request.getDividendIds().stream()
@@ -43,39 +43,38 @@ public class FormService {
         backendRequest.setIncludeAttestation(request.getIncludeAttestation());
         backendRequest.setIncludeDividends(request.getIncludeDividends());
 
-        return formsApi.generateForms(userId, backendRequest)
+        return formsApi.generateForms(backendRequest)
                 .map(formMapper::toGenerateResponse);
     }
 
-    public reactor.core.publisher.Flux<GeneratedFormDto> listForms(UUID userId, Integer taxYear, String formType) {
-        return formsApi.listForms(userId, taxYear, formType)
+    public reactor.core.publisher.Flux<GeneratedFormDto> listForms(Integer taxYear, String formType) {
+        return formsApi.listForms(taxYear, formType)
                 .map(formMapper::toGeneratedForm);
     }
 
-    public Mono<GeneratedFormDto> getForm(UUID id, UUID userId) {
-        return formsApi.getForm(id, userId)
+    public Mono<GeneratedFormDto> getForm(UUID id) {
+        return formsApi.getForm(id)
                 .map(formMapper::toGeneratedForm);
     }
 
-    public Mono<ResponseEntity<Resource>> downloadForm(UUID id, UUID userId) {
-        return formsApi.downloadForm(id, userId)
+    public Mono<ResponseEntity<Resource>> downloadForm(UUID id) {
+        return formsApi.downloadForm(id)
                 .map(file -> {
                     Resource resource = new org.springframework.core.io.FileSystemResource(file);
                     return ResponseEntity.ok()
                             .header(HttpHeaders.CONTENT_DISPOSITION,
                                     "attachment; filename=\"" + file.getName() + "\"")
-                            .header(HttpHeaders.CONTENT_TYPE, "application/pdf") // Assumed
-                                                                                                          // default
+                            .header(HttpHeaders.CONTENT_TYPE, "application/pdf") // Assumed default
                             .body(resource);
                 });
     }
 
-    public Mono<FormDownloadUrlResponseDto> getDownloadUrl(UUID id, UUID userId, Integer expiresIn) {
-        return formsApi.getFormDownloadUrl(id, userId, expiresIn)
+    public Mono<FormDownloadUrlResponseDto> getDownloadUrl(UUID id, Integer expiresIn) {
+        return formsApi.getFormDownloadUrl(id, expiresIn)
                 .map(formMapper::toDownloadResponse);
     }
 
-    public Mono<Void> deleteForm(UUID id, UUID userId) {
-        return formsApi.deleteForm(id, userId);
+    public Mono<Void> deleteForm(UUID id) {
+        return formsApi.deleteForm(id);
     }
 }

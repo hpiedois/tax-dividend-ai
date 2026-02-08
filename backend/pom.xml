@@ -51,6 +51,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-json</artifactId>
+        </dependency>
+
+        <!-- Jackson modules for production-ready JSON handling -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-parameter-names</artifactId>
+        </dependency>
 
         <!-- Keycloak Admin Client -->
         <dependency>
@@ -326,7 +336,8 @@
                                     </limits>
                                 </rule>
                                 <!-- Service implementation coverage -->
-                                <!-- Current: 49% after MapStruct migration - Target: 70% (add tests for uncovered services) -->
+                                <!-- Current: 49% after MapStruct migration - Target: 70% (add tests
+                                for uncovered services) -->
                                 <rule>
                                     <element>PACKAGE</element>
                                     <limits>

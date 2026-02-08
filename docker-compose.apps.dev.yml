@@ -1,0 +1,106 @@
+# ============================================================================
+# Tax Dividend AI - Applications Dev Overrides
+# ============================================================================
+# Purpose: Development-specific configuration for applications
+# Usage: docker-compose -f docker-compose.apps.yml -f docker-compose.apps.dev.yml up
+# ============================================================================
+# NOTE: In typical dev workflow, apps run in IDE, not Docker!
+#       This file is for testing full-stack deployment locally.
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # Backend - Dev overrides
+  # ==========================================================================
+  backend:
+    # Build with dev target (if multi-stage Dockerfile)
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: development
+      args:
+        - SPRING_PROFILES_ACTIVE=dev
+
+    # Expose port for local testing
+    ports:
+      - "8081:8081"
+
+    # Dev environment
+    environment:
+      SPRING_PROFILES_ACTIVE: dev,docker
+
+      # Enable debug port
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+
+    # Expose debug port
+    ports:
+      - "8081:8081"
+      - "5005:5005"  # Java debug port
+
+    # Mount source for hot reload (if configured)
+    volumes:
+      - ./backend/src:/app/src:ro
+      - ./backend/target:/app/target
+
+    # Less strict healthcheck in dev
+    healthcheck:
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ==========================================================================
+  # BFF Gateway - Dev overrides
+  # ==========================================================================
+  bff-gateway:
+    build:
+      context: .
+      dockerfile: bff-gateway/Dockerfile
+      target: development
+
+    ports:
+      - "8080:8080"
+      - "5006:5005"  # Java debug port (different from backend)
+
+    environment:
+      SPRING_PROFILES_ACTIVE: dev,docker
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
+
+    volumes:
+      - ./bff-gateway/src:/app/src:ro
+      - ./bff-gateway/target:/app/target
+
+    healthcheck:
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ==========================================================================
+  # Frontend - Dev overrides
+  # ==========================================================================
+  frontend:
+    # Dev mode with HMR (if Dockerfile supports it)
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+
+    ports:
+      - "5173:5173"
+
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8080
+      - VITE_KEYCLOAK_URL=http://localhost:8180
+      - VITE_KEYCLOAK_REALM=tax-dividend
+      - VITE_KEYCLOAK_CLIENT_ID=frontend
+
+    # Mount source for HMR
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+
+    # Dev server, no healthcheck needed
+    healthcheck:
+      disable: true

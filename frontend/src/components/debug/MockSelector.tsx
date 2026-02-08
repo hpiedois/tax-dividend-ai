@@ -18,7 +18,7 @@ export function MockSelector() {
     };
 
     return (
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+        <div className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end gap-2">
             {isOpen && (
                 <div className="bg-white rounded-lg shadow-lg border border-slate-200 p-2 mb-2 w-48 animate-in fade-in slide-in-from-bottom-2">
                     <p className="text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">Mock Data</p>

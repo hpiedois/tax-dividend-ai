@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.git
+.gitignore
+.DS_Store
+*.local
+*.log
+test-results
+*_test_output.txt

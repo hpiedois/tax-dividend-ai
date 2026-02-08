@@ -1,0 +1,20 @@
+# ============================================================================
+# Tax Dividend AI - BFF Gateway Docker Profile
+# ============================================================================
+# This profile is intended to be used IN COMBINATION with other profiles
+# (e.g., active profiles: "dev,docker" or "prod,docker").
+# It strictly handles infrastructure connectivity within the Docker network.
+# ============================================================================
+
+backend:
+  # Using Docker service name 'backend'
+  url: http://backend:8081/internal
+
+dividend-agent:
+  # Using Docker service name 'dividend-agent' (assuming agent service name)
+  # If the agent is actually properly named 'dividend-agent' in docker-compose
+  url: http://dividend-agent:8083/api
+
+spring:
+  zipkin:
+    base-url: http://tempo:9411

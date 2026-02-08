@@ -1,0 +1,196 @@
+# ============================================================================
+# Tax Dividend AI - Infrastructure Production Overrides
+# ============================================================================
+# Purpose: Production-specific configuration for infrastructure
+# Usage: docker-compose -f docker-compose.infra.yml -f docker-compose.infra.prod.yml up
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # PostgreSQL - Production overrides
+  # ==========================================================================
+  postgres:
+    # DO NOT expose port on host in production (internal network only)
+    ports: []
+
+    # Production-grade settings
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TAXDIVIDEND_DB_USER: ${TAXDIVIDEND_DB_USER}
+      TAXDIVIDEND_DB_PASSWORD: ${TAXDIVIDEND_DB_PASSWORD}
+      # Production tuning
+      POSTGRES_SHARED_BUFFERS: 256MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 1GB
+      POSTGRES_MAX_CONNECTIONS: 100
+
+    # Stricter healthcheck
+    healthcheck:
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # ==========================================================================
+  # MinIO - Production overrides
+  # ==========================================================================
+  minio:
+    # Only expose API, not console (or use reverse proxy)
+    ports:
+      - "9000:9000"
+
+    # Production credentials (from .env.prod)
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ==========================================================================
+  # Redis - Production overrides
+  # ==========================================================================
+  redis:
+    # Do not expose port
+    ports: []
+
+    # Production settings
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # ==========================================================================
+  # Keycloak - Production overrides
+  # ==========================================================================
+  keycloak:
+    # Production mode (no dev mode, no import-realm)
+    command: start --optimized
+
+    # Do not expose port directly (use reverse proxy)
+    ports: []
+
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+
+      # Production settings
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
+      KC_HOSTNAME_STRICT: "true"
+      KC_PROXY: edge
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+
+      # Security
+      KC_LOG_LEVEL: WARN
+      QUARKUS_LOG_LEVEL: WARN
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  keycloak-db:
+    ports: []
+
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # ==========================================================================
+  # MailHog - Disabled in production (use real SMTP)
+  # ==========================================================================
+  mailhog:
+    deploy:
+      replicas: 0
+
+  # ==========================================================================
+  # Observability - Production overrides
+  # ==========================================================================
+  grafana:
+    # Disable anonymous access in production
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL}
+
+    # Do not expose directly (use reverse proxy)
+    ports: []
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  prometheus:
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  loki:
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  tempo:
+    # Only expose OTLP endpoints (no UI)
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  blackbox:
+    ports: []

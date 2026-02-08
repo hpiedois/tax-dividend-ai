@@ -1,11 +1,14 @@
 {
     "realm": "tax-dividend",
     "enabled": true,
+    "sslRequired": "none",
+    "loginTheme": "tax-dividend",
     "users": [
         {
-            "username": "user",
+            "id": "4e012f70-3846-4941-b95f-5b98c70a235d",
+            "username": "jdoe",
             "enabled": true,
-            "email": "user@example.com",
+            "email": "jdoe@dummy.com",
             "firstName": "John",
             "lastName": "Doe",
             "credentials": [

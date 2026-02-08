@@ -36,7 +36,11 @@ public class UserContextHeaderFilter implements ExchangeFilterFunction {
                                 .map(GrantedAuthority::getAuthority)
                                 .collect(Collectors.toList());
 
-                        UserContext userContext = new UserContext(userId, email, roles);
+                        // Extract identity_provider claim (present for SSO logins: google, github, etc.)
+                        // For classic email/password login, this will be null or "keycloak"
+                        String identityProvider = jwt.getClaimAsString("identity_provider");
+
+                        UserContext userContext = new UserContext(userId, email, roles, identityProvider);
                         try {
                             String json = objectMapper.writeValueAsString(userContext);
                             String base64Context = Base64.getEncoder().encodeToString(json.getBytes());
@@ -44,8 +48,6 @@ public class UserContextHeaderFilter implements ExchangeFilterFunction {
                             ClientRequest newRequest = ClientRequest.from(request)
                                     .headers(headers -> {
                                         headers.set("X-User-Context", base64Context);
-                                        // Remove old header if present
-                                        headers.remove("X-User-Id");
                                     })
                                     .build();
                             return next.exchange(newRequest);

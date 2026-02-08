@@ -8,12 +8,17 @@ import { ThemeToggle } from './layout/ThemeToggle';
 import { UserMenu } from './layout/UserMenu';
 import { LogoFinFinal } from './ui/AppLogos';
 
+import { MockSelector } from './debug/MockSelector';
+
 export const Layout: React.FC = () => {
     const { user, logout } = useAuth();
     console.log('Layout Render:', { user });
     const navigate = useNavigate();
     const toastShownRef = React.useRef(false);
     const location = useLocation();
+
+    // STRICT CONDITION: Only show in Mock Mode
+    const showDebugMocks = String(import.meta.env.VITE_USE_MOCK) === 'true';
 
     React.useEffect(() => {
         if (location.state?.loginSuccess && !toastShownRef.current) {
@@ -35,6 +40,7 @@ export const Layout: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-background flex flex-col transition-colors duration-300">
+
             <nav className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-40 transition-colors duration-300">
                 <div className="w-full px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
@@ -133,6 +139,9 @@ export const Layout: React.FC = () => {
                     </Link>
                 </div>
             </div>
+
+            {/* Debug Tools */}
+            {showDebugMocks && <MockSelector />}
 
         </div>
     );

@@ -85,6 +85,31 @@ Configuration is in `src/main/resources/application.yml`.
 
 For production, use environment variables or Spring Cloud Config.
 
+### Configuration Profiles
+
+The application supports multiple environments via Spring Profiles:
+
+| Profile | File | Description |
+|---------|------|-------------|
+| `dev` | `application-dev.yml` | Local development (default). Unrestricted CORS, DEBUG logging, disabled tracing. |
+| `uat` | `application-uat.yml` | UAT environment. UAT url origins, INFO logging, tracing enabled. |
+| `prod` | `application-prod.yml` | Production environment. Strict CORS, INFO logging, tracing enabled. |
+| `docker` | `application-docker.yml` | **Connectivity only**. Use in combination with other profiles (e.g., `dev,docker`) when running in Docker to correctly route to `backend` and `dividend-agent` containers. |
+
+**How to run with a specific profile:**
+
+```bash
+# Run with 'dev' profile (default)
+./mvnw spring-boot:run
+
+# Run with 'uat' profile
+./mvnw spring-boot:run -Dspring-boot.run.profiles=uat
+
+# Run with 'dev' AND 'docker' profiles (for Docker)
+# (See docker-compose.yml for example)
+java -jar -Dspring.profiles.active=dev,docker app.jar
+```
+
 ## API Endpoints
 
 ### Public Endpoints (no auth required)

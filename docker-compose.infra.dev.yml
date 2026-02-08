@@ -1,0 +1,109 @@
+# ============================================================================
+# Tax Dividend AI - Infrastructure Dev Overrides
+# ============================================================================
+# Purpose: Development-specific configuration for infrastructure
+# Usage: docker-compose -f docker-compose.infra.yml -f docker-compose.infra.dev.yml up
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # PostgreSQL - Dev overrides
+  # ==========================================================================
+  postgres:
+    # Expose port on host for local development (pgAdmin, IDE, etc.)
+    ports:
+      - "5432:5432"
+    # Less strict healthcheck in dev
+    healthcheck:
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ==========================================================================
+  # MinIO - Dev overrides
+  # ==========================================================================
+  minio:
+    # Expose both API and Console
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  # ==========================================================================
+  # Redis - Dev overrides
+  # ==========================================================================
+  redis:
+    # Expose port for local debugging
+    ports:
+      - "6379:6379"
+
+  # ==========================================================================
+  # Keycloak - Dev overrides
+  # ==========================================================================
+  keycloak:
+    # Dev mode with import-realm enabled
+    command: start-dev --import-realm
+    # Expose port (8180 to avoid conflict with BFF on 8080)
+    ports:
+      - "8180:8080"
+    # Dev-specific environment
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:-keycloak_dev}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_PORT: 8080
+      # Dev-specific: verbose logging
+      KC_LOG_LEVEL: INFO
+      QUARKUS_LOG_LEVEL: INFO
+      # CRITICAL: Disable HTTPS requirement for dev (Hostname V2)
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_URL: "http://localhost:8180"
+      KC_HOSTNAME_ADMIN_URL: "http://localhost:8180"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_PROXY: "edge"
+      # Disable HTTPS checks completely for dev
+      KC_HTTP_MANAGEMENT_PORT: 9000
+      KC_HTTP_RELATIVE_PATH: "/"
+
+  # ==========================================================================
+  # MailHog - Dev only (not in prod)
+  # ==========================================================================
+  mailhog:
+    # Expose ports for local testing
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  # ==========================================================================
+  # Observability - Dev overrides
+  # ==========================================================================
+  grafana:
+    # Anonymous access for easy dev
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    ports:
+      - "3000:3000"
+
+  prometheus:
+    ports:
+      - "9090:9090"
+
+  loki:
+    ports:
+      - "3100:3100"
+
+  tempo:
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+      - "9411:9411"
+
+  blackbox:
+    ports:
+      - "9115:9115"

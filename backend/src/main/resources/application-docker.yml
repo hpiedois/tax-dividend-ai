@@ -1,0 +1,44 @@
+# ============================================================================
+# Tax Dividend AI - Docker Profile Configuration
+# ============================================================================
+# This profile is used when running the full stack via docker-compose.yml
+# (backend, bff, frontend, postgres, minio all in containers)
+# ============================================================================
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/taxdividend?currentSchema=taxdividend
+    username: taxdividend
+    password: secret
+
+  # Enable Flyway schema creation in docker
+  flyway:
+    enabled: true
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    create-schemas: true
+
+# MinIO / S3 Storage - Docker network
+storage:
+  s3:
+    endpoint: http://minio:9000
+    bucket: tax-dividend-forms
+    access-key: minioadmin
+    secret-key: minioadmin
+
+# Application-specific
+app:
+  security:
+    internal-api-key: docker-internal-api-key-change-in-production-min-32-chars
+
+  keycloak:
+    server-url: http://keycloak:8080
+    admin-username: admin
+    admin-password: admin
+
+logging:
+  level:
+    com.taxdividend: INFO
+    org.hibernate.SQL: INFO
+    org.hibernate.orm.jdbc.bind: INFO

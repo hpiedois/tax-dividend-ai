@@ -1,0 +1,18 @@
+# ============================================================================
+# Tax Dividend AI - BFF Gateway UAT Profile
+# ============================================================================
+
+logging:
+  level:
+    root: INFO
+    com.taxdividend: INFO
+
+app:
+  cors:
+    # UAT specific allowed origins
+    allowed-origins: "https://uat.taxdividend.ai"
+
+# Enable OpenTelemetry for UAT
+otel:
+  sdk:
+    disabled: false

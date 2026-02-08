@@ -1,0 +1,319 @@
+# ============================================================================
+# Tax Dividend AI - Infrastructure Stack
+# ============================================================================
+# Purpose: Core infrastructure services (databases, storage, auth, observability)
+# Usage:
+#   - Dev:  make infra-up  (keeps running, apps in IDE)
+#   - Prod: docker-compose -f docker-compose.infra.yml -f docker-compose.apps.yml up
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # DATABASES
+  # ==========================================================================
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: tax-dividend-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Application user (created via init script)
+      TAXDIVIDEND_DB_USER: ${TAXDIVIDEND_DB_USER}
+      TAXDIVIDEND_DB_PASSWORD: ${TAXDIVIDEND_DB_PASSWORD}
+    # No ports exposed by default (added in dev/prod overrides)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - tax-dividend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-taxdividend_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    labels:
+      com.taxdividend.service: "database"
+
+  # ==========================================================================
+  # STORAGE
+  # ==========================================================================
+
+  minio:
+    image: minio/minio:latest
+    container_name: tax-dividend-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    # No ports exposed by default
+    volumes:
+      - minio_data:/data
+    networks:
+      - tax-dividend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    labels:
+      com.taxdividend.service: "storage"
+
+  # MinIO bucket initialization
+  minio-init:
+    image: minio/mc:latest
+    container_name: tax-dividend-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin123};
+      mc mb local/tax-dividend-forms-dev --ignore-existing;
+      mc mb local/tax-dividend-forms --ignore-existing;
+      mc mb local/tax-dividend-exports-dev --ignore-existing;
+      mc policy set download local/tax-dividend-forms-dev;
+      mc policy set download local/tax-dividend-forms;
+      echo '✅ MinIO buckets created';
+      exit 0;
+      "
+    networks:
+      - tax-dividend-network
+
+  # ==========================================================================
+  # CACHE
+  # ==========================================================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: tax-dividend-redis
+    command: redis-server --appendonly yes
+    # No ports exposed by default
+    volumes:
+      - redis_data:/data
+    networks:
+      - tax-dividend-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      com.taxdividend.service: "cache"
+
+  # ==========================================================================
+  # AUTHENTICATION
+  # ==========================================================================
+
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: tax-dividend-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    networks:
+      - tax-dividend-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      com.taxdividend.service: "auth-db"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: tax-dividend-keycloak
+    # Command defined in overrides (dev: start-dev, prod: start)
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HEALTH_ENABLED: "true"
+      KC_HTTP_PORT: 8080
+    # No ports exposed by default
+    volumes:
+      - ./infrastructure/keycloak/realm-export.json:/opt/keycloak/data/import/realm.json:ro
+      - ./infrastructure/keycloak/themes:/opt/keycloak/themes:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    networks:
+      - tax-dividend-network
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080; echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; cat <&3 | grep -q 'HTTP/1.1 200 OK'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    labels:
+      com.taxdividend.service: "auth"
+
+  # ==========================================================================
+  # EMAIL (Development)
+  # ==========================================================================
+
+  mailhog:
+    image: anatomicjc/mailhog:latest
+    container_name: tax-dividend-mailhog
+    restart: unless-stopped
+    # No ports exposed by default (dev only)
+    networks:
+      - tax-dividend-network
+    labels:
+      com.taxdividend.service: "email-dev"
+
+  # ==========================================================================
+  # OBSERVABILITY
+  # ==========================================================================
+
+  # Logs aggregation
+  loki:
+    image: grafana/loki:3.2.0
+    container_name: tax-dividend-loki
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./infrastructure/observability/loki.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    # No ports exposed by default
+    networks:
+      - tax-dividend-network
+    labels:
+      com.taxdividend.service: "observability"
+
+  # Log collection
+  promtail:
+    image: grafana/promtail:3.2.0
+    container_name: tax-dividend-promtail
+    command: -config.file=/etc/promtail/config.yaml
+    volumes:
+      - ./infrastructure/observability/promtail.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - tax-dividend-network
+    labels:
+      com.taxdividend.service: "observability"
+
+  # Distributed tracing
+  tempo:
+    image: grafana/tempo:2.6.0
+    container_name: tax-dividend-tempo
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./infrastructure/observability/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo_data:/tmp/tempo
+    # No ports exposed by default
+    networks:
+      - tax-dividend-network
+    labels:
+      com.taxdividend.service: "observability"
+
+  # Metrics collection
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: tax-dividend-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --enable-feature=exemplar-storage
+      - --storage.tsdb.path=/prometheus
+    volumes:
+      - ./infrastructure/observability/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    # No ports exposed by default
+    networks:
+      - tax-dividend-network
+    labels:
+      com.taxdividend.service: "observability"
+
+  # Blackbox monitoring
+  blackbox:
+    image: prom/blackbox-exporter:master
+    container_name: tax-dividend-blackbox
+    # No ports exposed by default
+    networks:
+      - tax-dividend-network
+    labels:
+      com.taxdividend.service: "observability"
+
+  # Dashboards
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: tax-dividend-grafana
+    environment:
+      - GF_USERS_DEFAULT_THEME=dark
+      - GF_LOG_MODE=console
+    volumes:
+      - ./infrastructure/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    # No ports exposed by default
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - tax-dividend-network
+    labels:
+      com.taxdividend.service: "observability"
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  tax-dividend-network:
+    name: tax-dividend-network
+    driver: bridge
+    labels:
+      com.taxdividend.network: "main"
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+volumes:
+  postgres_data:
+    name: tax-dividend-postgres-data
+    labels:
+      com.taxdividend.volume: "database"
+
+  minio_data:
+    name: tax-dividend-minio-data
+    labels:
+      com.taxdividend.volume: "storage"
+
+  redis_data:
+    name: tax-dividend-redis-data
+    labels:
+      com.taxdividend.volume: "cache"
+
+  keycloak_db_data:
+    name: tax-dividend-keycloak-db-data
+    labels:
+      com.taxdividend.volume: "auth-db"
+
+  loki_data:
+    name: tax-dividend-loki-data
+    labels:
+      com.taxdividend.volume: "observability"
+
+  tempo_data:
+    name: tax-dividend-tempo-data
+    labels:
+      com.taxdividend.volume: "observability"
+
+  prometheus_data:
+    name: tax-dividend-prometheus-data
+    labels:
+      com.taxdividend.volume: "observability"
+
+  grafana_data:
+    name: tax-dividend-grafana-data
+    labels:
+      com.taxdividend.volume: "observability"

@@ -24,6 +24,18 @@ public class BackendClientConfig {
     private String internalApiKey;
 
     @Bean
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+        return mapper;
+    }
+
+    @Bean
     public WebClient webClient(WebClient.Builder builder, ObjectMapper objectMapper) {
         return builder
                 .defaultHeader("X-Internal-Api-Key", internalApiKey)

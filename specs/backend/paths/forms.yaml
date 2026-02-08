@@ -5,12 +5,6 @@
     summary: Generate tax forms
     operationId: generateForms
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     requestBody:
       required: true
       content:
@@ -32,12 +26,6 @@
     summary: List user's forms
     operationId: listForms
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: taxYear
         in: query
         schema:
@@ -69,12 +57,6 @@
         schema:
           type: string
           format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     responses:
       '200':
         description: Form metadata
@@ -97,12 +79,6 @@
         schema:
           type: string
           format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     responses:
       '204':
         description: Deleted
@@ -116,12 +92,6 @@
     parameters:
       - name: id
         in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: X-User-Id
-        in: header
         required: true
         schema:
           type: string
@@ -151,12 +121,6 @@
         in: path
         required: true
         description: Form ID
-        schema:
-          type: string
-          format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
         schema:
           type: string
           format: uuid
@@ -192,12 +156,6 @@
         in: path
         required: true
         description: Form ID to regenerate
-        schema:
-          type: string
-          format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
         schema:
           type: string
           format: uuid

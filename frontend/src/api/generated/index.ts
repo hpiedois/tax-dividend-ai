@@ -1,5 +1,5 @@
 /* tslint:disable */
-/* eslint-disable */
+ 
 /**
  * Tax Dividend AI BFF API
  * Backend for Frontend API for Tax Dividend AI

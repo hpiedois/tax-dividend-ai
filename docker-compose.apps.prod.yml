@@ -1,0 +1,181 @@
+# ============================================================================
+# Tax Dividend AI - Applications Production Overrides
+# ============================================================================
+# Purpose: Production-specific configuration for applications
+# Usage: docker-compose -f docker-compose.apps.yml -f docker-compose.apps.prod.yml up
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # Backend - Production overrides
+  # ==========================================================================
+  backend:
+    # Production build
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: production
+
+    # Do not expose port directly (use reverse proxy or internal network)
+    ports: []
+
+    # Production environment
+    environment:
+      SPRING_PROFILES_ACTIVE: prod,docker
+
+      # Production database (from secrets/env)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB}
+      DB_USERNAME: ${TAXDIVIDEND_DB_USER}
+      DB_PASSWORD: ${TAXDIVIDEND_DB_PASSWORD}
+
+      # Production storage
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_BUCKET: ${MINIO_BUCKET_PROD:-tax-dividend-forms}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+
+      # Production security
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
+      # Production Keycloak
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: tax-dividend
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+
+      # Production monitoring
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_TRACES_SAMPLER_PROBABILITY: 0.1  # 10% sampling in prod
+
+      # Production actuator
+      ACTUATOR_USERNAME: ${ACTUATOR_USERNAME}
+      ACTUATOR_PASSWORD: ${ACTUATOR_PASSWORD}
+
+      # JVM tuning for production
+      JAVA_OPTS: >-
+        -Xms512m
+        -Xmx1024m
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/tmp/heapdump.hprof
+
+    # No volume mounts in production
+
+    # Stricter healthcheck
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+    # Resource limits
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  # ==========================================================================
+  # BFF Gateway - Production overrides
+  # ==========================================================================
+  bff-gateway:
+    build:
+      context: .
+      dockerfile: bff-gateway/Dockerfile
+      target: production
+
+    # Do not expose directly
+    ports: []
+
+    environment:
+      SPRING_PROFILES_ACTIVE: prod,docker
+
+      # Backend connection
+      BACKEND_URL: http://backend:8081/internal
+
+      # Security
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+
+      # Keycloak
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: tax-dividend
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/tax-dividend/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/tax-dividend
+
+      # Monitoring
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      OTEL_TRACES_SAMPLER_PROBABILITY: 0.1
+
+      # JVM tuning
+      JAVA_OPTS: >-
+        -Xms256m
+        -Xmx512m
+        -XX:+UseG1GC
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  # ==========================================================================
+  # Frontend - Production overrides
+  # ==========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+
+    # Do not expose directly (use reverse proxy)
+    ports: []
+
+    environment:
+      - NODE_ENV=production
+      # Frontend config is baked into build, not runtime vars
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure

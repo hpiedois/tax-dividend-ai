@@ -3,7 +3,7 @@ import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 export const oidcConfig = {
     authority: "http://localhost:8180/realms/tax-dividend",
     client_id: "frontend",
-    redirect_uri: window.location.origin,
+    redirect_uri: window.location.origin + '/auth/callback',
     response_type: 'code',
     scope: 'openid profile email',
     userStore: new WebStorageStateStore({ store: window.sessionStorage }),

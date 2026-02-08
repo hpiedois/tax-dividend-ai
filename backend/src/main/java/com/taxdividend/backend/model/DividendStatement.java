@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.JdbcTypeCode;
+
 /**
  * Entity representing a broker dividend statement.
  * Tracks the lifecycle from upload to payment.
@@ -50,7 +52,8 @@ public class DividendStatement {
 
     // Status workflow
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "dividend_statement_status")
+    @JdbcTypeCode(org.hibernate.type.SqlTypes.NAMED_ENUM)
     @Builder.Default
     private DividendStatementStatus status = DividendStatementStatus.UPLOADED;
 

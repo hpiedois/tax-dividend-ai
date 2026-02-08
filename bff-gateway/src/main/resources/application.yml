@@ -22,6 +22,7 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://localhost:80}
   security:
+    internal-api-key: ${INTERNAL_API_KEY:changeme-internal-api-key-min-32-chars}
     oauth2:
       resourceserver:
         jwt:

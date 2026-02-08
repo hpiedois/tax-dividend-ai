@@ -38,263 +38,267 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Dividend Controller Tests")
 class DividendControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+        private ObjectMapper objectMapper = new ObjectMapper();
 
-    @MockitoBean
-    private TaxCalculationService taxCalculationService;
+        @MockitoBean
+        private TaxCalculationService taxCalculationService;
 
-    @MockitoBean
-    private DividendService dividendService;
+        @MockitoBean
+        private DividendService dividendService;
 
-    @MockitoBean
-    private AuditService auditService;
+        @MockitoBean
+        private AuditService auditService;
 
-    private UUID testUserId;
-    private User testUser;
-    private Dividend testDividend;
+        private UUID testUserId;
+        private User testUser;
+        private Dividend testDividend;
 
-    @BeforeEach
-    void setUp() {
-        testUserId = UUID.randomUUID();
-        testUser = User.builder()
-                .id(testUserId)
-                .email("test@example.com")
-                .country("CH")
-                .build();
+        @BeforeEach
+        void setUp() {
+                testUserId = UUID.randomUUID();
+                testUser = User.builder()
+                                .id(testUserId)
+                                .email("test@example.com")
+                                .country("CH")
+                                .build();
 
-        testDividend = Dividend.builder()
-                .id(UUID.randomUUID())
-                .user(testUser)
-                .isin("FR0000120271")
-                .securityName("Total Energies")
-                .grossAmount(new BigDecimal("100.00"))
-                .withholdingTax(new BigDecimal("30.00"))
-                .reclaimableAmount(new BigDecimal("15.00"))
-                .currency("EUR")
-                .paymentDate(LocalDate.of(2024, 12, 15))
-                .sourceCountry("FR")
-                .build();
-    }
+                testDividend = Dividend.builder()
+                                .id(UUID.randomUUID())
+                                .user(testUser)
+                                .isin("FR0000120271")
+                                .securityName("Total Energies")
+                                .grossAmount(new BigDecimal("100.00"))
+                                .withholdingTax(new BigDecimal("30.00"))
+                                .reclaimableAmount(new BigDecimal("15.00"))
+                                .currency("EUR")
+                                .paymentDate(LocalDate.of(2024, 12, 15))
+                                .sourceCountry("FR")
+                                .build();
+        }
 
-    @Test
-    @DisplayName("Should list user's dividends")
-    void shouldListUserDividends() throws Exception {
-        // Given
-        com.taxdividend.backend.api.dto.PaginatedDividendListDto response =
-                new com.taxdividend.backend.api.dto.PaginatedDividendListDto();
-        when(dividendService.listDividends(eq(testUserId), any(), isNull(), isNull(), isNull()))
-                .thenReturn(response);
+        private String getUserContextHeader(UUID userId) {
+                try {
+                        com.taxdividend.backend.security.UserContext context = new com.taxdividend.backend.security.UserContext(
+                                        userId,
+                                        "test@example.com",
+                                        new String[] { "USER" },
+                                        "keycloak");
+                        return java.util.Base64.getEncoder().encodeToString(objectMapper.writeValueAsBytes(context));
+                } catch (Exception e) {
+                        throw new RuntimeException(e);
+                }
+        }
 
-        // When/Then
-        mockMvc.perform(get("/internal/dividends")
-                        .header("X-User-Id", testUserId.toString())
-                        .param("page", "0")
-                        .param("size", "20"))
-                .andExpect(status().isOk());
+        @Test
+        @DisplayName("Should list user's dividends")
+        void shouldListUserDividends() throws Exception {
+                // Given
+                com.taxdividend.backend.api.dto.PaginatedDividendListDto response = new com.taxdividend.backend.api.dto.PaginatedDividendListDto();
+                when(dividendService.listDividends(eq(testUserId), any(), isNull(), isNull(), isNull()))
+                                .thenReturn(response);
 
-        verify(dividendService).listDividends(eq(testUserId), any(), isNull(), isNull(), isNull());
-    }
+                // When/Then
+                mockMvc.perform(get("/internal/dividends")
+                                .header("X-User-Context", getUserContextHeader(testUserId))
+                                .param("page", "0")
+                                .param("size", "20"))
+                                .andExpect(status().isOk());
 
-    @Test
-    @DisplayName("Should get dividend by ID")
-    void shouldGetDividendById() throws Exception {
-        // Given
-        UUID dividendId = testDividend.getId();
-        com.taxdividend.backend.api.dto.DividendDto dividendDto =
-                new com.taxdividend.backend.api.dto.DividendDto();
-        dividendDto.setId(dividendId);
-        dividendDto.setIsin("FR0000120271");
-        dividendDto.setSecurityName("Total Energies");
+                verify(dividendService).listDividends(eq(testUserId), any(), isNull(), isNull(), isNull());
+        }
 
-        when(dividendService.getDividend(dividendId, testUserId))
-                .thenReturn(Optional.of(dividendDto));
+        @Test
+        @DisplayName("Should get dividend by ID")
+        void shouldGetDividendById() throws Exception {
+                // Given
+                UUID dividendId = testDividend.getId();
+                com.taxdividend.backend.api.dto.DividendDto dividendDto = new com.taxdividend.backend.api.dto.DividendDto();
+                dividendDto.setId(dividendId);
+                dividendDto.setIsin("FR0000120271");
+                dividendDto.setSecurityName("Total Energies");
 
-        // When/Then
-        mockMvc.perform(get("/internal/dividends/{id}", dividendId)
-                        .header("X-User-Id", testUserId.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isin").value("FR0000120271"))
-                .andExpect(jsonPath("$.securityName").value("Total Energies"));
+                when(dividendService.getDividend(dividendId, testUserId))
+                                .thenReturn(Optional.of(dividendDto));
 
-        verify(dividendService).getDividend(dividendId, testUserId);
-    }
+                // When/Then
+                mockMvc.perform(get("/internal/dividends/{id}", dividendId)
+                                .header("X-User-Context", getUserContextHeader(testUserId)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.isin").value("FR0000120271"))
+                                .andExpect(jsonPath("$.securityName").value("Total Energies"));
 
-    @Test
-    @DisplayName("Should return 404 when dividend not found")
-    void shouldReturn404WhenDividendNotFound() throws Exception {
-        // Given
-        UUID nonExistentId = UUID.randomUUID();
-        when(dividendService.getDividend(nonExistentId, testUserId))
-                .thenReturn(Optional.empty());
+                verify(dividendService).getDividend(dividendId, testUserId);
+        }
 
-        // When/Then
-        mockMvc.perform(get("/internal/dividends/{id}", nonExistentId)
-                        .header("X-User-Id", testUserId.toString()))
-                .andExpect(status().isNotFound());
-    }
+        @Test
+        @DisplayName("Should return 404 when dividend not found")
+        void shouldReturn404WhenDividendNotFound() throws Exception {
+                // Given
+                UUID nonExistentId = UUID.randomUUID();
+                when(dividendService.getDividend(nonExistentId, testUserId))
+                                .thenReturn(Optional.empty());
 
-    @Test
-    @DisplayName("Should calculate tax for dividend")
-    void shouldCalculateTaxForDividend() throws Exception {
-        // Given
-        UUID dividendId = testDividend.getId();
-        com.taxdividend.backend.api.dto.DividendDto dividendDto =
-                new com.taxdividend.backend.api.dto.DividendDto();
-        dividendDto.setId(dividendId);
+                // When/Then
+                mockMvc.perform(get("/internal/dividends/{id}", nonExistentId)
+                                .header("X-User-Context", getUserContextHeader(testUserId)))
+                                .andExpect(status().isNotFound());
+        }
 
-        com.taxdividend.backend.api.dto.TaxCalculationResultDto calculationResult =
-                new com.taxdividend.backend.api.dto.TaxCalculationResultDto();
-        calculationResult.setDividendId(dividendId);
-        calculationResult.setReclaimableAmount(new BigDecimal("15.00"));
-        calculationResult.setSuccess(true);
+        @Test
+        @DisplayName("Should calculate tax for dividend")
+        void shouldCalculateTaxForDividend() throws Exception {
+                // Given
+                UUID dividendId = testDividend.getId();
+                com.taxdividend.backend.api.dto.DividendDto dividendDto = new com.taxdividend.backend.api.dto.DividendDto();
+                dividendDto.setId(dividendId);
 
-        when(dividendService.getDividend(dividendId, testUserId))
-                .thenReturn(Optional.of(dividendDto));
-        when(taxCalculationService.calculateAndUpdate(eq(dividendId), anyString()))
-                .thenReturn(calculationResult);
+                com.taxdividend.backend.api.dto.TaxCalculationResultDto calculationResult = new com.taxdividend.backend.api.dto.TaxCalculationResultDto();
+                calculationResult.setDividendId(dividendId);
+                calculationResult.setReclaimableAmount(new BigDecimal("15.00"));
+                calculationResult.setSuccess(true);
 
-        // When/Then
-        mockMvc.perform(post("/internal/dividends/{id}/calculate", dividendId)
-                        .header("X-User-Id", testUserId.toString())
-                        .param("residenceCountry", "CH"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.reclaimableAmount").value(15.00));
+                when(dividendService.getDividend(dividendId, testUserId))
+                                .thenReturn(Optional.of(dividendDto));
+                when(taxCalculationService.calculateAndUpdate(eq(dividendId), anyString()))
+                                .thenReturn(calculationResult);
 
-        verify(taxCalculationService).calculateAndUpdate(dividendId, "CH");
-    }
+                // When/Then
+                mockMvc.perform(post("/internal/dividends/{id}/calculate", dividendId)
+                                .header("X-User-Context", getUserContextHeader(testUserId))
+                                .param("residenceCountry", "CH"))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.reclaimableAmount").value(15.00));
 
-    @Test
-    @DisplayName("Should calculate batch of dividends")
-    void shouldCalculateBatch() throws Exception {
-        // Given
-        List<UUID> dividendIds = Arrays.asList(
-                UUID.randomUUID(),
-                UUID.randomUUID()
-        );
+                verify(taxCalculationService).calculateAndUpdate(dividendId, "CH");
+        }
 
-        com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto batchResult =
-                new com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto();
-        batchResult.setSuccessCount(2);
-        batchResult.setFailureCount(0);
-        batchResult.setTotalReclaimableAmount(new BigDecimal("25.00"));
+        @Test
+        @DisplayName("Should calculate batch of dividends")
+        void shouldCalculateBatch() throws Exception {
+                // Given
+                List<UUID> dividendIds = Arrays.asList(
+                                UUID.randomUUID(),
+                                UUID.randomUUID());
 
-        when(taxCalculationService.calculateBatchByIds(dividendIds, testUserId))
-                .thenReturn(batchResult);
+                com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto batchResult = new com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto();
+                batchResult.setSuccessCount(2);
+                batchResult.setFailureCount(0);
+                batchResult.setTotalReclaimableAmount(new BigDecimal("25.00"));
 
-        // When/Then
-        mockMvc.perform(post("/internal/dividends/calculate-batch")
-                        .header("X-User-Id", testUserId.toString())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dividendIds)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.successCount").value(2))
-                .andExpect(jsonPath("$.totalReclaimableAmount").value(25.00));
+                when(taxCalculationService.calculateBatchByIds(dividendIds, testUserId))
+                                .thenReturn(batchResult);
 
-        verify(taxCalculationService).calculateBatchByIds(dividendIds, testUserId);
-        verify(auditService).logTaxCalculation(eq(testUserId), eq(2), anyString());
-    }
+                // When/Then
+                mockMvc.perform(post("/internal/dividends/calculate-batch")
+                                .header("X-User-Context", getUserContextHeader(testUserId))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(dividendIds)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.successCount").value(2))
+                                .andExpect(jsonPath("$.totalReclaimableAmount").value(25.00));
 
-    @Test
-    @Disabled("Endpoint /internal/dividends/calculate-all not in OpenAPI spec - contract-first violation")
-    @DisplayName("Should calculate all user's dividends")
-    void shouldCalculateAllUserDividends() throws Exception {
-        // Given
-        com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto result =
-                new com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto();
-        result.setSuccessCount(5);
-        result.setFailureCount(0);
-        result.setTotalReclaimableAmount(new BigDecimal("100.00"));
+                verify(taxCalculationService).calculateBatchByIds(dividendIds, testUserId);
+                verify(auditService).logTaxCalculation(eq(testUserId), eq(2), anyString());
+        }
 
-        when(taxCalculationService.calculateAndUpdateForUser(testUserId))
-                .thenReturn(result);
+        @Test
+        @Disabled("Endpoint /internal/dividends/calculate-all not in OpenAPI spec - contract-first violation")
+        @DisplayName("Should calculate all user's dividends")
+        void shouldCalculateAllUserDividends() throws Exception {
+                // Given
+                com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto result = new com.taxdividend.backend.api.dto.TaxCalculationBatchResultDto();
+                result.setSuccessCount(5);
+                result.setFailureCount(0);
+                result.setTotalReclaimableAmount(new BigDecimal("100.00"));
 
-        // When/Then
-        mockMvc.perform(post("/internal/dividends/calculate-all")
-                        .header("X-User-Id", testUserId.toString()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.successCount").value(5))
-                .andExpect(jsonPath("$.totalReclaimableAmount").value(100.00));
+                when(taxCalculationService.calculateAndUpdateForUser(testUserId))
+                                .thenReturn(result);
 
-        verify(taxCalculationService).calculateAndUpdateForUser(testUserId);
-        verify(auditService).logTaxCalculation(eq(testUserId), eq(5), anyString());
-    }
+                // When/Then
+                mockMvc.perform(post("/internal/dividends/calculate-all")
+                                .header("X-User-Context", getUserContextHeader(testUserId)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.successCount").value(5))
+                                .andExpect(jsonPath("$.totalReclaimableAmount").value(100.00));
 
-    @Test
-    @Disabled("Endpoint /internal/dividends/by-date-range not in OpenAPI spec - contract-first violation")
-    @DisplayName("Should get dividends by date range")
-    void shouldGetDividendsByDateRange() throws Exception {
-        // Given
-        LocalDate startDate = LocalDate.of(2024, 1, 1);
-        LocalDate endDate = LocalDate.of(2024, 12, 31);
+                verify(taxCalculationService).calculateAndUpdateForUser(testUserId);
+                verify(auditService).logTaxCalculation(eq(testUserId), eq(5), anyString());
+        }
 
-        com.taxdividend.backend.api.dto.DividendDto dividendDto =
-                new com.taxdividend.backend.api.dto.DividendDto();
-        dividendDto.setId(testDividend.getId());
+        @Test
+        @Disabled("Endpoint /internal/dividends/by-date-range not in OpenAPI spec - contract-first violation")
+        @DisplayName("Should get dividends by date range")
+        void shouldGetDividendsByDateRange() throws Exception {
+                // Given
+                LocalDate startDate = LocalDate.of(2024, 1, 1);
+                LocalDate endDate = LocalDate.of(2024, 12, 31);
 
-        when(dividendService.getDividendsByDateRange(testUserId, startDate, endDate))
-                .thenReturn(Arrays.asList(dividendDto));
+                com.taxdividend.backend.api.dto.DividendDto dividendDto = new com.taxdividend.backend.api.dto.DividendDto();
+                dividendDto.setId(testDividend.getId());
 
-        // When/Then
-        mockMvc.perform(get("/internal/dividends/by-date-range")
-                        .header("X-User-Id", testUserId.toString())
-                        .param("startDate", "2024-01-01")
-                        .param("endDate", "2024-12-31"))
-                .andExpect(status().isOk());
+                when(dividendService.getDividendsByDateRange(testUserId, startDate, endDate))
+                                .thenReturn(Arrays.asList(dividendDto));
 
-        verify(dividendService).getDividendsByDateRange(testUserId, startDate, endDate);
-    }
+                // When/Then
+                mockMvc.perform(get("/internal/dividends/by-date-range")
+                                .header("X-User-Context", getUserContextHeader(testUserId))
+                                .param("startDate", "2024-01-01")
+                                .param("endDate", "2024-12-31"))
+                                .andExpect(status().isOk());
 
-    @Test
-    @Disabled("Endpoint /internal/dividends/unsubmitted not in OpenAPI spec - contract-first violation")
-    @DisplayName("Should get unsubmitted dividends")
-    void shouldGetUnsubmittedDividends() throws Exception {
-        // Given
-        com.taxdividend.backend.api.dto.DividendDto dividendDto =
-                new com.taxdividend.backend.api.dto.DividendDto();
-        dividendDto.setId(testDividend.getId());
+                verify(dividendService).getDividendsByDateRange(testUserId, startDate, endDate);
+        }
 
-        when(dividendService.getUnsubmittedDividends(testUserId))
-                .thenReturn(Arrays.asList(dividendDto));
+        @Test
+        @Disabled("Endpoint /internal/dividends/unsubmitted not in OpenAPI spec - contract-first violation")
+        @DisplayName("Should get unsubmitted dividends")
+        void shouldGetUnsubmittedDividends() throws Exception {
+                // Given
+                com.taxdividend.backend.api.dto.DividendDto dividendDto = new com.taxdividend.backend.api.dto.DividendDto();
+                dividendDto.setId(testDividend.getId());
 
-        // When/Then
-        mockMvc.perform(get("/internal/dividends/unsubmitted")
-                        .header("X-User-Id", testUserId.toString()))
-                .andExpect(status().isOk());
+                when(dividendService.getUnsubmittedDividends(testUserId))
+                                .thenReturn(Arrays.asList(dividendDto));
 
-        verify(dividendService).getUnsubmittedDividends(testUserId);
-    }
+                // When/Then
+                mockMvc.perform(get("/internal/dividends/unsubmitted")
+                                .header("X-User-Context", getUserContextHeader(testUserId)))
+                                .andExpect(status().isOk());
 
-    @Test
-    @DisplayName("Should delete dividend")
-    void shouldDeleteDividend() throws Exception {
-        // Given
-        UUID dividendId = testDividend.getId();
-        doNothing().when(dividendService).deleteDividend(dividendId, testUserId);
+                verify(dividendService).getUnsubmittedDividends(testUserId);
+        }
 
-        // When/Then
-        mockMvc.perform(delete("/internal/dividends/{id}", dividendId)
-                        .header("X-User-Id", testUserId.toString()))
-                .andExpect(status().isNoContent());
+        @Test
+        @DisplayName("Should delete dividend")
+        void shouldDeleteDividend() throws Exception {
+                // Given
+                UUID dividendId = testDividend.getId();
+                doNothing().when(dividendService).deleteDividend(dividendId, testUserId);
 
-        verify(dividendService).deleteDividend(dividendId, testUserId);
-    }
+                // When/Then
+                mockMvc.perform(delete("/internal/dividends/{id}", dividendId)
+                                .header("X-User-Context", getUserContextHeader(testUserId)))
+                                .andExpect(status().isNoContent());
 
-    @Test
-    @DisplayName("Should not allow user to access other user's dividend")
-    void shouldNotAllowAccessToOtherUserDividend() throws Exception {
-        // Given
-        UUID otherUserId = UUID.randomUUID();
-        UUID otherDividendId = UUID.randomUUID();
+                verify(dividendService).deleteDividend(dividendId, testUserId);
+        }
 
-        when(dividendService.getDividend(otherDividendId, testUserId))
-                .thenReturn(Optional.empty());
+        @Test
+        @DisplayName("Should not allow user to access other user's dividend")
+        void shouldNotAllowAccessToOtherUserDividend() throws Exception {
+                // Given
+                UUID otherUserId = UUID.randomUUID();
+                UUID otherDividendId = UUID.randomUUID();
 
-        // When/Then - testUserId trying to access otherUserId's dividend
-        mockMvc.perform(get("/internal/dividends/{id}", otherDividendId)
-                        .header("X-User-Id", testUserId.toString()))
-                .andExpect(status().isNotFound());
-    }
+                when(dividendService.getDividend(otherDividendId, testUserId))
+                                .thenReturn(Optional.empty());
+
+                // When/Then - testUserId trying to access otherUserId's dividend
+                mockMvc.perform(get("/internal/dividends/{id}", otherDividendId)
+                                .header("X-User-Context", getUserContextHeader(testUserId)))
+                                .andExpect(status().isNotFound());
+        }
 }

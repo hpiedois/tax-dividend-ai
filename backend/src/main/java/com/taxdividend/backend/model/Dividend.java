@@ -3,6 +3,7 @@ package com.taxdividend.backend.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -90,7 +91,8 @@ public class Dividend {
     private String sourceCountry;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20, nullable = false)
+    @Column(length = 20, nullable = false, columnDefinition = "dividend_status")
+    @JdbcTypeCode(org.hibernate.type.SqlTypes.NAMED_ENUM)
     @Builder.Default
     private DividendStatus status = DividendStatus.OPEN;
 

@@ -27,59 +27,59 @@ import static org.mockito.Mockito.when;
 @Disabled("TODO: Configure security for tests or use WebFluxTest")
 class FormControllerTest {
 
-    @Autowired
-    private WebTestClient webTestClient;
+        @Autowired
+        private WebTestClient webTestClient;
 
-    @MockitoBean
-    private FormService formService;
+        @MockitoBean
+        private FormService formService;
 
-    private static final UUID TEST_FORM_ID = UUID.fromString("987e6543-e21b-12d3-a456-426614174999");
+        private static final UUID TEST_FORM_ID = UUID.fromString("987e6543-e21b-12d3-a456-426614174999");
 
-    @Test
-    void generateTaxForms_ReturnsOk() {
-        // Given
-        when(formService.generateForms(any(), any()))
-                .thenReturn(Mono.just(new GenerateTaxFormsResponseDto()));
+        @Test
+        void generateTaxForms_ReturnsOk() {
+                // Given
+                when(formService.generateForms(any()))
+                                .thenReturn(Mono.just(new GenerateTaxFormsResponseDto()));
 
-        // When & Then
-        webTestClient.post()
-                .uri("/api/forms/generate")
-                .exchange();
-    }
+                // When & Then
+                webTestClient.post()
+                                .uri("/api/forms/generate")
+                                .exchange();
+        }
 
-    @Test
-    void listForms_ReturnsOk() {
-        // Given
-        when(formService.listForms(any(), any(), any()))
-                .thenReturn(Flux.empty());
+        @Test
+        void listForms_ReturnsOk() {
+                // Given
+                when(formService.listForms(any(), any()))
+                                .thenReturn(Flux.empty());
 
-        // When & Then
-        webTestClient.get()
-                .uri("/api/forms")
-                .exchange();
-    }
+                // When & Then
+                webTestClient.get()
+                                .uri("/api/forms")
+                                .exchange();
+        }
 
-    @Test
-    void getForm_ReturnsOk() {
-        // Given
-        when(formService.getForm(any(), any()))
-                .thenReturn(Mono.just(new GeneratedFormDto()));
+        @Test
+        void getForm_ReturnsOk() {
+                // Given
+                when(formService.getForm(any()))
+                                .thenReturn(Mono.just(new GeneratedFormDto()));
 
-        // When & Then
-        webTestClient.get()
-                .uri("/api/forms/{id}", TEST_FORM_ID)
-                .exchange();
-    }
+                // When & Then
+                webTestClient.get()
+                                .uri("/api/forms/{id}", TEST_FORM_ID)
+                                .exchange();
+        }
 
-    @Test
-    void deleteForm_ReturnsOk() {
-        // Given
-        when(formService.deleteForm(any(), any()))
-                .thenReturn(Mono.empty());
+        @Test
+        void deleteForm_ReturnsOk() {
+                // Given
+                when(formService.deleteForm(any()))
+                                .thenReturn(Mono.empty());
 
-        // When & Then
-        webTestClient.delete()
-                .uri("/api/forms/{id}", TEST_FORM_ID)
-                .exchange();
-    }
+                // When & Then
+                webTestClient.delete()
+                                .uri("/api/forms/{id}", TEST_FORM_ID)
+                                .exchange();
+        }
 }

@@ -5,12 +5,6 @@
     summary: List user's dividends with optional filters
     operationId: listDividends
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: page
         in: query
         schema:
@@ -60,12 +54,6 @@
         schema:
           type: string
           format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     responses:
       '200':
         description: Dividend details
@@ -88,12 +76,6 @@
         schema:
           type: string
           format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     responses:
       '204':
         description: Deleted
@@ -107,12 +89,6 @@
     summary: Update status for multiple dividends
     operationId: updateDividendStatus
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     requestBody:
       required: true
       content:
@@ -139,12 +115,6 @@
     summary: Get dividend statistics
     operationId: getDividendStats
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: taxYear
         in: query
         required: false
@@ -172,12 +142,6 @@
         schema:
           type: string
           format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: residenceCountry
         in: query
         schema:
@@ -197,12 +161,6 @@
     summary: Calculate tax for multiple dividends
     operationId: calculateBatch
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     requestBody:
       required: true
       content:
@@ -235,12 +193,6 @@
         schema:
           type: string
           format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     responses:
       '200':
         description: Tax recalculated for all dividends
@@ -264,12 +216,6 @@
       Automatically calculates tax and updates statement metadata.
     operationId: bulkImportDividends
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     requestBody:
       required: true
       content:
@@ -296,12 +242,6 @@
     description: Upload a broker statement PDF/CSV file. Creates a new DividendStatement with status UPLOADED.
     operationId: uploadDividendStatement
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: broker
         in: query
         required: false
@@ -350,12 +290,6 @@
     description: List dividend statements with optional status filter and pagination
     operationId: listDividendStatements
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: status
         in: query
         required: false
@@ -394,12 +328,6 @@
         schema:
           type: string
           format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     responses:
       '200':
         description: Dividend statement details
@@ -425,12 +353,6 @@
     parameters:
       - name: id
         in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: X-User-Id
-        in: header
         required: true
         schema:
           type: string
@@ -466,12 +388,6 @@
         schema:
           type: string
           format: uuid
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
     responses:
       '204':
         description: Deleted successfully
@@ -486,12 +402,6 @@
     description: Find statements whose period overlaps with the specified date range
     operationId: getDividendStatementsByDateRange
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: startDate
         in: query
         required: true
@@ -522,12 +432,6 @@
     description: Get count of statements for a specific status
     operationId: countDividendStatementsByStatus
     parameters:
-      - name: X-User-Id
-        in: header
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: status
         in: query
         required: true

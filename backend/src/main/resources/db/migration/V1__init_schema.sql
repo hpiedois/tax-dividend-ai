@@ -41,6 +41,7 @@ CREATE TABLE users (
     address TEXT,
     canton VARCHAR(2),
     country VARCHAR(2) DEFAULT 'CH',
+    registration_source VARCHAR(50) DEFAULT 'CLASSIC',
     status VARCHAR(50) DEFAULT 'ACTIVE',
     is_active BOOLEAN DEFAULT true,
     is_verified BOOLEAN DEFAULT false,
@@ -54,6 +55,7 @@ CREATE TABLE users (
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_is_active ON users(is_active);
 CREATE INDEX idx_users_status ON users(status);
+CREATE INDEX idx_users_registration_source ON users(registration_source);
 
 CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
@@ -63,6 +65,7 @@ CREATE TRIGGER update_users_updated_at
 COMMENT ON TABLE users IS 'Application users with authentication and tax information';
 COMMENT ON COLUMN users.tax_id IS 'Swiss NIF (Numéro d''Identification Fiscale)';
 COMMENT ON COLUMN users.canton IS 'Swiss canton code for tax residence (VD, GE, ZH, etc.)';
+COMMENT ON COLUMN users.registration_source IS 'How user registered: CLASSIC, GOOGLE_SSO, GITHUB_SSO, MICROSOFT_SSO, etc.';
 COMMENT ON COLUMN users.status IS 'User status: ACTIVE, PENDING, SUSPENDED, DELETED';
 
 -- ----------------------------------------------------------------------------
@@ -73,6 +76,7 @@ CREATE TABLE generated_forms (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     s3_key VARCHAR(500) NOT NULL,
     file_name VARCHAR(255) NOT NULL,
+    file_size BIGINT,
     tax_year INTEGER NOT NULL,
     form_type VARCHAR(50) NOT NULL,
     status VARCHAR(50) DEFAULT 'GENERATED',
@@ -88,6 +92,7 @@ CREATE INDEX idx_generated_forms_created_at ON generated_forms(created_at);
 
 COMMENT ON TABLE generated_forms IS 'Metadata for generated tax forms (5000, 5001, bundles)';
 COMMENT ON COLUMN generated_forms.s3_key IS 'S3/MinIO object key for the generated PDF/ZIP';
+COMMENT ON COLUMN generated_forms.file_size IS 'Size of the generated file in bytes';
 COMMENT ON COLUMN generated_forms.form_type IS 'Type: 5000 (residence), 5001 (dividends), BUNDLE (both)';
 COMMENT ON COLUMN generated_forms.status IS 'Status: GENERATED, SIGNED, SUBMITTED, APPROVED, REJECTED';
 COMMENT ON COLUMN generated_forms.metadata IS 'Additional metadata (JSON): generation params, validation results, etc.';
@@ -95,6 +100,14 @@ COMMENT ON COLUMN generated_forms.metadata IS 'Additional metadata (JSON): gener
 -- ----------------------------------------------------------------------------
 -- Dividends Table
 -- ----------------------------------------------------------------------------
+
+-- Status enum for individual dividend workflow
+CREATE TYPE dividend_status AS ENUM (
+    'OPEN',      -- Dividend identified, ready to be included in form
+    'SENT',      -- Form submitted to tax authority (manually marked)
+    'PAID'       -- Tax refund received (manually marked)
+);
+
 CREATE TABLE dividends (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     form_id UUID REFERENCES generated_forms(id) ON DELETE CASCADE,
@@ -109,6 +122,7 @@ CREATE TABLE dividends (
     reclaimable_amount DECIMAL(12,2) NOT NULL,
     treaty_rate DECIMAL(5,2),
     source_country VARCHAR(2) NOT NULL,
+    status dividend_status NOT NULL DEFAULT 'OPEN',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT positive_amounts CHECK (gross_amount >= 0 AND withholding_tax >= 0 AND reclaimable_amount >= 0),
     CONSTRAINT valid_rates CHECK (withholding_rate >= 0 AND withholding_rate <= 100 AND (treaty_rate IS NULL OR (treaty_rate >= 0 AND treaty_rate <= 100)))
@@ -119,6 +133,7 @@ CREATE INDEX idx_dividends_user_id ON dividends(user_id);
 CREATE INDEX idx_dividends_isin ON dividends(isin);
 CREATE INDEX idx_dividends_payment_date ON dividends(payment_date);
 CREATE INDEX idx_dividends_source_country ON dividends(source_country);
+CREATE INDEX idx_dividends_status ON dividends(status);
 
 COMMENT ON TABLE dividends IS 'Dividend data extracted from bank statements or manually entered';
 COMMENT ON COLUMN dividends.isin IS 'International Securities Identification Number (12 chars)';
@@ -126,6 +141,7 @@ COMMENT ON COLUMN dividends.withholding_rate IS 'Actual withholding rate applied
 COMMENT ON COLUMN dividends.treaty_rate IS 'Tax treaty reduced rate (%)';
 COMMENT ON COLUMN dividends.reclaimable_amount IS 'Amount that can be reclaimed (withheld - treaty)';
 COMMENT ON COLUMN dividends.source_country IS 'Country where dividend was paid (ISO 2-letter code)';
+COMMENT ON COLUMN dividends.status IS 'Dividend reclaim workflow status: OPEN → SENT → PAID';
 
 -- ----------------------------------------------------------------------------
 -- Dividend Statements Table (Broker Statements)
@@ -334,7 +350,7 @@ DO $$
 BEGIN
     RAISE NOTICE '✅ Tax Dividend AI database schema initialized successfully';
     RAISE NOTICE '   - 6 tables created (users, generated_forms, dividends, dividend_statements, audit_logs, tax_rules)';
-    RAISE NOTICE '   - 1 enum type created (dividend_statement_status)';
+    RAISE NOTICE '   - 2 enum types created (dividend_status, dividend_statement_status)';
     RAISE NOTICE '   - 2 default tax rules inserted (FR→CH for EQUITY and BOND)';
     RAISE NOTICE '   - All indexes and triggers configured';
 END

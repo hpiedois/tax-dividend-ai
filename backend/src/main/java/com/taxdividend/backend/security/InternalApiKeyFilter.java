@@ -5,10 +5,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -56,10 +54,16 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
     private String expectedApiKey;
 
     private final ObjectMapper objectMapper;
+    private final com.taxdividend.backend.service.UserService userService;
 
-    // Constructor with @Lazy to defer ObjectMapper initialization
-    public InternalApiKeyFilter(@Lazy ObjectMapper objectMapper) {
+    /**
+     * Constructor with dependencies injection.
+     * In Spring Boot 4, ObjectMapper must be explicitly configured as a bean.
+     * @see com.taxdividend.backend.config.JacksonConfig
+     */
+    public InternalApiKeyFilter(ObjectMapper objectMapper, com.taxdividend.backend.service.UserService userService) {
         this.objectMapper = objectMapper;
+        this.userService = userService;
     }
 
     @Override
@@ -118,10 +122,19 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // 3. Store user context in thread-local (for service layer access)
+            // 3. Auto-provision SSO users or validate classic users exist
+            try {
+                userService.findOrCreateFromSso(userContext);
+            } catch (com.taxdividend.backend.service.UserService.UserNotRegisteredException e) {
+                log.warn("User not registered: {}", e.getMessage());
+                sendUnauthorized(response, e.getMessage());
+                return;
+            }
+
+            // 4. Store user context in thread-local (for service layer access)
             UserContextHolder.set(userContext);
 
-            // 4. Create Spring Security authentication (for @PreAuthorize, etc.)
+            // 5. Create Spring Security authentication (for @PreAuthorize, etc.)
             List<SimpleGrantedAuthority> authorities = Collections.emptyList();
             if (userContext.roles() != null) {
                 authorities = Arrays.stream(userContext.roles())
@@ -139,7 +152,7 @@ public class InternalApiKeyFilter extends OncePerRequestFilter {
             log.debug("Authenticated request for user {} ({}) on endpoint {}",
                 userContext.userId(), userContext.email(), path);
 
-            // 5. Continue filter chain
+            // 6. Continue filter chain
             filterChain.doFilter(request, response);
 
         } finally {

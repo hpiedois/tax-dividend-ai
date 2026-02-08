@@ -1,0 +1,156 @@
+# ============================================================================
+# Tax Dividend AI - Applications Stack
+# ============================================================================
+# Purpose: Application services (backend, bff, frontend)
+# Usage:
+#   - Dev:  Apps run in IDE (VS Code), only infra runs in Docker
+#   - Staging/Prod: docker-compose -f docker-compose.infra.yml -f docker-compose.apps.yml up
+# ============================================================================
+# IMPORTANT: Requires infrastructure to be running (docker-compose.infra.yml)
+# ============================================================================
+
+services:
+  # ==========================================================================
+  # BACKEND API
+  # ==========================================================================
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: tax-dividend-backend
+    restart: unless-stopped
+    # No ports exposed by default (added in overrides)
+    environment:
+      # Spring profile
+      SPRING_PROFILES_ACTIVE: docker
+
+      # Database (connects to infra postgres)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-taxdividend_dev}
+      DB_USERNAME: ${TAXDIVIDEND_DB_USER:-taxdividend_user}
+      DB_PASSWORD: ${TAXDIVIDEND_DB_PASSWORD:-dev_password_123}
+
+      # Storage (connects to infra minio)
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_BUCKET: tax-dividend-forms-dev
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+
+      # Email (connects to infra mailhog)
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+
+      # Security
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-api-key-for-local-testing-only-min-32-chars}
+
+      # Keycloak (connects to infra keycloak)
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: tax-dividend
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+
+      # Monitoring (connects to infra tempo)
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+
+      # Actuator
+      ACTUATOR_USERNAME: ${ACTUATOR_USERNAME:-admin}
+      ACTUATOR_PASSWORD: ${ACTUATOR_PASSWORD:-admin}
+    depends_on:
+      - postgres
+      - minio
+      - keycloak
+    networks:
+      - tax-dividend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      com.taxdividend.service: "backend"
+      com.taxdividend.tier: "application"
+
+  # ==========================================================================
+  # BFF GATEWAY
+  # ==========================================================================
+
+  bff-gateway:
+    build:
+      context: .
+      dockerfile: bff-gateway/Dockerfile
+    container_name: tax-dividend-bff
+    restart: unless-stopped
+    # No ports exposed by default
+    environment:
+      # Spring profile
+      SPRING_PROFILES_ACTIVE: docker
+
+      # Backend connection
+      BACKEND_URL: http://backend:8081/internal
+
+      # Security
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-dev-internal-api-key-for-local-testing-only-min-32-chars}
+
+      # Keycloak OAuth2 (connects to infra keycloak)
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: tax-dividend
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/tax-dividend/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/tax-dividend
+
+      # Monitoring (connects to infra tempo)
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+    depends_on:
+      - backend
+      - keycloak
+    networks:
+      - tax-dividend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      com.taxdividend.service: "bff"
+      com.taxdividend.tier: "application"
+
+  # ==========================================================================
+  # FRONTEND
+  # ==========================================================================
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tax-dividend-frontend
+    restart: unless-stopped
+    # No ports exposed by default
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://localhost:8080
+      - VITE_KEYCLOAK_URL=http://localhost:8080
+      - VITE_KEYCLOAK_REALM=tax-dividend
+      - VITE_KEYCLOAK_CLIENT_ID=frontend
+    depends_on:
+      - bff-gateway
+    networks:
+      - tax-dividend-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      com.taxdividend.service: "frontend"
+      com.taxdividend.tier: "application"
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+networks:
+  tax-dividend-network:
+    external: true
+    name: tax-dividend-network

@@ -10,8 +10,8 @@ import {
 
 // Mock the API client
 const mockPost = vi.fn();
-vi.mock('../../lib/api/client', () => ({
-  apiClient: {
+vi.mock('../../api/index', () => ({
+  api: {
     post: (...args: any[]) => mockPost(...args),
   },
 }));
